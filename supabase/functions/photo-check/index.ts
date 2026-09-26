@@ -1,25 +1,29 @@
-// AI photo check. Called by the app right after a selfie or photo upload.
-//   selfie : must contain exactly one live face  → set_selfie_verified
-//   photo  : must contain the verified user (face match against the selfie)
-//            photos 1-3 must also be a clear, camera-facing, solo face shot
+// Photo check. Called by the app right after a selfie or photo upload.
 //
-// Uses AWS Rekognition (DetectFaces + CompareFaces). Any provider works —
-// swap the two helper functions below.
+// Two modes:
+//  * AI mode (when AWS_ACCESS_KEY_ID is set): AWS Rekognition checks that the
+//    selfie is one clear face, and that each photo shows the same person
+//    (photos 1-3 must be a clear, camera-facing, solo face shot).
+//  * Manual mode (no AWS keys yet, the free default): everything is approved
+//    so people can finish signing up, and every image is added to
+//    public.manual_review for a person to check in the Supabase Table Editor.
 //
-// Deploy:  supabase functions deploy photo-check
-// Secrets: supabase secrets set AWS_REGION=ca-central-1 AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...
+// Deploy: Supabase dashboard → Edge Functions → photo-check (or `supabase functions deploy photo-check`)
 import { createClient } from "npm:@supabase/supabase-js@2";
-import {
-  CompareFacesCommand,
-  DetectFacesCommand,
-  RekognitionClient,
-} from "npm:@aws-sdk/client-rekognition@3";
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
-const rek = new RekognitionClient({ region: Deno.env.get("AWS_REGION") ?? "ca-central-1" });
+const AI = !!Deno.env.get("AWS_ACCESS_KEY_ID");
 
 async function download(bucket: string, path: string): Promise<Uint8Array> {
   const { data, error } = await admin.storage.from(bucket).download(path);
@@ -27,75 +31,89 @@ async function download(bucket: string, path: string): Promise<Uint8Array> {
   return new Uint8Array(await data.arrayBuffer());
 }
 
-// Clear face = one dominant face, looking roughly at the camera, eyes open, no sunglasses, sharp.
+// ---------- AI helpers (only loaded when AWS keys exist) ----------
+async function rekognition() {
+  const m = await import("npm:@aws-sdk/client-rekognition@3");
+  return { m, client: new m.RekognitionClient({ region: Deno.env.get("AWS_REGION") ?? "ca-central-1" }) };
+}
+
 async function analyse(bytes: Uint8Array) {
-  const out = await rek.send(new DetectFacesCommand({ Image: { Bytes: bytes }, Attributes: ["ALL"] }));
-  const faces = (out.FaceDetails ?? []).filter((f) => (f.Confidence ?? 0) > 90);
-  const main = faces.sort((a, b) =>
-    (b.BoundingBox!.Width! * b.BoundingBox!.Height!) - (a.BoundingBox!.Width! * a.BoundingBox!.Height!)
+  const { m, client } = await rekognition();
+  const out = await client.send(new m.DetectFacesCommand({ Image: { Bytes: bytes }, Attributes: ["ALL"] }));
+  // deno-lint-ignore no-explicit-any
+  const faces = (out.FaceDetails ?? []).filter((f: any) => (f.Confidence ?? 0) > 90);
+  // deno-lint-ignore no-explicit-any
+  const main: any = faces.sort((a: any, b: any) =>
+    (b.BoundingBox.Width * b.BoundingBox.Height) - (a.BoundingBox.Width * a.BoundingBox.Height)
   )[0];
   if (!main) return { faces: 0, clear: false };
-  const p = main.Pose!;
-  const clear =
-    Math.abs(p.Yaw!) < 30 && Math.abs(p.Pitch!) < 25 &&
-    !(main.Sunglasses?.Value) &&
-    (main.EyesOpen?.Value ?? true) &&
-    (main.Quality?.Sharpness ?? 100) > 40 &&
-    main.BoundingBox!.Width! > 0.12;           // not a tiny distant face
+  const p = main.Pose;
+  const clear = Math.abs(p.Yaw) < 30 && Math.abs(p.Pitch) < 25 && !(main.Sunglasses?.Value) &&
+    (main.EyesOpen?.Value ?? true) && (main.Quality?.Sharpness ?? 100) > 40 && main.BoundingBox.Width > 0.12;
   return { faces: faces.length, clear };
 }
 
-async function sameFace(selfie: Uint8Array, photo: Uint8Array): Promise<boolean> {
-  const out = await rek.send(new CompareFacesCommand({
+async function sameFace(selfie: Uint8Array, photo: Uint8Array) {
+  const { m, client } = await rekognition();
+  const out = await client.send(new m.CompareFacesCommand({
     SourceImage: { Bytes: selfie }, TargetImage: { Bytes: photo }, SimilarityThreshold: 90,
   }));
   return (out.FaceMatches ?? []).length > 0;
 }
 
 Deno.serve(async (req) => {
-  // Identify the caller from their JWT
-  const jwt = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
-  const { data: { user } } = await admin.auth.getUser(jwt);
-  if (!user) return new Response("unauthorized", { status: 401 });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  const body = await req.json() as { type: "selfie" | "photo"; photo_id?: string };
+  try {
+    const jwt = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+    const { data: { user } } = await admin.auth.getUser(jwt);
+    if (!user) return json({ error: "Not signed in" }, 401);
 
-  const { data: profile } = await admin.from("profiles").select("selfie_path").eq("id", user.id).single();
-  if (!profile?.selfie_path) return new Response("no selfie", { status: 400 });
-  const selfie = await download("selfies", profile.selfie_path);
+    const body = await req.json() as { type: "selfie" | "photo"; photo_id?: string };
 
-  if (body.type === "selfie") {
-    const a = await analyse(selfie);
-    const ok = a.faces === 1 && a.clear;
-    await admin.rpc("set_selfie_verified", { p_user: user.id, p_ok: ok });
-    return Response.json({ ok, reason: ok ? null : "Take a clear selfie, alone, facing the camera." });
+    // ---------------- selfie ----------------
+    if (body.type === "selfie") {
+      if (!AI) {
+        await admin.rpc("set_selfie_verified", { p_user: user.id, p_ok: true });
+        await admin.from("manual_review").insert({ user_id: user.id, kind: "selfie" });
+        return json({ ok: true, mode: "manual" });
+      }
+      const { data: profile } = await admin.from("profiles").select("selfie_path").eq("id", user.id).single();
+      if (!profile?.selfie_path) return json({ ok: false, reason: "No selfie uploaded." }, 400);
+      const a = await analyse(await download("selfies", profile.selfie_path));
+      const ok = a.faces === 1 && a.clear;
+      await admin.rpc("set_selfie_verified", { p_user: user.id, p_ok: ok });
+      return json({ ok, reason: ok ? null : "Take a clear selfie, alone, facing the camera." });
+    }
+
+    // ---------------- photo ----------------
+    const { data: photo } = await admin.from("photos").select("*").eq("id", body.photo_id).eq("user_id", user.id).single();
+    if (!photo) return json({ error: "Photo not found" }, 404);
+
+    if (!AI) {
+      await admin.rpc("set_photo_review", { p_photo: photo.id, p_shows_user: true, p_clear_face: true, p_reason: null });
+      await admin.from("manual_review").insert({ user_id: user.id, photo_id: photo.id, kind: "photo" });
+      return json({ approved: true, mode: "manual" });
+    }
+
+    const { data: profile } = await admin.from("profiles").select("selfie_path").eq("id", user.id).single();
+    const selfie = await download("selfies", profile!.selfie_path);
+    const bytes = await download("photos", photo.storage_path);
+    const a = await analyse(bytes);
+    if (photo.position >= 4 && a.faces === 0) {
+      await admin.from("manual_review").insert({ user_id: user.id, photo_id: photo.id, kind: "photo" });
+      return json({ status: "pending_review" });
+    }
+    const showsUser = a.faces > 0 ? await sameFace(selfie, bytes) : false;
+    const clearFace = showsUser && a.clear && a.faces === 1;
+    const reason = !showsUser
+      ? "This photo needs to clearly be you."
+      : (photo.position <= 3 && !clearFace)
+      ? "Photos 1-3 must be just you, looking at the camera, face clearly visible."
+      : null;
+    await admin.rpc("set_photo_review", { p_photo: photo.id, p_shows_user: showsUser, p_clear_face: clearFace, p_reason: reason });
+    return json({ approved: reason === null, reason });
+  } catch (e) {
+    return json({ error: String((e as Error)?.message ?? e) }, 500);
   }
-
-  const { data: photo } = await admin.from("photos").select("*").eq("id", body.photo_id).eq("user_id", user.id).single();
-  if (!photo) return new Response("no photo", { status: 404 });
-  const bytes = await download("photos", photo.storage_path);
-
-  const a = await analyse(bytes);
-  // Photos 4-6 may show the user facing away. Face match can't confirm those,
-  // so they go to human review (shows_user = null → stays pending) unless a face matches.
-  let showsUser = a.faces > 0 ? await sameFace(selfie, bytes) : false;
-  const clearFace = showsUser && a.clear && a.faces === 1;
-
-  if (photo.position >= 4 && a.faces === 0) {
-    // No visible face: could be back-of-head (allowed) or a mountain (not allowed).
-    // Leave pending for a moderator to decide.
-    return Response.json({ status: "pending_review" });
-  }
-  if (photo.position <= 3 && a.faces === 0) showsUser = false;
-
-  const reason = !showsUser
-    ? "This photo needs to clearly be you."
-    : (photo.position <= 3 && !clearFace)
-    ? "Photos 1-3 must be just you, looking at the camera, face clearly visible."
-    : null;
-
-  await admin.rpc("set_photo_review", {
-    p_photo: photo.id, p_shows_user: showsUser, p_clear_face: clearFace, p_reason: reason,
-  });
-  return Response.json({ approved: reason === null, reason });
 });
