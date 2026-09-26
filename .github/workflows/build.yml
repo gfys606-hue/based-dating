@@ -1,0 +1,91 @@
+# Builds Based on every push to main:
+#   1. the website version  -> published with GitHub Pages
+#   2. a test Android app   -> downloadable from the run's "Artifacts" section (app-debug.apk)
+# Free for public repos. Nothing to install on your computer.
+name: Build Based
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: build
+  cancel-in-progress: true
+
+env:
+  # Public, browser-safe values (protected by row-level security in the database)
+  SUPABASE_URL: https://dzfnetcoyxjyjtmorfgk.supabase.co
+  SUPABASE_ANON_KEY: sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Add web + Android project folders
+        run: |
+          flutter create . --platforms=web,android --org com.based --project-name based_dating
+          rm -rf test
+
+      - name: Android permissions (camera, location, internet)
+        run: |
+          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <application#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#android:label="based_dating"#android:label="Based"#' android/app/src/main/AndroidManifest.xml
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Check code
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Build website
+        run: >
+          flutter build web --release
+          --base-href "/${{ github.event.repository.name }}/"
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - name: Build Android test app
+        run: >
+          flutter build apk --debug
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: based-android-test-app
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/build/web
+
+  deploy-website:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
