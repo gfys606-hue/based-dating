@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Based — Dating for people who actually show up</title>
+<meta name="description" content="Based is a dating app built on real conversations. No ghosting, no collecting matches, no games. Join the waitlist for your city.">
+<meta property="og:title" content="Based — Dating for people who actually show up">
+<meta property="og:description" content="No ghosting. No games. Real people, real conversations. Join the waitlist for your city.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #111418;
+    --ink-2: #3b4048;
+    --cream: #f4f1ec;
+    --paper: #fffdf9;
+    --ember: #e4572e;
+    --ember-dark: #b8401d;
+    --line: #e2ddd4;
+    --ok: #2f7d4f;
+    --err: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--cream); color: var(--ink);
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-size: 17px; line-height: 1.55;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  header { padding: 22px 0; }
+  .logo { font-family: Archivo, sans-serif; font-weight: 900; font-size: 26px; letter-spacing: -0.02em; text-decoration: none; }
+  .logo span { color: var(--ember); }
+
+  .hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; padding: 40px 0 72px; }
+  h1 {
+    font-family: Archivo, sans-serif; font-weight: 900; letter-spacing: -0.035em;
+    font-size: clamp(40px, 6.4vw, 76px); line-height: 0.98; margin: 0 0 22px;
+  }
+  h1 em { font-style: normal; color: var(--ember); }
+  .lede { font-size: 20px; color: var(--ink-2); max-width: 34ch; margin: 0 0 24px; }
+  .proof { font-size: 15px; color: var(--ink-2); display: flex; align-items: center; gap: 10px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 0 4px rgba(228,87,46,.18); }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 22px;
+    padding: 28px; box-shadow: 0 1px 0 rgba(17,20,24,.04), 0 24px 48px -28px rgba(17,20,24,.25);
+  }
+  .card h2 { font-family: Archivo, sans-serif; font-size: 24px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .card p.sub { margin: 0 0 20px; color: var(--ink-2); font-size: 15px; }
+  label.field { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px; }
+  input[type=email], input[type=text] {
+    width: 100%; font: inherit; padding: 13px 14px; border-radius: 12px;
+    border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--ink); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label {
+    display: block; text-align: center; padding: 12px; border-radius: 12px; cursor: pointer;
+    border: 1.5px solid var(--line); background: #fff; font-weight: 600; font-size: 15px;
+  }
+  .seg input:checked + label { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .seg input:focus-visible + label { outline: 3px solid rgba(228,87,46,.5); outline-offset: 2px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0 4px; font-size: 14px; color: var(--ink-2); }
+  .check input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--ink); }
+  button {
+    width: 100%; margin-top: 18px; font: inherit; font-weight: 700; font-size: 17px;
+    padding: 15px; border: 0; border-radius: 14px; background: var(--ember); color: #fff; cursor: pointer;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: var(--ember-dark); }
+  button:active { transform: translateY(1px); }
+  button[disabled] { opacity: .6; cursor: default; }
+  .msg { margin-top: 14px; font-size: 15px; min-height: 1.4em; }
+  .msg.ok { color: var(--ok); font-weight: 600; }
+  .msg.err { color: var(--err); }
+  .fine { font-size: 12.5px; color: #6b7078; margin: 14px 0 0; }
+  .done { text-align: center; padding: 20px 4px; }
+  .done .big { font-family: Archivo, sans-serif; font-weight: 900; font-size: 30px; letter-spacing: -0.02em; margin: 6px 0; }
+
+  section.band { background: var(--ink); color: #f1eee8; padding: 80px 0; }
+  .band h2, .rules h2 { font-family: Archivo, sans-serif; font-weight: 900; letter-spacing: -0.03em; font-size: clamp(30px, 4.2vw, 46px); line-height: 1.05; margin: 0 0 14px; }
+  .band p.intro { color: #b9bcc2; max-width: 56ch; margin: 0 0 40px; font-size: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .rule { border: 1px solid #2c3036; border-radius: 18px; padding: 24px; background: #171b20; }
+  .rule .n { font-family: Archivo, sans-serif; color: var(--ember); font-weight: 900; font-size: 15px; letter-spacing: .08em; }
+  .rule h3 { font-family: Archivo, sans-serif; font-size: 22px; margin: 6px 0 8px; letter-spacing: -0.01em; }
+  .rule p { margin: 0; color: #b9bcc2; font-size: 16px; }
+
+  section.rules { padding: 80px 0; }
+  .nots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 28px; }
+  .not { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; font-weight: 600; }
+  .not s { color: #8a8f96; text-decoration-color: var(--ember); text-decoration-thickness: 2px; font-weight: 500; }
+  .not small { display: block; font-weight: 400; color: var(--ink-2); margin-top: 4px; font-size: 14.5px; }
+
+  .cta { text-align: center; padding: 20px 0 90px; }
+  .cta a.btn {
+    display: inline-block; text-decoration: none; background: var(--ink); color: #fff; font-weight: 700;
+    padding: 16px 28px; border-radius: 14px;
+  }
+  footer { border-top: 1px solid var(--line); padding: 26px 0 40px; font-size: 13.5px; color: #6b7078; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; gap: 32px; padding: 16px 0 56px; }
+    .grid { grid-template-columns: 1fr; }
+    .nots { grid-template-columns: 1fr; }
+    section.band, section.rules { padding: 56px 0; }
+  }
+  @media (max-width: 420px) {
+    .wrap { padding: 0 16px; }
+    .card { padding: 22px 18px; }
+    .lede { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<header><div class="wrap"><a class="logo" href="#">Based<span>.</span></a></div></header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <h1>Dating for people who actually <em>show up.</em></h1>
+      <p class="lede">No ghosting. No collecting matches for an ego boost. No games. Just real people having real conversations.</p>
+      <div class="proof"><span class="dot"></span><span id="count">Opening city by city. Get on the list for yours.</span></div>
+    </div>
+
+    <div class="card" id="join">
+      <div id="formWrap">
+        <h2>Join the waitlist</h2>
+        <p class="sub">We open one city at a time, once enough people have signed up, so nobody lands in an empty app.</p>
+        <form id="form" novalidate>
+          <label class="field" for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+
+          <label class="field" for="city">City</label>
+          <input id="city" name="city" type="text" autocomplete="address-level2" required placeholder="Calgary, AB">
+
+          <label class="field">I'm a</label>
+          <div class="seg" role="radiogroup">
+            <div><input type="radio" id="g-man" name="gender" value="man"><label for="g-man">Man</label></div>
+            <div><input type="radio" id="g-woman" name="gender" value="woman"><label for="g-woman">Woman</label></div>
+          </div>
+
+          <label class="check"><input type="checkbox" id="adult" required> I'm 18 or older.</label>
+
+          <button type="submit" id="submit">Save my spot</button>
+          <div class="msg" id="msg" role="status" aria-live="polite"></div>
+          <p class="fine">We only use your email to tell you when Based opens in your city. No spam, and we never sell it.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <section class="band">
+    <div class="wrap">
+      <h2>The rules are what make it work.</h2>
+      <p class="intro">Every dating app says it's different. Based enforces it. The same rules for everyone, and nobody can pay their way around them.</p>
+      <div class="grid">
+        <div class="rule"><div class="n">01</div><h3>Talk, or fade out</h3><p>Match with as many people as you want. But if you collect matches and never reply, fewer and fewer people see you. Start talking again and you come back.</p></div>
+        <div class="rule"><div class="n">02</div><h3>A call within 3 days</h3><p>Every match gets a quick voice or video call in the app within 3 days. Five minutes is enough to know if there's something there.</p></div>
+        <div class="rule"><div class="n">03</div><h3>"Not feeling it" is fine</h3><p>One tap ends a match politely, and it never counts against you. Being honest is free. Leading someone on isn't.</p></div>
+        <div class="rule"><div class="n">04</div><h3>Real photos of real people</h3><p>Three clear photos of your face, checked against a live selfie. No sunsets, no plates of food, no back-of-the-head mystery shots.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="rules">
+    <div class="wrap">
+      <h2>What you won't find here.</h2>
+      <div class="nots">
+        <div class="not"><s>Paywalled "see who liked you"</s><small>Everything that helps you meet people is free, for everyone, always.</small></div>
+        <div class="not"><s>Curated bios</s><small>Your profile shows your photos, interests and what you actually post about.</small></div>
+        <div class="not"><s>Follower counts</s><small>Nobody sees a popularity score, including you.</small></div>
+        <div class="not"><s>Endless swiping</s><small>A daily batch of people near you, closest first.</small></div>
+        <div class="not"><s>Pen pals</s><small>Numbers unlock after a video call, so things actually move forward.</small></div>
+        <div class="not"><s>Bots and catfish</s><small>Selfie check at sign-up, and reports are acted on fast.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta"><a class="btn" href="#join">Get on the list</a></div>
+</main>
+
+<footer><div class="wrap"><span>© <span id="yr"></span> Based</span><span>18+ only.</span></div></footer>
+
+<script>
+(() => {
+  const SUPABASE_URL = 'https://dzfnetcoyxjyjtmorfgk.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ'; // public, browser-safe key
+  const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' };
+
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // "?ref=tiktok" etc. gets saved with the sign-up so you can see which channels work
+  const source = (new URLSearchParams(location.search).get('ref') || document.referrer.split('/')[2] || 'direct').slice(0, 80);
+
+  // Social proof counter (only shown once it's worth showing)
+  fetch(SUPABASE_URL + '/rest/v1/rpc/waitlist_total', { method: 'POST', headers, body: '{}' })
+    .then(r => r.ok ? r.json() : null)
+    .then(n => {
+      if (typeof n === 'number' && n >= 25) {
+        document.getElementById('count').textContent = n.toLocaleString() + ' people are already waiting. Opening city by city.';
+      }
+    })
+    .catch(() => {});
+
+  const form = document.getElementById('form');
+  const msg = document.getElementById('msg');
+  const btn = document.getElementById('submit');
+
+  const say = (text, kind) => { msg.textContent = text; msg.className = 'msg ' + (kind || ''); };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = form.email.value.trim();
+    const city = form.city.value.trim();
+    const gender = (form.querySelector('input[name=gender]:checked') || {}).value;
+    const adult = document.getElementById('adult').checked;
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say('Enter a valid email.', 'err');
+    if (city.length < 2) return say('Which city are you in?', 'err');
+    if (!gender) return say('Pick man or woman.', 'err');
+    if (!adult) return say('Based is 18+ only.', 'err');
+
+    btn.disabled = true; say('Saving…');
+    try {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ email, city, gender, is_adult: true, source })
+      });
+      if (r.status === 201 || r.status === 409) {
+        document.getElementById('formWrap').innerHTML =
+          '<div class="done"><div class="big">' + (r.status === 409 ? "You're already on the list." : "You're on the list.") + '</div>' +
+          '<p>We\'ll email you the moment Based opens in ' + city.replace(/[<>&"]/g, '') + '.</p>' +
+          '<p class="fine">Want it to open sooner? Send this page to friends in your city. The more people who sign up, the faster it opens there.</p></div>';
+        return;
+      }
+      throw new Error('status ' + r.status);
+    } catch (err) {
+      say('Something went wrong. Please try again in a moment.', 'err');
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
