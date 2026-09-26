@@ -21,7 +21,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _code = TextEditingController();
   bool _sent = false;
   bool _busy = false;
-  bool _showCode = false;
+  bool _showCode = true;
   String? _error;
 
   Future<void> _sendLink() async {
@@ -90,14 +90,14 @@ class _AuthScreenState extends State<AuthScreen> {
                         onSubmitted: (_) => _sendLink(),
                       ),
                       const SizedBox(height: 14),
-                      FilledButton(onPressed: _busy ? null : _sendLink, child: const Text('Email me a sign-in link')),
+                      FilledButton(onPressed: _busy ? null : _sendLink, child: const Text('Email me a code')),
                     ] else ...[
                       Text('Check your email', style: B.heading(22)),
                       const SizedBox(height: 6),
                       Text.rich(TextSpan(children: [
-                        const TextSpan(text: 'We sent a sign-in link to '),
+                        const TextSpan(text: 'We sent a 6-digit code to '),
                         TextSpan(text: _email.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        const TextSpan(text: '. Open it on this device, in this same browser, and you\'re in.'),
+                        const TextSpan(text: '. Enter it below, or tap the link in the email.'),
                       ]), style: const TextStyle(color: B.ink2, height: 1.45)),
                       const SizedBox(height: 6),
                       const Text('Not there? Check spam. It can take a minute.', style: TextStyle(color: B.muted, fontSize: 13)),
@@ -106,15 +106,20 @@ class _AuthScreenState extends State<AuthScreen> {
                         TextField(
                           controller: _code,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(hintText: '6-digit code from the email'),
+                          maxLength: 6,
+                          autofocus: true,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 8),
+                          decoration: const InputDecoration(hintText: '······', counterText: ''),
+                          onChanged: (v) { if (v.trim().length == 6) _verifyCode(); },
                         ),
                         const SizedBox(height: 10),
-                        FilledButton(onPressed: _busy ? null : _verifyCode, child: const Text('Verify code')),
+                        FilledButton(onPressed: _busy ? null : _verifyCode, child: const Text('Sign in')),
                       ] else
                         OutlinedButton(onPressed: () => setState(() => _showCode = true), child: const Text('My email has a code instead')),
                       const SizedBox(height: 6),
                       TextButton(
-                        onPressed: _busy ? null : () => setState(() { _sent = false; _showCode = false; _code.clear(); }),
+                        onPressed: _busy ? null : () => setState(() { _sent = false; _code.clear(); }),
                         child: const Text('Use a different email or send again'),
                       ),
                     ],
