@@ -15,7 +15,13 @@ const _anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(url: _url, anonKey: _anonKey);
+  await Supabase.initialize(
+    url: _url,
+    anonKey: _anonKey,
+    // Implicit flow: the sign-in link carries the session itself, so it works
+    // even if the email opens in a different browser (e.g. inside the Gmail app).
+    authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
+  );
   runApp(const BasedApp());
 }
 
