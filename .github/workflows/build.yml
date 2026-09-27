@@ -1,6 +1,6 @@
 # Builds Based on every push to main:
 #   1. the website version  -> published with GitHub Pages
-#   2. a test Android app   -> downloadable from the run's "Artifacts" section (app-debug.apk)
+#   2. a test Android app   -> downloadable at https://based-social.com/test (and the run's "Artifacts")
 #   3. the Google Play file -> "based-play-store-bundle" artifact (app-release.aab),
 #      built only once the ANDROID_KEYSTORE_BASE64 + ANDROID_KEYSTORE_PASSWORD secrets are set
 # Free for public repos. Nothing to install on your computer.
@@ -73,16 +73,33 @@ jobs:
           --dart-define=SUPABASE_URL=$SUPABASE_URL
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
-      - name: Build Android test app
-        run: >
-          flutter build apk --debug
-          --dart-define=SUPABASE_URL=$SUPABASE_URL
-          --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+      - name: Build Android test app (published at based-social.com/test)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # Signed with the upload key once its secrets are set (so installs update in place);
+          # until then with a temporary debug key.
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+          fi
+          flutter build apk --release --split-per-abi \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          mkdir -p build/web/test
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/web/test/based-test.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/web/test/based-test-older-phones.apk
+          SIZE=$(du -m build/web/test/based-test.apk | cut -f1)
+          printf '{"build": %s, "date": "%s", "size_mb": %s, "signed": "%s"}\n' \
+            "${{ github.run_number }}" "$(date -u +%Y-%m-%dT%H:%MZ)" "$SIZE" "$([ -n "$KEYSTORE_B64" ] && echo upload || echo debug)" \
+            > build/web/test/build.json
 
       - uses: actions/upload-artifact@v4
         with:
           name: based-android-test-app
-          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          path: app/build/web/test/*.apk
 
       - name: Build Google Play bundle (.aab)
         env:
