@@ -61,7 +61,7 @@ jobs:
       - name: Build website
         run: >
           flutter build web --release
-          --base-href "/${{ github.event.repository.name }}/"
+          --base-href "/"
           --dart-define=SUPABASE_URL=$SUPABASE_URL
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
