@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 
 import '../services/api.dart';
 
