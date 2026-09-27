@@ -89,7 +89,7 @@ class Api {
       .from('messages')
       .stream(primaryKey: ['id'])
       .eq('match_id', matchId)
-      .order('created_at');
+      .order('created_at', ascending: true);
 
   static Future<void> send(String matchId, String body) =>
       db.from('messages').insert({'match_id': matchId, 'sender_id': me, 'body': body});

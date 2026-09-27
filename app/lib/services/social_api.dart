@@ -23,7 +23,7 @@ class SocialApi {
       .from('circle_messages')
       .stream(primaryKey: ['id'])
       .eq('circle_id', circleId)
-      .order('created_at');
+      .order('created_at', ascending: true);
 
   static Future<void> sendCircleMessage(String circleId, String body) =>
       _db.from('circle_messages').insert({'circle_id': circleId, 'sender_id': Api.me, 'body': body});
@@ -100,7 +100,7 @@ class SocialApi {
       .from('listing_messages')
       .stream(primaryKey: ['id'])
       .eq('thread_id', threadId)
-      .order('created_at');
+      .order('created_at', ascending: true);
 
   static Future<void> sendThreadMessage(String threadId, String body) =>
       _db.from('listing_messages').insert({'thread_id': threadId, 'sender_id': Api.me, 'body': body});
