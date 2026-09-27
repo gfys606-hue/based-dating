@@ -195,7 +195,12 @@ class _ChatScreenState extends State<ChatScreen> {
           if (open != null && open['status'] == 'accepted')
             FilledButton.icon(
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => CallScreen(callId: open['id'] as String, kind: open['kind'] as String),
+                builder: (_) => CallScreen(
+                  callId: open['id'] as String,
+                  kind: open['kind'] as String,
+                  matchId: _matchId,
+                  otherId: _otherId,
+                ),
               )).then((_) => _reload()),
               icon: const Icon(Icons.call, size: 18),
               label: const Text('Join'),
