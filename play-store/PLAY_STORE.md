@@ -72,6 +72,12 @@ Data is **encrypted in transit**: Yes. Users **can request deletion**: Yes. Data
 | App interactions (likes, matches, calls) | Yes | App functionality, fraud prevention/security | Required |
 | Device or other IDs | Yes | Fraud prevention/security | Required |
 
-## Before going public (not store paperwork, but reviewers will notice)
-- **Calls aren't live yet.** The 3-day call rule is built, but the actual voice/video call (LiveKit) still needs to be plugged in. Launch production after that works; the closed test can start before.
-- When calls are added, the app will also need microphone permission.
+## Turning on calls (LiveKit)
+The call code is built: `call-token` and `livekit-webhook` functions, migration `20260927000008_livekit_calls.sql`, and the in-app call screen.
+1. Create a free LiveKit Cloud project at cloud.livekit.io. Copy its URL (`wss://…livekit.cloud`), API key and API secret.
+2. Supabase → Edge Functions → Secrets: add `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
+3. Run migration `20260927000008_livekit_calls.sql` in the SQL Editor.
+4. Deploy the functions: `supabase functions deploy call-token` and `supabase functions deploy livekit-webhook --no-verify-jwt`.
+5. LiveKit Cloud → Settings → Webhooks → add `https://dzfnetcoyxjyjtmorfgk.supabase.co/functions/v1/livekit-webhook`.
+
+Data safety addition: **Audio** and **Photos and videos → Videos** are transmitted live during calls but not stored (mark "processed ephemerally").
