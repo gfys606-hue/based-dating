@@ -5,6 +5,7 @@ import 'screens/auth_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/paused_screen.dart';
+import 'screens/platform_shell.dart';
 import 'services/api.dart';
 import 'theme.dart';
 
@@ -78,6 +79,8 @@ class _StatusRouterState extends State<_StatusRouter> {
         final status = p?['status'] as String? ?? 'onboarding';
         switch (status) {
           case 'active':
+            // Testers see the full Based Social platform (module tabs on the left).
+            if (p?['is_tester'] == true) return PlatformShell(onStatusChanged: _refresh);
             return HomeShell(onStatusChanged: _refresh);
           case 'paused':
           case 'suspended':
