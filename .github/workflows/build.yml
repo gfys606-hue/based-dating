@@ -49,9 +49,9 @@ jobs:
           flutter create . --platforms=web,android --org com.based --project-name based_dating
           rm -rf test
 
-      - name: Android permissions (camera, location, internet)
+      - name: Android permissions (camera, microphone, location, internet)
         run: |
-          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <application#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <application#' android/app/src/main/AndroidManifest.xml
           sed -i 's#android:label="based_dating"#android:label="Based"#' android/app/src/main/AndroidManifest.xml
 
       - name: Google Play setup (app ID + release signing)
