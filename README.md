@@ -63,6 +63,12 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 ### 3. Run the backend tests locally (optional)
 Needs a local Postgres 16 on port 5433: `cd supabase/tests && ./run.sh`
 
+## Based Social modules (testers only)
+Circles, Search, Events and Market live in `supabase/migrations/20260927000009_social_modules.sql` and `app/lib/screens/` (`circles_screen`, `search_screen`, `events_screen`, `market_screen`). Testers get module tabs down the left side; everyone else sees only Dating.
+1. Run migration `20260927000009_social_modules.sql` in the Supabase SQL Editor.
+2. Make someone a tester: Table Editor → `profiles` → set `is_tester` to `true` (users can't set this themselves).
+3. Test app for Android: https://based-social.com/test (rebuilt on every push).
+
 ## Not built yet (next steps)
 1. **Real calls:** built with LiveKit. Add the keys and deploy (see `play-store/PLAY_STORE.md` → Turning on calls).
 2. **Push notifications:** send rows from `notifications` via Firebase Cloud Messaging.
