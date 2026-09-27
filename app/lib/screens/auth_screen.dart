@@ -19,6 +19,8 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _email = TextEditingController();
   final _code = TextEditingController();
+  final _password = TextEditingController();
+  bool _usePassword = false; // only for accounts that have a password (e.g. the Google Play review account)
   bool _sent = false;
   bool _busy = false;
   bool _showCode = true;
@@ -52,9 +54,20 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _passwordLogIn() async {
+    setState(() { _busy = true; _error = null; });
+    try {
+      await Api.db.auth.signInWithPassword(email: _email.text.trim(), password: _password.text);
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   void _setMode(bool logIn) {
     if (_busy) return;
-    setState(() { _logIn = logIn; _error = null; });
+    setState(() { _logIn = logIn; _usePassword = false; _error = null; });
   }
 
   Widget _modeTab(String label, bool logIn) {
@@ -122,7 +135,24 @@ class _AuthScreenState extends State<AuthScreen> {
                         onSubmitted: (_) => _sendLink(),
                       ),
                       const SizedBox(height: 14),
-                      FilledButton(onPressed: _busy ? null : _sendLink, child: Text(_logIn ? 'Email me a login code' : 'Create account')),
+                      if (_logIn && _usePassword) ...[
+                        TextField(
+                          controller: _password,
+                          obscureText: true,
+                          autofillHints: const [AutofillHints.password],
+                          decoration: const InputDecoration(hintText: 'Password'),
+                          onSubmitted: (_) => _passwordLogIn(),
+                        ),
+                        const SizedBox(height: 14),
+                        FilledButton(onPressed: _busy ? null : _passwordLogIn, child: const Text('Log in')),
+                      ] else
+                        FilledButton(onPressed: _busy ? null : _sendLink, child: Text(_logIn ? 'Email me a login code' : 'Create account')),
+                      if (_logIn)
+                        TextButton(
+                          onPressed: _busy ? null : () => setState(() { _usePassword = !_usePassword; _error = null; }),
+                          child: Text(_usePassword ? 'Use an email code instead' : 'Log in with a password',
+                              style: const TextStyle(color: B.muted, fontSize: 13)),
+                        ),
                     ] else ...[
                       Text('Check your email', style: B.heading(22)),
                       const SizedBox(height: 6),

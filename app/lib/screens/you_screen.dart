@@ -54,6 +54,8 @@ class YouScreen extends StatelessWidget {
               row(Icons.refresh, 'Refresh account status', onStatusChanged),
               const Divider(height: 1, color: Color(0xFFEFEAE2)),
               row(Icons.logout, 'Sign out', () => Api.db.auth.signOut(), color: B.urgent),
+              const Divider(height: 1, color: Color(0xFFEFEAE2)),
+              row(Icons.delete_forever_outlined, 'Delete account', () => _confirmDelete(context), color: B.urgent),
             ]),
           ),
         ),
@@ -64,5 +66,33 @@ class YouScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+            'This permanently deletes your profile, photos, matches and messages. It can\'t be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: B.urgent, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await Api.deleteAccount();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not delete your account. Please try again.')),
+        );
+      }
+    }
   }
 }
