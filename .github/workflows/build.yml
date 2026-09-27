@@ -1,6 +1,8 @@
 # Builds Based on every push to main:
 #   1. the website version  -> published with GitHub Pages
 #   2. a test Android app   -> downloadable from the run's "Artifacts" section (app-debug.apk)
+#   3. the Google Play file -> "based-play-store-bundle" artifact (app-release.aab),
+#      built only once the ANDROID_KEYSTORE_BASE64 + ANDROID_KEYSTORE_PASSWORD secrets are set
 # Free for public repos. Nothing to install on your computer.
 name: Build Based
 
@@ -52,8 +54,14 @@ jobs:
           sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <application#' android/app/src/main/AndroidManifest.xml
           sed -i 's#android:label="based_dating"#android:label="Based"#' android/app/src/main/AndroidManifest.xml
 
+      - name: Google Play setup (app ID + release signing)
+        run: python3 tool/android_release.py
+
       - name: Get packages
         run: flutter pub get
+
+      - name: App icon
+        run: dart run flutter_launcher_icons
 
       - name: Check code
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
@@ -75,6 +83,28 @@ jobs:
         with:
           name: based-android-test-app
           path: app/build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: Build Google Play bundle (.aab)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::notice::Upload key secrets not set yet - skipping the Google Play bundle."
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+          flutter build appbundle --release \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: based-play-store-bundle
+          path: app/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: ignore
 
       - uses: actions/upload-pages-artifact@v3
         with:
