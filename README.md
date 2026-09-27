@@ -64,7 +64,7 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 Needs a local Postgres 16 on port 5433: `cd supabase/tests && ./run.sh`
 
 ## Not built yet (next steps)
-1. **Real calls:** plug LiveKit into `call_screen.dart` and point its webhook at `call-webhook`.
+1. **Real calls:** built with LiveKit. Add the keys and deploy (see `play-store/PLAY_STORE.md` → Turning on calls).
 2. **Push notifications:** send rows from `notifications` via Firebase Cloud Messaging.
 3. **AI moderation for messages/comments** (scams, hostility) → `flag_comment_hostile`.
 4. **Moderator dashboard** for reports and pending photos 4–6.
