@@ -22,6 +22,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _sent = false;
   bool _busy = false;
   bool _showCode = true;
+  bool _logIn = false; // false = create account, true = existing account
   String? _error;
 
   Future<void> _sendLink() async {
@@ -34,16 +35,45 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await Api.db.auth.signInWithOtp(
         email: email,
-        shouldCreateUser: true,
+        // Log in never creates a new account; Sign up does.
+        shouldCreateUser: !_logIn,
         // On the website, send people back to this exact page after they tap the link.
         emailRedirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
       );
       setState(() => _sent = true);
     } on AuthException catch (e) {
-      setState(() => _error = e.message);
+      final noAccount = _logIn &&
+          (e.code == 'otp_disabled' || e.message.toLowerCase().contains('signups not allowed'));
+      setState(() => _error = noAccount
+          ? 'No account with that email yet. Tap "Sign up" to create one.'
+          : e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _setMode(bool logIn) {
+    if (_busy) return;
+    setState(() { _logIn = logIn; _error = null; });
+  }
+
+  Widget _modeTab(String label, bool logIn) {
+    final on = _logIn == logIn;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _setMode(logIn),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: on ? B.accent : B.line, width: on ? 2.5 : 1)),
+          ),
+          child: Text(label,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, fontWeight: on ? FontWeight.w800 : FontWeight.w500, color: on ? B.ink : B.muted)),
+        ),
+      ),
+    );
   }
 
   Future<void> _verifyCode() async {
@@ -80,6 +110,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   decoration: B.cardBox(),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     if (!_sent) ...[
+                      Row(children: [_modeTab('Sign up', false), _modeTab('Log in', true)]),
+                      const SizedBox(height: 16),
                       const Text('Email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextField(
@@ -90,7 +122,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         onSubmitted: (_) => _sendLink(),
                       ),
                       const SizedBox(height: 14),
-                      FilledButton(onPressed: _busy ? null : _sendLink, child: const Text('Email me a code')),
+                      FilledButton(onPressed: _busy ? null : _sendLink, child: Text(_logIn ? 'Email me a login code' : 'Create account')),
                     ] else ...[
                       Text('Check your email', style: B.heading(22)),
                       const SizedBox(height: 6),
