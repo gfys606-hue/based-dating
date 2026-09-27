@@ -159,6 +159,24 @@ class Api {
         'p_match': matchId,
       });
 
+  // ---------- account ----------
+  /// Permanently deletes the signed-in user's account, photos and data.
+  static Future<void> deleteAccount() async {
+    final uid = me;
+    for (final bucket in const ['photos', 'selfies', 'media']) {
+      try {
+        final files = await db.storage.from(bucket).list(path: uid);
+        if (files.isNotEmpty) {
+          await db.storage.from(bucket).remove([for (final f in files) '$uid/${f.name}']);
+        }
+      } catch (_) {
+        // Keep going: the account itself must still be deleted.
+      }
+    }
+    await db.rpc('delete_my_account');
+    await db.auth.signOut();
+  }
+
   // ---------- storage ----------
   static Future<String> photoUrl(String path) =>
       db.storage.from('photos').createSignedUrl(path, 60 * 60);
