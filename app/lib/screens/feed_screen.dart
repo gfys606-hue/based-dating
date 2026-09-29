@@ -109,7 +109,7 @@ class _PostsViewState extends State<PostsView> {
               if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
               final posts = snap.data ?? [];
               if (posts.isEmpty) {
-                return ListView(children: const [
+                return ListView(children: [
                   SizedBox(height: 120),
                   Center(child: Text('Nothing this close yet. Widen the distance or post something.', style: TextStyle(color: B.muted))),
                 ]);
