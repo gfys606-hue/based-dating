@@ -60,7 +60,7 @@ class BasedNavBar extends StatelessWidget {
                         const Positioned(
                           top: 10,
                           right: 22,
-                          child: CircleAvatar(radius: 4, backgroundColor: Color(0xFFE5484D)),
+                          child: CircleAvatar(radius: 4, backgroundColor: Color(0xFF5B7FEA)),
                         ),
                     ]),
                   ),
