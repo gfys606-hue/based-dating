@@ -23,15 +23,44 @@ Future<void> main() async {
     // even if the email opens in a different browser (e.g. inside the Gmail app).
     authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
   );
+  await B.loadMode();
   runApp(const BasedApp());
 }
 
-class BasedApp extends StatelessWidget {
+/// App root. Picks light or dark (phone setting, or the user's choice in You → Appearance)
+/// and rebuilds everything when that changes.
+class BasedApp extends StatefulWidget {
   const BasedApp({super.key});
+  @override
+  State<BasedApp> createState() => _BasedAppState();
+}
+
+class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    B.mode.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    B.mode.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() => _changed();
+
+  void _changed() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
+    final system = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    B.isDark = B.mode.value == ThemeMode.dark || (B.mode.value == ThemeMode.system && system == Brightness.dark);
     return MaterialApp(
+      key: ValueKey(B.isDark), // light/dark switch rebuilds every screen with the new colors
       title: 'Based',
       debugShowCheckedModeBanner: false,
       theme: B.theme(),
