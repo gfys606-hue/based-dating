@@ -37,10 +37,10 @@ class B {
   static Color get accentStrong => _c(0xFF2A4BB8, 0xFF9DB2F2); // accent-colored text on soft fills
 
   // Status
-  static Color get urgent => _c(0xFFA1261C, 0xFFF07A70); // under 24h
-  static Color get urgentSoft => _c(0xFFF1DCD9, 0xFF3A1F1D);
-  static Color get soon => _c(0xFF9A5F12, 0xFFE0A24A); // under 2 days
-  static Color get soonSoft => _c(0xFFF3E6D2, 0xFF33291A);
+  static Color get urgent => _c(0xFF1E3FAE, 0xFF8FA8F3); // under 24h (deep royal blue)
+  static Color get urgentSoft => _c(0xFFDCE4FA, 0xFF1A2444);
+  static Color get soon => _c(0xFF4169E1, 0xFF5B7FEA); // under 2 days (royal blue)
+  static Color get soonSoft => _c(0xFFE8EDFC, 0xFF1C2540);
   static Color get ok => _c(0xFF2F6B47, 0xFF6FC08E);
   static Color get okSoft => _c(0xFFEAF3EC, 0xFF1C2E23);
   static Color get okInk => _c(0xFF1F4D32, 0xFF9FD8B2); // text on okSoft
