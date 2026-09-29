@@ -161,7 +161,7 @@ class Segmented extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 alignment: Alignment.center,
                 decoration: i == index
-                    ? BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(9), boxShadow: B.shadow)
+                    ? BoxDecoration(color: B.isDark ? B.panelRaised : B.card, borderRadius: BorderRadius.circular(9), boxShadow: B.shadow)
                     : null,
                 child: Text(options[i],
                     style: TextStyle(
