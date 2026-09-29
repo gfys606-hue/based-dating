@@ -26,9 +26,9 @@ class BasedNavBar extends StatelessWidget {
         height: B.navHeight,
         padding: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
-          color: B.ink,
+          color: B.panel,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: B.ink.withOpacity(.45), blurRadius: 30, spreadRadius: -10, offset: const Offset(0, 12))],
+          boxShadow: [BoxShadow(color: const Color(0xFF15181D).withOpacity(.45), blurRadius: 30, spreadRadius: -10, offset: const Offset(0, 12))],
         ),
         child: Row(children: [
           for (var i = 0; i < _items.length; i++)
@@ -43,24 +43,24 @@ class BasedNavBar extends StatelessWidget {
                   child: Container(
                     height: 56,
                     decoration: i == index
-                        ? BoxDecoration(color: const Color(0xFF2A2F36), borderRadius: BorderRadius.circular(18))
+                        ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(18))
                         : null,
                     child: Stack(alignment: Alignment.center, children: [
                       Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                         Icon(i == index ? _items[i].$2 : _items[i].$1,
-                            size: 22, color: i == index ? Colors.white : const Color(0xFF9BA0A7)),
+                            size: 22, color: i == index ? Colors.white : B.onPanelMuted),
                         const SizedBox(height: 3),
                         Text(_items[i].$3,
                             style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: i == index ? FontWeight.w700 : FontWeight.w600,
-                                color: i == index ? Colors.white : const Color(0xFF9BA0A7))),
+                                color: i == index ? Colors.white : B.onPanelMuted)),
                       ]),
                       if (i == 2 && talkBadge && i != index)
                         const Positioned(
                           top: 10,
                           right: 22,
-                          child: CircleAvatar(radius: 4, backgroundColor: Color(0xFFE4572E)),
+                          child: CircleAvatar(radius: 4, backgroundColor: Color(0xFFE5484D)),
                         ),
                     ]),
                   ),

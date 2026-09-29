@@ -36,7 +36,7 @@ class ModuleRail extends StatelessWidget {
         width: width,
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: B.ink,
+          color: B.panel,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x5515181D), blurRadius: 24, spreadRadius: -10, offset: Offset(4, 8))],
         ),
@@ -69,15 +69,15 @@ class ModuleRail extends StatelessWidget {
           onTap: () => onTap(i),
           child: Container(
             height: 60,
-            decoration: on ? BoxDecoration(color: const Color(0xFF2A2F36), borderRadius: BorderRadius.circular(16)) : null,
+            decoration: on ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(16)) : null,
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Icon(on ? m.activeIcon : m.icon, size: 22, color: on ? Colors.white : const Color(0xFF9BA0A7)),
+              Icon(on ? m.activeIcon : m.icon, size: 22, color: on ? Colors.white : B.onPanelMuted),
               const SizedBox(height: 4),
               Text(m.label,
                   style: TextStyle(
                       fontSize: 10,
                       fontWeight: on ? FontWeight.w800 : FontWeight.w600,
-                      color: on ? Colors.white : const Color(0xFF9BA0A7))),
+                      color: on ? Colors.white : B.onPanelMuted)),
             ]),
           ),
         ),

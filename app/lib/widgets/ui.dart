@@ -102,7 +102,7 @@ class TimerTile extends StatelessWidget {
             ]),
             const SizedBox(height: 8),
             Text(caption ?? (match['next_call_status'] == 'accepted' ? 'Call booked' : 'No call booked yet'),
-                style: const TextStyle(fontSize: 13, color: B.ink2)),
+                style: TextStyle(fontSize: 13, color: B.ink2)),
             const SizedBox(height: 6),
             Text(timeLeftLabel(h), style: B.display(20).copyWith(color: u.color)),
             const SizedBox(height: 6),
@@ -125,8 +125,8 @@ class PillChip extends StatelessWidget {
         selected: selected,
         button: true,
         child: Material(
-          color: selected ? B.ink : Colors.white,
-          shape: StadiumBorder(side: BorderSide(color: selected ? B.ink : B.line, width: 1.5)),
+          color: selected ? B.panel : B.card,
+          shape: StadiumBorder(side: BorderSide(color: selected ? B.panel : B.line, width: 1.5)),
           child: InkWell(
             customBorder: const StadiumBorder(),
             onTap: onTap,
@@ -151,7 +151,7 @@ class Segmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(color: const Color(0xFFEBE6DE), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(12)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           for (var i = 0; i < options.length; i++)
             GestureDetector(
@@ -161,7 +161,7 @@ class Segmented extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 alignment: Alignment.center,
                 decoration: i == index
-                    ? BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9), boxShadow: B.shadow)
+                    ? BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(9), boxShadow: B.shadow)
                     : null,
                 child: Text(options[i],
                     style: TextStyle(

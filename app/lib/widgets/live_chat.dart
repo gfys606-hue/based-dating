@@ -56,7 +56,7 @@ class _LiveChatState extends State<LiveChat> {
               return const Center(child: CircularProgressIndicator());
             }
             if (msgs.isEmpty) {
-              return const Center(child: Text('No messages yet. Say hi.', style: TextStyle(color: B.muted)));
+              return Center(child: Text('No messages yet. Say hi.', style: TextStyle(color: B.muted)));
             }
             return ListView.builder(
               reverse: true,
@@ -106,14 +106,14 @@ class _LiveChatState extends State<LiveChat> {
           Padding(
             padding: const EdgeInsets.only(left: 6, top: 8, bottom: 2),
             child: Text(widget.names[sender] ?? 'Member',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: B.muted)),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: B.muted)),
           ),
         Container(
           margin: const EdgeInsets.symmetric(vertical: 3),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           constraints: const BoxConstraints(maxWidth: 300),
           decoration: BoxDecoration(
-            color: mine ? B.ink : Colors.white,
+            color: mine ? B.panel : B.card,
             borderRadius: BorderRadius.circular(18),
             boxShadow: mine ? null : B.shadow,
           ),
