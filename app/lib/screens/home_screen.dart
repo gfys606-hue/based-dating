@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _matches = [];
   List<Map<String, dynamic>> _people = [];
   Map<String, dynamic>? _post;
+  List<Map<String, dynamic>> _notices = [];
   bool _loading = true;
 
   @override
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Api.myMatches(),
         Api.matchBatch(),
         Api.feed(range: 'region'),
+        Api.unreadNotices().catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       final posts = results[2].where((p) => p['author_id'] != Api.me).toList();
@@ -50,11 +52,20 @@ class _HomeScreenState extends State<HomeScreen> {
         _matches = results[0];
         _people = results[1].take(3).toList();
         _post = posts.isEmpty ? null : posts.first;
+        _notices = results[3];
         _loading = false;
       });
     } catch (e) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _dismissNotices() async {
+    final ids = [for (final n in _notices) n['id'] as int];
+    setState(() => _notices = []);
+    try {
+      await Api.markNoticesRead(ids);
+    } catch (_) {}
   }
 
   Future<void> _openChat(Map<String, dynamic> m) async {
@@ -103,6 +114,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
 
           if (_loading) const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
+
+          if (_notices.isNotEmpty) ...[
+            _NoticesCard(notices: _notices, onDismiss: _dismissNotices),
+            const SizedBox(height: 18),
+          ],
 
           if (hero != null) ...[
             _HeroCard(match: hero, onTap: () => _openChat(hero)),
@@ -167,6 +183,52 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Things the app needs you to know: nudges, missed calls, blocked messages, expiries.
+class _NoticesCard extends StatelessWidget {
+  const _NoticesCard({required this.notices, required this.onDismiss});
+  final List<Map<String, dynamic>> notices;
+  final VoidCallback onDismiss;
+
+  static IconData _icon(String kind) => switch (kind) {
+        'nudge' => Icons.visibility_outlined,
+        'no_show' || 'call_missed' => Icons.phone_missed,
+        'message_blocked' => Icons.block,
+        'match_expired' || 'match_ended' => Icons.hourglass_bottom,
+        'match' => Icons.favorite,
+        'paused' => Icons.pause_circle_outline,
+        'contact_unlocked' => Icons.lock_open,
+        _ => Icons.notifications_none,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = notices.take(4).toList();
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 6, 6),
+      decoration: BoxDecoration(color: B.accentSoft, borderRadius: BorderRadius.circular(B.radius)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const SectionLabel('Heads up'),
+        const SizedBox(height: 6),
+        for (final n in shown)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8, right: 8),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Icon(_icon(n['kind'] as String? ?? ''), size: 18, color: B.accent),
+              const SizedBox(width: 10),
+              Expanded(child: Text(n['body'] as String? ?? '', style: const TextStyle(fontSize: 14, height: 1.35, color: B.ink))),
+            ]),
+          ),
+        Row(children: [
+          if (notices.length > shown.length)
+            Text('+${notices.length - shown.length} more', style: const TextStyle(fontSize: 12, color: B.muted)),
+          const Spacer(),
+          TextButton(onPressed: onDismiss, child: const Text('Got it')),
+        ]),
+      ]),
     );
   }
 }
