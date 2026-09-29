@@ -132,7 +132,7 @@ class _MarketScreenState extends State<MarketScreen> {
     if (_items.isEmpty) {
       return Center(
         child: Text(_view == 1 ? 'You haven\'t listed anything yet.' : 'Nothing here yet. Be the first to sell something.',
-            style: const TextStyle(color: B.muted)),
+            style: TextStyle(color: B.muted)),
       );
     }
     return RefreshIndicator(
@@ -165,8 +165,8 @@ class _MarketScreenState extends State<MarketScreen> {
             Positioned.fill(
               child: l['photo_path'] == null
                   ? Container(
-                      decoration: BoxDecoration(color: const Color(0xFFEFEAE2), borderRadius: BorderRadius.circular(16)),
-                      child: const Icon(Icons.image_outlined, color: B.muted),
+                      decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(16)),
+                      child: Icon(Icons.image_outlined, color: B.muted),
                     )
                   : SignedPhoto(l['photo_path'] as String, radius: 16),
             ),
@@ -175,7 +175,7 @@ class _MarketScreenState extends State<MarketScreen> {
               bottom: 8,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: B.ink, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(10)),
                 child: Text(money(l['price_cents'] as int),
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
               ),
@@ -195,14 +195,14 @@ class _MarketScreenState extends State<MarketScreen> {
         const SizedBox(height: 6),
         Text(l['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
         Text(l['distance_km'] == null ? (marketCategories[l['category']] ?? '') : '${l['distance_km']} km away',
-            style: const TextStyle(color: B.muted, fontSize: 12)),
+            style: TextStyle(color: B.muted, fontSize: 12)),
       ]),
     );
   }
 
   Widget _inbox() {
     if (_threads.isEmpty) {
-      return const Center(child: Text('No conversations yet.', style: TextStyle(color: B.muted)));
+      return Center(child: Text('No conversations yet.', style: TextStyle(color: B.muted)));
     }
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -243,8 +243,8 @@ class ListingScreen extends StatelessWidget {
           aspectRatio: 1.1,
           child: l['photo_path'] == null
               ? Container(
-                  decoration: BoxDecoration(color: const Color(0xFFEFEAE2), borderRadius: BorderRadius.circular(B.radius)),
-                  child: const Icon(Icons.image_outlined, size: 48, color: B.muted),
+                  decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(B.radius)),
+                  child: Icon(Icons.image_outlined, size: 48, color: B.muted),
                 )
               : SignedPhoto(l['photo_path'] as String, radius: B.radius),
         ),
@@ -259,11 +259,11 @@ class ListingScreen extends StatelessWidget {
             if (l['distance_km'] != null) '${l['distance_km']} km away',
             if (!mine) 'Sold by ${l['seller_name']}',
           ].join(' · '),
-          style: const TextStyle(color: B.muted),
+          style: TextStyle(color: B.muted),
         ),
         if (l['description'] != null) ...[
           const SizedBox(height: 14),
-          Text(l['description'] as String, style: const TextStyle(fontSize: 15, height: 1.45, color: B.ink2)),
+          Text(l['description'] as String, style: TextStyle(fontSize: 15, height: 1.45, color: B.ink2)),
         ],
         const SizedBox(height: 24),
         if (mine) ...[
@@ -281,7 +281,7 @@ class ListingScreen extends StatelessWidget {
               await SocialApi.setListingStatus(l['listing_id'] as String, 'removed');
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Remove listing', style: TextStyle(color: B.urgent)),
+            child: Text('Remove listing', style: TextStyle(color: B.urgent)),
           ),
         ] else
           FilledButton.icon(
@@ -301,7 +301,7 @@ class ListingScreen extends StatelessWidget {
             },
           ),
         const SizedBox(height: 12),
-        const Text('Meet in a public place and pay in person. Never send money before you see the item.',
+        Text('Meet in a public place and pay in person. Never send money before you see the item.',
             textAlign: TextAlign.center, style: TextStyle(color: B.muted, fontSize: 12)),
       ]),
     );
@@ -390,8 +390,8 @@ class _NewListingSheetState extends State<_NewListingSheet> {
               height: 140,
               child: _photo == null
                   ? Container(
-                      decoration: BoxDecoration(color: const Color(0xFFEFEAE2), borderRadius: BorderRadius.circular(16)),
-                      child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(16)),
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                         Icon(Icons.add_a_photo_outlined, color: B.muted),
                         SizedBox(height: 6),
                         Text('Add a photo', style: TextStyle(color: B.muted)),
@@ -422,7 +422,7 @@ class _NewListingSheetState extends State<_NewListingSheet> {
           ]),
           const SizedBox(height: 10),
           TextField(controller: _desc, maxLines: 3, decoration: const InputDecoration(hintText: 'Details (optional)')),
-          if (_error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: const TextStyle(color: B.urgent))),
+          if (_error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: TextStyle(color: B.urgent))),
           const SizedBox(height: 14),
           FilledButton(onPressed: _busy ? null : _post, child: Text(_busy ? 'Working…' : 'Post listing')),
         ]),

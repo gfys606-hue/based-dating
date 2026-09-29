@@ -116,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   TextSpan(text: '.', style: B.display(60).copyWith(color: B.accent)),
                 ])),
                 const SizedBox(height: 10),
-                const Text('Dating for people who actually show up.', style: TextStyle(fontSize: 20, color: B.ink2, height: 1.35)),
+                Text('Dating for people who actually show up.', style: TextStyle(fontSize: 20, color: B.ink2, height: 1.35)),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.all(18),
@@ -151,7 +151,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         TextButton(
                           onPressed: _busy ? null : () => setState(() { _usePassword = !_usePassword; _error = null; }),
                           child: Text(_usePassword ? 'Use an email code instead' : 'Log in with a password',
-                              style: const TextStyle(color: B.muted, fontSize: 13)),
+                              style: TextStyle(color: B.muted, fontSize: 13)),
                         ),
                     ] else ...[
                       Text('Check your email', style: B.heading(22)),
@@ -160,9 +160,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         const TextSpan(text: 'We sent a 6-digit code to '),
                         TextSpan(text: _email.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
                         const TextSpan(text: '. Enter it below, or tap the link in the email.'),
-                      ]), style: const TextStyle(color: B.ink2, height: 1.45)),
+                      ]), style: TextStyle(color: B.ink2, height: 1.45)),
                       const SizedBox(height: 6),
-                      const Text('Not there? Check spam. It can take a minute.', style: TextStyle(color: B.muted, fontSize: 13)),
+                      Text('Not there? Check spam. It can take a minute.', style: TextStyle(color: B.muted, fontSize: 13)),
                       const SizedBox(height: 14),
                       if (_showCode) ...[
                         TextField(
@@ -187,7 +187,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                     if (_error != null) Padding(
                       padding: const EdgeInsets.only(top: 12),
-                      child: Text(_error!, style: const TextStyle(color: B.urgent)),
+                      child: Text(_error!, style: TextStyle(color: B.urgent)),
                     ),
                   ]),
                 ),

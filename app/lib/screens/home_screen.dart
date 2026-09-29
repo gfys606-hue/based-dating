@@ -101,14 +101,14 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(children: [
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${DateFormat('EEEE').format(now)} $partOfDay', style: const TextStyle(color: B.muted, fontSize: 14)),
+                Text('${DateFormat('EEEE').format(now)} $partOfDay', style: TextStyle(color: B.muted, fontSize: 14)),
                 Text('Your day', style: B.display(32)),
               ]),
             ),
             IconButton(
               tooltip: 'You',
               onPressed: () => widget.goTab(3),
-              icon: const CircleAvatar(radius: 22, backgroundColor: Color(0xFFD9CDBD), child: Icon(Icons.person, color: B.ink2)),
+              icon: CircleAvatar(radius: 22, backgroundColor: B.avatarFill, child: Icon(Icons.person, color: B.ink2)),
             ),
           ]),
           const SizedBox(height: 16),
@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ]),
           const SizedBox(height: 6),
           if (_people.isEmpty && !_loading)
-            const Text("You've seen everyone for today. More tomorrow.", style: TextStyle(color: B.muted)),
+            Text("You've seen everyone for today. More tomorrow.", style: TextStyle(color: B.muted)),
           if (_people.isNotEmpty)
             Row(children: [
               for (var i = 0; i < _people.length; i++) ...[
@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(_post!['author_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                       Text('${_post!['topic']}${_post!['distance_km'] == null ? '' : ' · ${_post!['distance_km']} km'}',
-                          style: const TextStyle(fontSize: 12, color: B.muted)),
+                          style: TextStyle(fontSize: 12, color: B.muted)),
                     ]),
                   ]),
                   const SizedBox(height: 8),
@@ -219,12 +219,12 @@ class _NoticesCard extends StatelessWidget {
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Icon(_icon(n['kind'] as String? ?? ''), size: 18, color: B.accent),
               const SizedBox(width: 10),
-              Expanded(child: Text(n['body'] as String? ?? '', style: const TextStyle(fontSize: 14, height: 1.35, color: B.ink))),
+              Expanded(child: Text(n['body'] as String? ?? '', style: TextStyle(fontSize: 14, height: 1.35, color: B.ink))),
             ]),
           ),
         Row(children: [
           if (notices.length > shown.length)
-            Text('+${notices.length - shown.length} more', style: const TextStyle(fontSize: 12, color: B.muted)),
+            Text('+${notices.length - shown.length} more', style: TextStyle(fontSize: 12, color: B.muted)),
           const Spacer(),
           TextButton(onPressed: onDismiss, child: const Text('Got it')),
         ]),
@@ -249,7 +249,7 @@ class _HeroCard extends StatelessWidget {
     final sub = booked ? 'Be there. No-shows count against you.' : '5 minutes is enough to know.';
 
     return Material(
-      color: B.ink,
+      color: B.panel,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -261,7 +261,7 @@ class _HeroCard extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(kicker, style: const TextStyle(color: Color(0xFFF0A58A), fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6)),
+                Text(kicker, style: const TextStyle(color: B.panelAccent, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6)),
                 const SizedBox(height: 2),
                 Text(title, style: B.heading(19).copyWith(color: Colors.white)),
                 const SizedBox(height: 2),
@@ -300,7 +300,7 @@ class _PersonTile extends StatelessWidget {
             right: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(10)),
               child: Text('${person['display_name']} · ${person['distance_km']} km',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),

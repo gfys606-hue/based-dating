@@ -67,7 +67,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
           children: [
             Text('Circles', style: B.display(32)),
             const SizedBox(height: 6),
-            const Text('Small groups of people you\'d actually get along with. Placed by what you\'re into, when you\'re free, and where you are.',
+            Text('Small groups of people you\'d actually get along with. Placed by what you\'re into, when you\'re free, and where you are.',
                 style: TextStyle(color: B.ink2, height: 1.4)),
             const SizedBox(height: 18),
             _findCard(),
@@ -75,7 +75,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
             if (_loading)
               const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
             else if (_error != null)
-              Text(_error!, style: const TextStyle(color: B.urgent))
+              Text(_error!, style: TextStyle(color: B.urgent))
             else if (_circles.isNotEmpty) ...[
               const SectionLabel('Your circles'),
               const SizedBox(height: 10),
@@ -89,7 +89,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
 
   Widget _findCard() => Container(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: B.ink, borderRadius: BorderRadius.circular(B.radius)),
+        decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             for (var i = 0; i < 4; i++)
@@ -136,11 +136,11 @@ class _CirclesScreenState extends State<CirclesScreen> {
                 Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                 const SizedBox(height: 2),
                 Text(last ?? '${c['member_count']} members · say hi',
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: B.muted, fontSize: 13)),
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.muted, fontSize: 13)),
               ]),
             ),
             if (at != null)
-              Text(DateFormat.MMMd().format(DateTime.parse(at).toLocal()), style: const TextStyle(color: B.muted, fontSize: 12)),
+              Text(DateFormat.MMMd().format(DateTime.parse(at).toLocal()), style: TextStyle(color: B.muted, fontSize: 12)),
           ]),
         ),
       ),

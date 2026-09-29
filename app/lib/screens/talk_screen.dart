@@ -56,7 +56,7 @@ class _TalkScreenState extends State<TalkScreen> {
               if (snap.connectionState != ConnectionState.done)
                 const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
               if (needCall.isNotEmpty) ...[
-                const SectionLabel('Needs a call', color: B.urgent),
+                SectionLabel('Needs a call', color: B.urgent),
                 const SizedBox(height: 10),
                 GridView.count(
                   crossAxisCount: 2,
@@ -75,7 +75,7 @@ class _TalkScreenState extends State<TalkScreen> {
                 Container(
                   padding: const EdgeInsets.all(30),
                   decoration: B.cardBox(),
-                  child: const Text('No matches yet. Like someone in Discover.', textAlign: TextAlign.center, style: TextStyle(color: B.muted)),
+                  child: Text('No matches yet. Like someone in Discover.', textAlign: TextAlign.center, style: TextStyle(color: B.muted)),
                 ),
               if (list.isNotEmpty)
                 Container(
@@ -83,7 +83,7 @@ class _TalkScreenState extends State<TalkScreen> {
                   clipBehavior: Clip.antiAlias,
                   child: Column(children: [
                     for (var i = 0; i < list.length; i++) ...[
-                      if (i > 0) const Divider(height: 1, color: Color(0xFFEFEAE2)),
+                      if (i > 0) Divider(height: 1, color: B.fill),
                       _Row(match: list[i], onTap: () => _open(list[i])),
                     ],
                   ]),
@@ -109,7 +109,7 @@ class _Row extends StatelessWidget {
     final preview = match['last_message'] == null
         ? (match['icebreaker'] as String? ?? 'Say hi')
         : '${match['last_from_me'] == true ? 'You: ' : ''}${match['last_message']}';
-    final (bg, fg) = urgent ? (B.urgentSoft, B.urgent) : done ? (B.okSoft, const Color(0xFF1F4D32)) : (const Color(0xFFF1ECE4), B.ink2);
+    final (bg, fg) = urgent ? (B.urgentSoft, B.urgent) : done ? (B.okSoft, B.okInk) : (B.fill, B.ink2);
 
     return InkWell(
       onTap: onTap,

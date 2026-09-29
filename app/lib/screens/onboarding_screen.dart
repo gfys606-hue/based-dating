@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
+import '../theme.dart';
 
 /// Onboarding — target under 3 minutes. No bio, pronouns, job, or height.
 /// Steps: basics → selfie → photos → interests → 3 scenarios → availability → location → rules
@@ -164,7 +165,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _photoTile(int pos) {
     final s = _photoState[pos];
-    final color = s == 'approved' ? Colors.green : s == null ? Colors.grey : s == 'pending' ? Colors.orange : Colors.red;
+    final color = s == 'approved' ? B.ok : s == null ? B.muted : s == 'pending' ? B.soon : B.urgent;
     return InkWell(
       onTap: _busy ? null : () => _run(() async {
         final img = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: 1600);

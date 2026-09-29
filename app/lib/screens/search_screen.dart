@@ -90,7 +90,7 @@ class _SearchScreenState extends State<SearchScreen> {
           _privacyToggle(),
           const SizedBox(height: 8),
           if (_q.text.trim().length >= 2 && !_loading && empty)
-            const Padding(padding: EdgeInsets.all(30), child: Center(child: Text('Nothing found.', style: TextStyle(color: B.muted)))),
+            Padding(padding: EdgeInsets.all(30), child: Center(child: Text('Nothing found.', style: TextStyle(color: B.muted)))),
           if (_list('topics').isNotEmpty) ...[
             _label('Interests'),
             Wrap(spacing: 6, runSpacing: 6, children: [
@@ -120,10 +120,10 @@ class _SearchScreenState extends State<SearchScreen> {
             for (final c in _list('circles'))
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(backgroundColor: B.accentSoft, child: Icon(Icons.bubble_chart, color: B.accent)),
+                leading: CircleAvatar(backgroundColor: B.accentSoft, child: Icon(Icons.bubble_chart, color: B.accent)),
                 title: Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text('${c['members']} members'),
-                trailing: c['joined'] == true ? const Text('Joined', style: TextStyle(color: B.muted)) : const Text('Join', style: TextStyle(color: B.accent, fontWeight: FontWeight.w700)),
+                trailing: c['joined'] == true ? Text('Joined', style: TextStyle(color: B.muted)) : Text('Join', style: TextStyle(color: B.accent, fontWeight: FontWeight.w700)),
                 onTap: () => _openCircle(c),
               ),
           ],
@@ -132,7 +132,7 @@ class _SearchScreenState extends State<SearchScreen> {
             for (final e in _list('events'))
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.event, color: B.ink2),
+                leading: Icon(Icons.event, color: B.ink2),
                 title: Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text([
                   DateFormat('EEE, MMM d · h:mm a').format(DateTime.parse(e['starts_at'] as String).toLocal()),
@@ -160,7 +160,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: B.cardBox(),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('${p['author']} · ${p['topic']}', style: const TextStyle(color: B.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+                  Text('${p['author']} · ${p['topic']}', style: TextStyle(color: B.muted, fontSize: 12, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(p['body'] as String, maxLines: 4, overflow: TextOverflow.ellipsis),
                 ]),
@@ -175,9 +175,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _privacyToggle() => Container(
         padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
-        decoration: BoxDecoration(color: const Color(0xFFEFEAE2), borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(14)),
         child: Row(children: [
-          const Expanded(
+          Expanded(
             child: Text('Use my searches to improve my matches and circles',
                 style: TextStyle(fontSize: 13, color: B.ink2)),
           ),

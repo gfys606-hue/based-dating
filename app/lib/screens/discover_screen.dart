@@ -138,7 +138,7 @@ class _Cards extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(26),
-                boxShadow: [BoxShadow(color: B.ink.withOpacity(.35), blurRadius: 36, spreadRadius: -18, offset: const Offset(0, 16))],
+                boxShadow: [BoxShadow(color: const Color(0xFF000000).withOpacity(.35), blurRadius: 36, spreadRadius: -18, offset: const Offset(0, 16))],
               ),
               child: Stack(fit: StackFit.expand, children: [
                 SignedPhoto(photos.isEmpty ? null : photos.first, radius: 26),
@@ -147,7 +147,7 @@ class _Cards extends StatelessWidget {
                   left: 14,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+                    decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(999)),
                     child: Text(_block(km), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   ),
                 ),
@@ -156,7 +156,7 @@ class _Cards extends StatelessWidget {
                   right: 14,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: B.ink, borderRadius: BorderRadius.circular(999)),
+                    decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(999)),
                     child: Text('$left left today', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
@@ -166,11 +166,11 @@ class _Cards extends StatelessWidget {
                   bottom: 10,
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(20)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                       Text('${person['display_name']}, ${person['age']}', style: B.display(24)),
                       const SizedBox(height: 3),
-                      Text('$km km away', style: const TextStyle(color: B.muted)),
+                      Text('$km km away', style: TextStyle(color: B.muted)),
                       if (shared.isNotEmpty) ...[
                         const SizedBox(height: 3),
                         Text('You both follow ${shared.take(3).join(', ')}', style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -229,13 +229,13 @@ class _Radar extends StatelessWidget {
                   top: center - center * const [.38, .58, .78, .98][i] + 4,
                   child: Text('${_rings[i]} km',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: i == 1 ? const Color(0xFF8F3113) : B.muted)),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: i == 1 ? B.accentStrong : B.muted)),
                 ),
               Positioned(
                 left: center - 22,
                 top: center - 22,
-                child: const CircleAvatar(
-                    radius: 22, backgroundColor: B.ink, child: Text('You', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
+                child: CircleAvatar(
+                    radius: 22, backgroundColor: B.panel, child: Text('You', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
               ),
               for (final p in people)
                 Builder(builder: (_) {
@@ -256,7 +256,7 @@ class _Radar extends StatelessWidget {
                           width: 44,
                           height: 44,
                           padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: B.shadow),
+                          decoration: BoxDecoration(color: B.card, shape: BoxShape.circle, boxShadow: B.shadow),
                           child: SignedPhoto(photos.isEmpty ? null : photos.first, radius: 19),
                         ),
                       ),
@@ -270,7 +270,7 @@ class _Radar extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: B.cardBox(),
-          child: const Text.rich(TextSpan(children: [
+          child: Text.rich(TextSpan(children: [
             TextSpan(text: 'Closest rings fill first. ', style: TextStyle(fontWeight: FontWeight.w700)),
             TextSpan(text: 'Within 10 km, shared interests come first. Tap a face to see them.'),
           ]), style: TextStyle(color: B.ink2, height: 1.45)),
@@ -295,8 +295,8 @@ class _RingsPainter extends CustomPainter {
     canvas.drawCircle(c, r * .58, Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = const Color(0xFFE6B8A4));
-    canvas.drawCircle(c, r * .38, Paint()..color = Colors.white);
+      ..color = B.accentMid);
+    canvas.drawCircle(c, r * .38, Paint()..color = B.card);
     canvas.drawCircle(c, r * .38, Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
@@ -317,7 +317,7 @@ class _Empty extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text("That's everyone for today.", style: B.heading(22), textAlign: TextAlign.center),
             const SizedBox(height: 8),
-            const Text('Talk to your matches. New people show up tomorrow, closest first.',
+            Text('Talk to your matches. New people show up tomorrow, closest first.',
                 textAlign: TextAlign.center, style: TextStyle(color: B.ink2)),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: onRefresh, child: const Text('Refresh')),

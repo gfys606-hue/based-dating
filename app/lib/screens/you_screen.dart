@@ -29,8 +29,8 @@ class YouScreen extends StatelessWidget {
           child: Ink(
             padding: const EdgeInsets.all(14),
             decoration: B.cardBox(),
-            child: const Row(children: [
-              CircleAvatar(radius: 30, backgroundColor: Color(0xFFD9CDBD), child: Icon(Icons.person, color: B.ink2, size: 30)),
+            child: Row(children: [
+              CircleAvatar(radius: 30, backgroundColor: B.avatarFill, child: Icon(Icons.person, color: B.ink2, size: 30)),
               SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -43,24 +43,35 @@ class YouScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
+        const SectionLabel('Appearance'),
+        const SizedBox(height: 10),
+        ValueListenableBuilder<ThemeMode>(
+          valueListenable: B.mode,
+          builder: (context, mode, _) => Segmented(
+            options: const ['Phone setting', 'Light', 'Dark'],
+            index: const [ThemeMode.system, ThemeMode.light, ThemeMode.dark].indexOf(mode),
+            onChanged: (i) => B.setMode(const [ThemeMode.system, ThemeMode.light, ThemeMode.dark][i]),
+          ),
+        ),
+        const SizedBox(height: 20),
         const SectionLabel('Account'),
         const SizedBox(height: 10),
         Container(
           decoration: B.cardBox(),
           clipBehavior: Clip.antiAlias,
           child: Material(
-            color: Colors.white,
+            color: B.card,
             child: Column(children: [
               row(Icons.refresh, 'Refresh account status', onStatusChanged),
-              const Divider(height: 1, color: Color(0xFFEFEAE2)),
+              Divider(height: 1, color: B.fill),
               row(Icons.logout, 'Sign out', () => Api.db.auth.signOut(), color: B.urgent),
-              const Divider(height: 1, color: Color(0xFFEFEAE2)),
+              Divider(height: 1, color: B.fill),
               row(Icons.delete_forever_outlined, 'Delete account', () => _confirmDelete(context), color: B.urgent),
             ]),
           ),
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'Your engagement score is never shown, to you or anyone. No premium tier: everything that helps you meet people is free.',
           style: TextStyle(color: B.muted, fontSize: 13, height: 1.5),
         ),
@@ -79,7 +90,7 @@ class YouScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: B.urgent, fontWeight: FontWeight.w700)),
+            child: Text('Delete', style: TextStyle(color: B.urgent, fontWeight: FontWeight.w700)),
           ),
         ],
       ),

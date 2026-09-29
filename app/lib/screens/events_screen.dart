@@ -112,7 +112,7 @@ class _AvailabilityCardState extends State<AvailabilityCard> {
           for (final d in _days)
             Expanded(
               child: Text(d[0].toUpperCase() + d.substring(1, 2),
-                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: B.muted)),
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: B.muted)),
             ),
         ]),
         for (final s in _slots)
@@ -138,7 +138,7 @@ class _AvailabilityCardState extends State<AvailabilityCard> {
                       height: 28,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
-                        color: _free[d]!.contains(s) ? B.accent : const Color(0xFFEFEAE2),
+                        color: _free[d]!.contains(s) ? B.accent : B.fill,
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -210,7 +210,7 @@ class EventsListState extends State<EventsList> {
               ),
             ),
           if (_events.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 30),
               child: Text('Nothing planned yet. Start something.', textAlign: TextAlign.center, style: TextStyle(color: B.muted)),
             ),
@@ -240,7 +240,7 @@ class EventsListState extends State<EventsList> {
             // Date block on the left
             Container(
               width: 62,
-              color: my == 'going' ? B.accent : B.ink,
+              color: my == 'going' ? B.accent : B.panel,
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text(DateFormat('MMM').format(at).toUpperCase(),
                     style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w800)),
@@ -255,10 +255,10 @@ class EventsListState extends State<EventsList> {
                     Text(((e['circle_name'] ?? e['topic']) as String).toUpperCase(), style: B.label.copyWith(color: B.accent)),
                   Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                   const SizedBox(height: 2),
-                  Text(meta, style: const TextStyle(color: B.muted, fontSize: 13)),
+                  Text(meta, style: TextStyle(color: B.muted, fontSize: 13)),
                   if (e['details'] != null) ...[
                     const SizedBox(height: 6),
-                    Text(e['details'] as String, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: B.ink2)),
+                    Text(e['details'] as String, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.ink2)),
                   ],
                   const SizedBox(height: 10),
                   Row(children: [
@@ -271,7 +271,7 @@ class EventsListState extends State<EventsList> {
                           await SocialApi.cancelEvent(e['event_id'] as String);
                           load();
                         },
-                        child: const Text('Cancel event', style: TextStyle(color: B.urgent)),
+                        child: Text('Cancel event', style: TextStyle(color: B.urgent)),
                       )
                     else ...[
                       _rsvpButton(e, 'maybe', 'Maybe'),
@@ -395,7 +395,7 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
             ]),
           ),
         ]),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: const TextStyle(color: B.urgent))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: TextStyle(color: B.urgent))),
         const SizedBox(height: 14),
         FilledButton(onPressed: _busy ? null : _create, child: Text(_busy ? 'Creating…' : 'Create')),
       ]),

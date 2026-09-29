@@ -38,7 +38,7 @@ class _PostsViewState extends State<PostsView> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: B.card,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) => Padding(
@@ -60,7 +60,7 @@ class _PostsViewState extends State<PostsView> {
             ),
             const SizedBox(height: 10),
             TextField(controller: body, maxLength: 500, maxLines: 4, decoration: const InputDecoration(hintText: 'Say what you actually think')),
-            const Text('Contact info, links and social handles are blocked in posts.', style: TextStyle(fontSize: 12, color: B.muted)),
+            Text('Contact info, links and social handles are blocked in posts.', style: TextStyle(fontSize: 12, color: B.muted)),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () async {
@@ -88,7 +88,7 @@ class _PostsViewState extends State<PostsView> {
           children: [
             FilledButton.icon(
               onPressed: _compose,
-              style: FilledButton.styleFrom(backgroundColor: B.ink, minimumSize: const Size(0, 40)),
+              style: FilledButton.styleFrom(backgroundColor: B.panel, minimumSize: const Size(0, 40)),
               icon: const Icon(Icons.edit, size: 18),
               label: const Text('Post'),
             ),
@@ -155,7 +155,7 @@ class _PostCardState extends State<_PostCard> {
             Avatar(path: p['author_photo'] as String?, size: 34),
             const SizedBox(width: 10),
             Expanded(child: Text(p['author_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700))),
-            Text('${p['topic']}${km == null ? '' : ' · $km km'}', style: const TextStyle(fontSize: 12, color: B.muted)),
+            Text('${p['topic']}${km == null ? '' : ' · $km km'}', style: TextStyle(fontSize: 12, color: B.muted)),
           ]),
         ),
         const SizedBox(height: 8),
@@ -170,7 +170,7 @@ class _PostCardState extends State<_PostCard> {
           ),
           const SizedBox(width: 8),
           if (p['like_count'] != null)
-            Text('${p['like_count']} likes · only you see this', style: const TextStyle(fontSize: 13, color: B.muted)),
+            Text('${p['like_count']} likes · only you see this', style: TextStyle(fontSize: 13, color: B.muted)),
           const Spacer(),
           IconButton(
             tooltip: 'Comments',
@@ -193,7 +193,7 @@ class _PostCardState extends State<_PostCard> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: B.card,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),

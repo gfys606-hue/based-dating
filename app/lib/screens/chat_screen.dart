@@ -170,7 +170,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   : video
                       ? 'Call done ✓ · One message each unlocks phone numbers'
                       : 'Call done ✓ · A video call unlocks phone numbers',
-              style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1F4D32)),
+              style: TextStyle(fontWeight: FontWeight.w700, color: B.okInk),
             ),
           ),
           TextButton.icon(
@@ -187,7 +187,7 @@ class _ChatScreenState extends State<ChatScreen> {
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: B.ink, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (open == null)
           Text('${timeLeftLabel(h)} to get a call in · $left reschedule${left == 1 ? '' : 's'} left', style: onDark)
@@ -199,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 10),
           DeadlineBar(
             fraction: h / 72,
-            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFFE4572E) : const Color(0xFFE0A24A)),
+            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFFE5484D) : const Color(0xFFE0A24A)),
             track: const Color(0xFF3B4048),
           ),
         ],
@@ -225,14 +225,14 @@ class _ChatScreenState extends State<ChatScreen> {
           // Not confirmed yet: either person can suggest another time for free.
           if (open != null && open['status'] == 'proposed')
             OutlinedButton(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.muted, width: 1.5)),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.onPanelMuted, width: 1.5)),
               onPressed: _propose,
               child: Text(open['proposed_by'] == Api.me ? 'Change time' : 'Suggest another time'),
             ),
           // Confirmed: moving it uses one of the 2 shared reschedules.
           if (open != null && open['status'] == 'accepted' && left > 0)
             OutlinedButton(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.muted, width: 1.5)),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.onPanelMuted, width: 1.5)),
               onPressed: () => _propose(reschedule: true),
               child: Text('Reschedule ($left left)'),
             ),
@@ -246,7 +246,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final number = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: B.card,
         title: const Text('Share your number'),
         content: TextField(controller: ctrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(hintText: '403 555 0100')),
         actions: [
@@ -296,7 +296,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Text.rich(TextSpan(children: [
                         const TextSpan(text: 'Icebreaker: ', style: TextStyle(fontWeight: FontWeight.w700)),
                         TextSpan(text: _m['icebreaker'] as String),
-                      ]), style: const TextStyle(color: B.ink2)),
+                      ]), style: TextStyle(color: B.ink2)),
                     ),
                 ],
               );
@@ -307,7 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
             child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF1F4D32), backgroundColor: B.okSoft, side: const BorderSide(color: B.ok, width: 1.5)),
+              style: OutlinedButton.styleFrom(foregroundColor: B.okInk, backgroundColor: B.okSoft, side: BorderSide(color: B.ok, width: 1.5)),
               onPressed: _shareNumber,
               icon: const Icon(Icons.phone),
               label: const Text('Share my number'),
@@ -350,7 +350,7 @@ class _ChatScreenState extends State<ChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         constraints: const BoxConstraints(maxWidth: 300),
         decoration: BoxDecoration(
-          color: blocked ? const Color(0xFFFBECEB) : (mine ? B.ink : Colors.white),
+          color: blocked ? B.urgentSoft : (mine ? B.panel : B.card),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -362,7 +362,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         child: Text(
           blocked ? 'Not sent: contact info unlocks after a video call and one message from each of you.' : msg['body'] as String,
-          style: TextStyle(fontSize: 15, height: 1.35, color: blocked ? const Color(0xFF7C1D16) : (mine ? Colors.white : B.ink)),
+          style: TextStyle(fontSize: 15, height: 1.35, color: blocked ? B.urgent : (mine ? Colors.white : B.ink)),
         ),
       ),
     );
