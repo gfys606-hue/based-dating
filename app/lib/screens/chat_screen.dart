@@ -59,8 +59,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<DateTime?> _pickTime() async {
-    final latest = DateTime.parse((_m['call_done'] == true ? _m['max_deadline'] : _m['call_deadline']) as String).toLocal();
     final now = DateTime.now();
+    // Before the first call: by the deadline. After it: any time in the next month.
+    final latest = _m['call_done'] == true
+        ? now.add(const Duration(days: 30))
+        : DateTime.parse(_m['call_deadline'] as String).toLocal();
     final d = await showDatePicker(context: context, firstDate: now, lastDate: latest.isAfter(now) ? latest : now, initialDate: now);
     if (d == null || !mounted) return null;
     final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))));
@@ -153,15 +156,29 @@ class _ChatScreenState extends State<ChatScreen> {
     final u = urgencyColors(h);
 
     if (done && open == null) {
+      final video = _m['video_call_done'] == true;
       return Container(
         width: double.infinity,
         margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: B.okSoft, borderRadius: BorderRadius.circular(18)),
-        child: Text(
-          _m['contact_unlocked'] == true ? 'Call done ✓ · Phone numbers unlocked' : 'Call done ✓ · One message each unlocks phone numbers',
-          style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1F4D32)),
-        ),
+        child: Row(children: [
+          Expanded(
+            child: Text(
+              _m['contact_unlocked'] == true
+                  ? 'Call done ✓ · Phone numbers unlocked'
+                  : video
+                      ? 'Call done ✓ · One message each unlocks phone numbers'
+                      : 'Call done ✓ · A video call unlocks phone numbers',
+              style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1F4D32)),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _propose,
+            icon: Icon(video ? Icons.call : Icons.videocam, size: 18),
+            label: Text(video ? 'Call again' : 'Video call'),
+          ),
+        ]),
       );
     }
 
