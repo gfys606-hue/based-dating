@@ -222,11 +222,19 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: const Icon(Icons.call, size: 18),
               label: const Text('Join'),
             ),
-          if (open != null && left > 0)
+          // Not confirmed yet: either person can suggest another time for free.
+          if (open != null && open['status'] == 'proposed')
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.muted, width: 1.5)),
+              onPressed: _propose,
+              child: Text(open['proposed_by'] == Api.me ? 'Change time' : 'Suggest another time'),
+            ),
+          // Confirmed: moving it uses one of the 2 shared reschedules.
+          if (open != null && open['status'] == 'accepted' && left > 0)
             OutlinedButton(
               style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.muted, width: 1.5)),
               onPressed: () => _propose(reschedule: true),
-              child: const Text('Reschedule'),
+              child: Text('Reschedule ($left left)'),
             ),
         ]),
       ]),
