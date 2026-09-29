@@ -122,6 +122,18 @@ class Api {
         'p_kind': kind,
       });
 
+  // ---------- notices (nudges, missed calls, blocked messages, expiries) ----------
+  static Future<List<Map<String, dynamic>>> unreadNotices() async => List<Map<String, dynamic>>.from(await db
+      .from('notifications')
+      .select()
+      .eq('user_id', me)
+      .eq('read', false)
+      .order('created_at', ascending: false)
+      .limit(20));
+
+  static Future<void> markNoticesRead(List<int> ids) =>
+      db.from('notifications').update({'read': true}).inFilter('id', ids);
+
   // ---------- feed ----------
   static Future<List<Map<String, dynamic>>> feed({String? range, int? topic, DateTime? before}) async =>
       List<Map<String, dynamic>>.from(await db.rpc('get_feed', params: {
