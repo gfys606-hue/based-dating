@@ -23,8 +23,8 @@ ol{padding-left:22px}a{color:var(--accent)}
 <p>Early test build for Android. Things will break. Tell us when they do.</p>
 
 <div class="card">
-  <a class="btn" href="based-test.apk" download>Download for Android</a>
-  <a class="btn2" href="based-test-older-phones.apk" download>Older phone (32-bit)? Use this one</a>
+  <a class="btn" id="dl" href="based-test.apk" download="based-test.apk">Download for Android</a>
+  <a class="btn2" id="dl32" href="based-test-older-phones.apk" download="based-test-older-phones.apk">Older phone (32-bit)? Use this one</a>
   <p class="muted" id="info" style="margin:12px 0 0">Latest build</p>
 </div>
 
@@ -49,6 +49,10 @@ ol{padding-left:22px}a{color:var(--accent)}
 fetch('build.json',{cache:'no-store'}).then(r=>r.json()).then(b=>{
   var d=new Date(b.date);
   document.getElementById('info').textContent='Build '+b.build+' · '+d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+b.size_mb+' MB';
+  // Save the file with its build number, e.g. based-build-45.apk, so you can tell which one you have.
+  document.getElementById('dl').setAttribute('download','based-build-'+b.build+'.apk');
+  document.getElementById('dl32').setAttribute('download','based-build-'+b.build+'-older-phones.apk');
+  document.getElementById('dl').textContent='Download build '+b.build+' for Android';
 }).catch(function(){});
 </script>
 </body></html>
