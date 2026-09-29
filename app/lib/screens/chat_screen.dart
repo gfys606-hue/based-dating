@@ -199,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 10),
           DeadlineBar(
             fraction: h / 72,
-            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFFE5484D) : const Color(0xFFE0A24A)),
+            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFF8FA8F3) : B.panelAccent),
             track: const Color(0xFF3B4048),
           ),
         ],

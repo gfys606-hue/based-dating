@@ -95,7 +95,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
             for (var i = 0; i < 4; i++)
               Align(
                 widthFactor: .7,
-                child: CircleAvatar(radius: 16, backgroundColor: [B.accent, const Color(0xFFE0A24A), const Color(0xFF6E8B74), const Color(0xFF9BA0A7)][i]),
+                child: CircleAvatar(radius: 16, backgroundColor: [B.accent, B.panelAccent, const Color(0xFF6E8B74), const Color(0xFF9BA0A7)][i]),
               ),
           ]),
           const SizedBox(height: 14),

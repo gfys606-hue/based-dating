@@ -264,7 +264,7 @@ class _CallScreenState extends State<CallScreen> {
                   icon: Icon(_camOn ? Icons.videocam : Icons.videocam_off),
                 ),
               IconButton.filled(
-                style: IconButton.styleFrom(backgroundColor: Colors.red),
+                style: IconButton.styleFrom(backgroundColor: const Color(0xFF4169E1)),
                 iconSize: 36,
                 onPressed: _hangUp,
                 icon: const Icon(Icons.call_end, color: Colors.white),
