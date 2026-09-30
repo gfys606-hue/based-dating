@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
-import '../widgets/nav_bar.dart';
+import '../widgets/module_rail.dart';
 import 'discover_screen.dart';
 import 'home_screen.dart';
 import 'talk_screen.dart';
 import 'you_screen.dart';
 
-/// The app shell: 4 fixed destinations + the floating menu.
-/// Home (Your day) · Discover · Talk · You
+/// An extra module page on the rail (testers: Circles, Search, Events, Market).
+/// [build] gets `open(module)` so a page can jump to another module (1 Circles, 2 Search, 3 Events, 4 Market).
+class ShellPage {
+  const ShellPage(this.item, this.build);
+  final RailItem item;
+  final Widget Function(void Function(int module) open) build;
+}
+
+/// The app shell: every destination lives on the left rail (no bottom bar).
+/// Home (Your day) · Discover · Talk · You, then any extra modules.
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.onStatusChanged});
+  const HomeShell({super.key, required this.onStatusChanged, this.extras = const []});
   final VoidCallback onStatusChanged;
+  final List<ShellPage> extras;
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
@@ -19,6 +28,7 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _tab = 0;
   bool _talkBadge = false;
+  final _opened = <int>{0, 1, 2, 3}; // extra modules are built the first time they're opened
 
   /// Which view Discover shows: 0 = people, 1 = posts. Home can switch it.
   final discoverMode = ValueNotifier<int>(0);
@@ -42,25 +52,43 @@ class _HomeShellState extends State<HomeShell> {
 
   void goTab(int i, {int? discover}) {
     if (discover != null) discoverMode.value = discover;
-    setState(() => _tab = i);
-    _refresh[i].value++;
+    setState(() {
+      _tab = i;
+      _opened.add(i);
+    });
+    if (i < _refresh.length) _refresh[i].value++;
     _checkBadge();
   }
 
+  /// Extra module 1..n → rail index 4..
+  void _openModule(int module) => goTab(3 + module);
+
   @override
   Widget build(BuildContext context) {
+    final items = [
+      const RailItem('Home', Icons.home_outlined, Icons.home_rounded),
+      const RailItem('Discover', Icons.radar_outlined, Icons.radar),
+      RailItem('Talk', Icons.chat_bubble_outline, Icons.chat_bubble, badge: _talkBadge),
+      const RailItem('You', Icons.person_outline, Icons.person),
+      for (final e in widget.extras) e.item,
+    ];
     return Scaffold(
-      extendBody: true,
-      body: SafeArea(
-        bottom: false,
-        child: IndexedStack(index: _tab, children: [
-          HomeScreen(refresh: _refresh[0], goTab: goTab),
-          DiscoverScreen(refresh: _refresh[1], mode: discoverMode),
-          TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
-          YouScreen(onStatusChanged: widget.onStatusChanged),
-        ]),
-      ),
-      bottomNavigationBar: BasedNavBar(index: _tab, onTap: (i) => goTab(i), talkBadge: _talkBadge),
+      body: Row(children: [
+        ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 3),
+        Expanded(
+          child: SafeArea(
+            left: false,
+            child: IndexedStack(index: _tab, children: [
+              HomeScreen(refresh: _refresh[0], goTab: goTab),
+              DiscoverScreen(refresh: _refresh[1], mode: discoverMode),
+              TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
+              YouScreen(onStatusChanged: widget.onStatusChanged),
+              for (var i = 0; i < widget.extras.length; i++)
+                _opened.contains(4 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
+            ]),
+          ),
+        ),
+      ]),
     );
   }
 }

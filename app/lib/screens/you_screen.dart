@@ -35,7 +35,7 @@ class YouScreen extends StatelessWidget {
               SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Your profile', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
+                  Text('Your profile', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
                   Text('See it the way others do', style: TextStyle(color: B.muted, fontSize: 13)),
                 ]),
               ),

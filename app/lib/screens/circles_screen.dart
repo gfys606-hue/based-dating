@@ -133,7 +133,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                 const SizedBox(height: 2),
                 Text(last ?? '${c['member_count']} members · say hi',
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.muted, fontSize: 13)),

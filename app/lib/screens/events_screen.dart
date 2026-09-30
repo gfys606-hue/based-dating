@@ -102,7 +102,7 @@ class _AvailabilityCardState extends State<AvailabilityCard> {
       decoration: B.cardBox(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Expanded(child: Text('When are you usually free?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
+          const Expanded(child: Text('When are you usually free?', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
           if (_dirty)
             TextButton(onPressed: _saving ? null : _save, child: Text(_saving ? 'Saving…' : 'Save')),
         ]),
@@ -243,7 +243,7 @@ class EventsListState extends State<EventsList> {
               color: my == 'going' ? B.accent : B.panel,
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text(DateFormat('MMM').format(at).toUpperCase(),
-                    style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+                    style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
                 Text('${at.day}', style: B.display(26).copyWith(color: Colors.white)),
               ]),
             ),
@@ -253,7 +253,7 @@ class EventsListState extends State<EventsList> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   if (e['circle_name'] != null || e['topic'] != null)
                     Text(((e['circle_name'] ?? e['topic']) as String).toUpperCase(), style: B.label.copyWith(color: B.accent)),
-                  Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                  Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 2),
                   Text(meta, style: TextStyle(color: B.muted, fontSize: 13)),
                   if (e['details'] != null) ...[

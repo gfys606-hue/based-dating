@@ -177,7 +177,7 @@ class _MarketScreenState extends State<MarketScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(6)),
                 child: Text(money(l['price_cents'] as int),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
               ),
             ),
             if (status != 'active')
@@ -187,7 +187,7 @@ class _MarketScreenState extends State<MarketScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(6)),
-                  child: Text(status.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                  child: Text(status.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
                 ),
               ),
           ]),

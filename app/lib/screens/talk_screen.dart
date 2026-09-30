@@ -121,11 +121,11 @@ class _Row extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(match['other_name'] as String,
-                  style: TextStyle(fontSize: 16, fontWeight: theirTurn ? FontWeight.w600 : FontWeight.w700)),
+                  style: TextStyle(fontSize: 16, fontWeight: theirTurn ? FontWeight.w700 : FontWeight.w700)),
               Text(preview,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: theirTurn ? B.ink : B.muted, fontWeight: theirTurn ? FontWeight.w600 : FontWeight.w400)),
+                  style: TextStyle(fontSize: 13, color: theirTurn ? B.ink : B.muted, fontWeight: theirTurn ? FontWeight.w700 : FontWeight.w400)),
             ]),
           ),
           const SizedBox(width: 8),

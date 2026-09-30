@@ -148,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: SizedBox(width: 44, height: 44, child: SignedPhoto(l['photo_path'] as String?, radius: 10)),
                 title: Text(l['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
-                trailing: Text(money(l['price_cents'] as int), style: const TextStyle(fontWeight: FontWeight.w600)),
+                trailing: Text(money(l['price_cents'] as int), style: const TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => widget.openModule(4),
               ),
           ],

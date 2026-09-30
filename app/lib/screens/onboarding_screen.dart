@@ -213,7 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         const Text('No right answers. Never shown on your profile.'),
         for (final e in _scenarios.entries) ...[
           const SizedBox(height: 16),
-          Text(e.value.$1, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(e.value.$1, style: const TextStyle(fontWeight: FontWeight.w700)),
           Wrap(spacing: 8, children: [
             for (final o in e.value.$2)
               ChoiceChip(label: Text(o), selected: _answers[e.key] == o, onSelected: (_) => setState(() => _answers[e.key] = o)),
@@ -298,7 +298,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _rule(String title, String body) => ListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text(body),
       );
 

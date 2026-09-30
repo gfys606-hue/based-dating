@@ -83,7 +83,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           child: Text(label,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, fontWeight: on ? FontWeight.w600 : FontWeight.w500, color: on ? B.ink : B.muted)),
+              style: TextStyle(fontSize: 15, fontWeight: on ? FontWeight.w700 : FontWeight.w500, color: on ? B.ink : B.muted)),
         ),
       ),
     );
@@ -125,7 +125,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     if (!_sent) ...[
                       Row(children: [_modeTab('Sign up', false), _modeTab('Log in', true)]),
                       const SizedBox(height: 16),
-                      const Text('Email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      const Text('Email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _email,
@@ -171,7 +171,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           maxLength: 6,
                           autofocus: true,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 8),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 8),
                           decoration: const InputDecoration(hintText: '······', counterText: ''),
                           onChanged: (v) { if (v.trim().length == 6) _verifyCode(); },
                         ),

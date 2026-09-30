@@ -173,7 +173,7 @@ class _Cards extends StatelessWidget {
                       Text('$km km away', style: TextStyle(color: B.muted)),
                       if (shared.isNotEmpty) ...[
                         const SizedBox(height: 3),
-                        Text('You both follow ${shared.take(3).join(', ')}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text('You both follow ${shared.take(3).join(', ')}', style: const TextStyle(fontWeight: FontWeight.w700)),
                       ],
                     ]),
                   ),
