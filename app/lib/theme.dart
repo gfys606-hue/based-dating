@@ -18,9 +18,9 @@ class B {
   static Color get muted => _c(0xFF5A6068, 0xFF9AA1AB); // captions
 
   // Surfaces
-  static Color get bg => _c(0xFFF6F3EE, 0xFF0F1115); // page background
-  static Color get card => _c(0xFFFFFFFF, 0xFF1A1D23);
-  static Color get line => _c(0xFFE2DDD4, 0xFF2C3038);
+  static Color get bg => _c(0xFFF7F5F1, 0xFF0B0C0F); // page background
+  static Color get card => _c(0xFFFFFFFF, 0xFF15171C);
+  static Color get line => _c(0xFFE4E0D8, 0xFF272A31);
   static Color get fill => _c(0xFFEFEAE2, 0xFF23272E); // soft fills: toggles, placeholders, dividers
   static Color get avatarFill => _c(0xFFD9CDBD, 0xFF2C3038);
 
@@ -45,31 +45,30 @@ class B {
   static Color get okSoft => _c(0xFFEAF3EC, 0xFF1C2E23);
   static Color get okInk => _c(0xFF1F4D32, 0xFF9FD8B2); // text on okSoft
 
-  static const radius = 20.0;
+  static const radius = 12.0;
   static const navHeight = 70.0;
   static const navClearance = 104.0; // bottom padding so content scrolls above the floating menu
 
+  // Barely-there shadows; edges come from fine hairlines instead.
   static List<BoxShadow> get shadow => isDark
-      ? const [BoxShadow(color: Color(0x66000000), blurRadius: 18, spreadRadius: -10, offset: Offset(0, 6))]
-      : [
-          BoxShadow(color: const Color(0xFF15181D).withOpacity(.05), blurRadius: 2, offset: const Offset(0, 1)),
-          BoxShadow(color: const Color(0xFF15181D).withOpacity(.12), blurRadius: 24, spreadRadius: -12, offset: const Offset(0, 8)),
-        ];
+      ? const [BoxShadow(color: Color(0x55000000), blurRadius: 14, spreadRadius: -8, offset: Offset(0, 6))]
+      : const [BoxShadow(color: Color(0x0F15181D), blurRadius: 12, spreadRadius: -6, offset: Offset(0, 4))];
 
   static BoxDecoration cardBox({Color? border}) => BoxDecoration(
         color: card,
         borderRadius: BorderRadius.circular(radius),
         boxShadow: shadow,
-        border: border == null ? (isDark ? Border.all(color: line) : null) : Border.all(color: border, width: 2),
+        border: Border.all(color: border ?? line, width: border == null ? 0.8 : 1.5),
       );
 
+  // Type: an elegant serif for display/headings (speakeasy menu feel), a crisp sans for everything else.
   static TextStyle display(double size) =>
-      GoogleFonts.archivo(fontSize: size, fontWeight: FontWeight.w900, letterSpacing: -0.025 * size, color: ink, height: 1.05);
+      GoogleFonts.playfairDisplay(fontSize: size, fontWeight: FontWeight.w600, letterSpacing: -0.01 * size, color: ink, height: 1.1);
 
   static TextStyle heading(double size) =>
-      GoogleFonts.archivo(fontSize: size, fontWeight: FontWeight.w800, color: ink);
+      GoogleFonts.playfairDisplay(fontSize: size, fontWeight: FontWeight.w600, color: ink, height: 1.2);
 
-  static TextStyle get label => TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.7, color: muted);
+  static TextStyle get label => TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.8, color: muted);
 
   // ---------- Appearance setting: System / Light / Dark ----------
   static final mode = ValueNotifier<ThemeMode>(ThemeMode.system);
@@ -106,24 +105,24 @@ class B {
       dividerColor: line,
     );
     return base.copyWith(
-      textTheme: GoogleFonts.dmSansTextTheme(base.textTheme).apply(bodyColor: ink, displayColor: ink),
+      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(bodyColor: ink, displayColor: ink),
       iconTheme: IconThemeData(color: ink2),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: accent,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.4),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ink,
           minimumSize: const Size(0, 52),
-          side: BorderSide(color: line, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          side: BorderSide(color: line, width: 1),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.4),
         ),
       ),
       textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: accent)),
@@ -131,9 +130,9 @@ class B {
         filled: true,
         fillColor: isDark ? card : bg,
         hintStyle: TextStyle(color: muted),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: line, width: 1.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: line, width: 1.5)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: accent, width: 1.5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: line, width: 1)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: line, width: 1)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: accent, width: 1.5)),
       ),
       appBarTheme: AppBarTheme(backgroundColor: bg, foregroundColor: ink, elevation: 0, scrolledUnderElevation: 0),
       cardColor: card,
@@ -147,7 +146,7 @@ class B {
         backgroundColor: panel,
         contentTextStyle: const TextStyle(color: Colors.white),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
