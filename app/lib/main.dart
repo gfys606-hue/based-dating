@@ -7,6 +7,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/paused_screen.dart';
 import 'screens/platform_shell.dart';
 import 'services/api.dart';
+import 'services/push.dart';
 import 'theme.dart';
 
 // Run with:
@@ -24,6 +25,7 @@ Future<void> main() async {
     authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
   );
   await B.loadMode();
+  await Push.init();
   runApp(const BasedApp());
 }
 
@@ -63,6 +65,7 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
       key: ValueKey(B.isDark), // light/dark switch rebuilds every screen with the new colors
       title: 'Based',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: Push.messenger,
       theme: B.theme(),
       home: const AuthGate(),
     );
@@ -79,6 +82,7 @@ class AuthGate extends StatelessWidget {
       stream: Api.db.auth.onAuthStateChange,
       builder: (context, _) {
         if (Api.db.auth.currentSession == null) return const AuthScreen();
+        Push.register(); // once per sign-in; asks for notification permission the first time
         return const _StatusRouter();
       },
     );
