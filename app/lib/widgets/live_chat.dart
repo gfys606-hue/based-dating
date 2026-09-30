@@ -114,7 +114,7 @@ class _LiveChatState extends State<LiveChat> {
           constraints: const BoxConstraints(maxWidth: 300),
           decoration: BoxDecoration(
             color: mine ? B.panel : B.card,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: mine ? null : B.shadow,
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

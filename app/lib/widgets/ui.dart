@@ -97,7 +97,7 @@ class TimerTile extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(match['other_name'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15), overflow: TextOverflow.ellipsis),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15), overflow: TextOverflow.ellipsis),
               ),
             ]),
             const SizedBox(height: 8),
@@ -126,7 +126,7 @@ class PillChip extends StatelessWidget {
         button: true,
         child: Material(
           color: selected ? B.panel : B.card,
-          shape: StadiumBorder(side: BorderSide(color: selected ? B.panel : B.line, width: 1.5)),
+          shape: StadiumBorder(side: BorderSide(color: selected ? B.panel : B.line, width: 1)),
           child: InkWell(
             customBorder: const StadiumBorder(),
             onTap: onTap,
@@ -151,7 +151,7 @@ class Segmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(8)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           for (var i = 0; i < options.length; i++)
             GestureDetector(
@@ -161,7 +161,7 @@ class Segmented extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 alignment: Alignment.center,
                 decoration: i == index
-                    ? BoxDecoration(color: B.isDark ? B.panelRaised : B.card, borderRadius: BorderRadius.circular(9), boxShadow: B.shadow)
+                    ? BoxDecoration(color: B.isDark ? B.panelRaised : B.card, borderRadius: BorderRadius.circular(5), boxShadow: B.shadow)
                     : null,
                 child: Text(options[i],
                     style: TextStyle(
