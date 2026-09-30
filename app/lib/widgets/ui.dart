@@ -151,7 +151,7 @@ class Segmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(3)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           for (var i = 0; i < options.length; i++)
             GestureDetector(
@@ -161,7 +161,7 @@ class Segmented extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 alignment: Alignment.center,
                 decoration: i == index
-                    ? BoxDecoration(color: B.isDark ? B.panelRaised : B.card, borderRadius: BorderRadius.circular(5), boxShadow: B.shadow)
+                    ? BoxDecoration(color: B.isDark ? B.panelRaised : B.card, borderRadius: BorderRadius.circular(2), boxShadow: B.shadow)
                     : null,
                 child: Text(options[i],
                     style: TextStyle(

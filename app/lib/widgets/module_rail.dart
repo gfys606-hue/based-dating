@@ -33,7 +33,7 @@ class ModuleRail extends StatelessWidget {
         width: width,
         decoration: BoxDecoration(
           color: B.panel,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: B.isDark ? B.line : Colors.transparent, width: 0.8),
           boxShadow: B.shadow,
         ),
@@ -42,7 +42,7 @@ class ModuleRail extends StatelessWidget {
             padding: const EdgeInsets.only(top: 14, bottom: 10),
             child: Text.rich(TextSpan(children: [
               TextSpan(text: 'B', style: B.display(26).copyWith(color: Colors.white)),
-              TextSpan(text: '.', style: B.display(26).copyWith(color: B.accent)),
+              TextSpan(text: '.', style: B.display(26).copyWith(color: B.gold)),
             ])),
           ),
           Expanded(
@@ -75,30 +75,30 @@ class ModuleRail extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(4),
           onTap: () => onTap(i),
           child: Container(
             height: 58,
-            decoration: on ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(10)) : null,
+            decoration: on ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(4)) : null,
             child: Stack(alignment: Alignment.center, children: [
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Icon(on ? m.activeIcon : m.icon, size: 22, color: on ? Colors.white : B.onPanelMuted),
                 const SizedBox(height: 4),
-                Text(m.label,
+                Text(m.label.toUpperCase(),
                     style: TextStyle(
-                        fontSize: 10.5,
-                        letterSpacing: 0.2,
+                        fontSize: 9.5,
+                        letterSpacing: 1.0,
                         fontWeight: on ? FontWeight.w700 : FontWeight.w600,
                         color: on ? Colors.white : B.onPanelMuted)),
               ]),
               if (m.badge && !on)
-                Positioned(top: 9, right: 14, child: CircleAvatar(radius: 4, backgroundColor: B.accent)),
+                Positioned(top: 9, right: 14, child: CircleAvatar(radius: 4, backgroundColor: B.gold)),
               if (on)
                 Positioned(
                   left: 0,
                   top: 16,
                   bottom: 16,
-                  child: Container(width: 3, decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(2))),
+                  child: Container(width: 3, decoration: BoxDecoration(color: B.gold, borderRadius: BorderRadius.circular(2))),
                 ),
             ]),
           ),

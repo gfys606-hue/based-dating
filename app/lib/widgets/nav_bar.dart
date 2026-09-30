@@ -27,7 +27,7 @@ class BasedNavBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
           color: B.panel,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(6),
           boxShadow: [BoxShadow(color: const Color(0xFF15181D).withOpacity(.45), blurRadius: 30, spreadRadius: -10, offset: const Offset(0, 12))],
         ),
         child: Row(children: [
@@ -38,12 +38,12 @@ class BasedNavBar extends StatelessWidget {
                 button: true,
                 label: _items[i].$3,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(4),
                   onTap: () => onTap(i),
                   child: Container(
                     height: 56,
                     decoration: i == index
-                        ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(10))
+                        ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(4))
                         : null,
                     child: Stack(alignment: Alignment.center, children: [
                       Column(mainAxisAlignment: MainAxisAlignment.center, children: [
