@@ -154,7 +154,7 @@ class _MarketScreenState extends State<MarketScreen> {
   Widget _tile(Map<String, dynamic> l) {
     final status = l['status'] as String;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       onTap: () async {
         await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ListingScreen(listing: l)));
         _load();
@@ -165,7 +165,7 @@ class _MarketScreenState extends State<MarketScreen> {
             Positioned.fill(
               child: l['photo_path'] == null
                   ? Container(
-                      decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(10)),
                       child: Icon(Icons.image_outlined, color: B.muted),
                     )
                   : SignedPhoto(l['photo_path'] as String, radius: 16),
@@ -175,9 +175,9 @@ class _MarketScreenState extends State<MarketScreen> {
               bottom: 8,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(6)),
                 child: Text(money(l['price_cents'] as int),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
               ),
             ),
             if (status != 'active')
@@ -186,8 +186,8 @@ class _MarketScreenState extends State<MarketScreen> {
                 top: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(10)),
-                  child: Text(status.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                  decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(6)),
+                  child: Text(status.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                 ),
               ),
           ]),
@@ -390,7 +390,7 @@ class _NewListingSheetState extends State<_NewListingSheet> {
               height: 140,
               child: _photo == null
                   ? Container(
-                      decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(10)),
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                         Icon(Icons.add_a_photo_outlined, color: B.muted),
                         SizedBox(height: 6),

@@ -121,7 +121,7 @@ class _Row extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(match['other_name'] as String,
-                  style: TextStyle(fontSize: 16, fontWeight: theirTurn ? FontWeight.w800 : FontWeight.w700)),
+                  style: TextStyle(fontSize: 16, fontWeight: theirTurn ? FontWeight.w600 : FontWeight.w700)),
               Text(preview,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

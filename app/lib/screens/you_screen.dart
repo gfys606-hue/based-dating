@@ -25,7 +25,7 @@ class YouScreen extends StatelessWidget {
         Text('You', style: B.display(32)),
         const SizedBox(height: 16),
         InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(12),
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: Api.me))),
           child: Ink(
             padding: const EdgeInsets.all(14),
@@ -35,7 +35,7 @@ class YouScreen extends StatelessWidget {
               SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Your profile', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+                  Text('Your profile', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
                   Text('See it the way others do', style: TextStyle(color: B.muted, fontSize: 13)),
                 ]),
               ),

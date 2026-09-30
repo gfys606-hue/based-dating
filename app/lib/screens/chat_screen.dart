@@ -161,7 +161,7 @@ class _ChatScreenState extends State<ChatScreen> {
         width: double.infinity,
         margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: B.okSoft, borderRadius: BorderRadius.circular(18)),
+        decoration: BoxDecoration(color: B.okSoft, borderRadius: BorderRadius.circular(10)),
         child: Row(children: [
           Expanded(
             child: Text(
@@ -187,7 +187,7 @@ class _ChatScreenState extends State<ChatScreen> {
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (open == null)
           Text('${timeLeftLabel(h)} to get a call in · $left reschedule${left == 1 ? '' : 's'} left', style: onDark)
@@ -352,8 +352,8 @@ class _ChatScreenState extends State<ChatScreen> {
         decoration: BoxDecoration(
           color: blocked ? B.urgentSoft : (mine ? B.panel : B.card),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
+            topLeft: const Radius.circular(10),
+            topRight: const Radius.circular(10),
             bottomLeft: Radius.circular(mine ? 18 : 6),
             bottomRight: Radius.circular(mine ? 6 : 18),
           ),

@@ -177,7 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             : res['status'] == 'pending_review' ? 'pending' : (res['reason'] as String? ?? 'Rejected'));
       }),
       child: Container(
-        decoration: BoxDecoration(border: Border.all(color: color, width: 2), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(border: Border.all(color: color, width: 2), borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.all(6),
         child: Center(
           child: Text(

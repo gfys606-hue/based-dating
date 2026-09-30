@@ -127,13 +127,13 @@ class _CirclesScreenState extends State<CirclesScreen> {
               width: 48,
               height: 48,
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: B.accentSoft, borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: B.accentSoft, borderRadius: BorderRadius.circular(8)),
               child: Text('${c['member_count'] ?? ''}', style: B.heading(18).copyWith(color: B.accent)),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                 const SizedBox(height: 2),
                 Text(last ?? '${c['member_count']} members · say hi',
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.muted, fontSize: 13)),

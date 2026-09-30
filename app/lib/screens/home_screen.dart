@@ -250,9 +250,9 @@ class _HeroCard extends StatelessWidget {
 
     return Material(
       color: B.panel,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -271,7 +271,7 @@ class _HeroCard extends StatelessWidget {
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(8)),
               child: Text(booked ? 'Open' : 'Book', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
             ),
           ]),
@@ -300,7 +300,7 @@ class _PersonTile extends StatelessWidget {
             right: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(6)),
               child: Text('${person['display_name']} · ${person['distance_km']} km',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),

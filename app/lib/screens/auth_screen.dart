@@ -83,7 +83,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           child: Text(label,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, fontWeight: on ? FontWeight.w800 : FontWeight.w500, color: on ? B.ink : B.muted)),
+              style: TextStyle(fontSize: 15, fontWeight: on ? FontWeight.w600 : FontWeight.w500, color: on ? B.ink : B.muted)),
         ),
       ),
     );
@@ -171,7 +171,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           maxLength: 6,
                           autofocus: true,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 8),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 8),
                           decoration: const InputDecoration(hintText: '······', counterText: ''),
                           onChanged: (v) { if (v.trim().length == 6) _verifyCode(); },
                         ),

@@ -148,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: SizedBox(width: 44, height: 44, child: SignedPhoto(l['photo_path'] as String?, radius: 10)),
                 title: Text(l['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
-                trailing: Text(money(l['price_cents'] as int), style: const TextStyle(fontWeight: FontWeight.w800)),
+                trailing: Text(money(l['price_cents'] as int), style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () => widget.openModule(4),
               ),
           ],
@@ -175,7 +175,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _privacyToggle() => Container(
         padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
-        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(8)),
         child: Row(children: [
           Expanded(
             child: Text('Use my searches to improve my matches and circles',
