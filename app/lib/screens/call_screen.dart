@@ -221,7 +221,7 @@ class _CallScreenState extends State<CallScreen> {
             width: 110,
             height: 160,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(3),
               child: VideoTrackRenderer(local, fit: VideoViewFit.cover),
             ),
           ),

@@ -139,7 +139,7 @@ class _AvailabilityCardState extends State<AvailabilityCard> {
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
                         color: _free[d]!.contains(s) ? B.accent : B.fill,
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),

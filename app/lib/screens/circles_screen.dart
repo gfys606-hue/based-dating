@@ -127,7 +127,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
               width: 48,
               height: 48,
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: B.accentSoft, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: B.accentSoft, borderRadius: BorderRadius.circular(3)),
               child: Text('${c['member_count'] ?? ''}', style: B.heading(18).copyWith(color: B.accent)),
             ),
             const SizedBox(width: 12),

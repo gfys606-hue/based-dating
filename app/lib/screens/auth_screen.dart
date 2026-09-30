@@ -113,10 +113,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 const Spacer(),
                 Text.rich(TextSpan(children: [
                   TextSpan(text: 'Based', style: B.display(60)),
-                  TextSpan(text: '.', style: B.display(60).copyWith(color: B.accent)),
+                  TextSpan(text: '.', style: B.display(60).copyWith(color: B.gold)),
                 ])),
                 const SizedBox(height: 10),
-                Text('Dating for people who actually show up.', style: TextStyle(fontSize: 20, color: B.ink2, height: 1.35)),
+                Text('The door is not for everyone.', style: B.sloganStyle.copyWith(fontSize: 26, height: 1.15)),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.all(18),

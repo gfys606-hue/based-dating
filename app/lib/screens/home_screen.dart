@@ -101,8 +101,11 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(children: [
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${DateFormat('EEEE').format(now)} $partOfDay', style: TextStyle(color: B.muted, fontSize: 14)),
-                Text('Your day', style: B.display(32)),
+                Text('The door is not for everyone.', style: B.sloganStyle),
+                const SizedBox(height: 8),
+                Text('${DateFormat('EEEE').format(now)} $partOfDay'.toUpperCase(), style: B.label),
+                const SizedBox(height: 4),
+                Text(now.hour >= 17 ? 'Your evening' : 'Your day', style: B.display(34)),
               ]),
             ),
             IconButton(
@@ -249,10 +252,10 @@ class _HeroCard extends StatelessWidget {
     final sub = booked ? 'Be there. No-shows count against you.' : '5 minutes is enough to know.';
 
     return Material(
-      color: B.panel,
-      borderRadius: BorderRadius.circular(14),
+      color: B.hero,
+      borderRadius: BorderRadius.circular(6),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(6),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -265,14 +268,14 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(title, style: B.heading(19).copyWith(color: Colors.white)),
                 const SizedBox(height: 2),
-                Text(sub, style: const TextStyle(color: Color(0xFFBDB8B0), fontSize: 13)),
+                Text(sub, style: const TextStyle(color: Color(0xFFE3E9FB), fontSize: 13)),
               ]),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(color: B.accent, borderRadius: BorderRadius.circular(8)),
-              child: Text(booked ? 'Open' : 'Book', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              decoration: BoxDecoration(color: B.gold, borderRadius: BorderRadius.circular(2)),
+              child: Text(booked ? 'OPEN' : 'BOOK', style: const TextStyle(color: B.onGold, fontWeight: FontWeight.w700, letterSpacing: 1.4, fontSize: 12.5)),
             ),
           ]),
         ),
@@ -300,7 +303,7 @@ class _PersonTile extends StatelessWidget {
             right: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(2)),
               child: Text('${person['display_name']} · ${person['distance_km']} km',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),

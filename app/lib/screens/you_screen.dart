@@ -25,7 +25,7 @@ class YouScreen extends StatelessWidget {
         Text('You', style: B.display(32)),
         const SizedBox(height: 16),
         InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: Api.me))),
           child: Ink(
             padding: const EdgeInsets.all(14),

@@ -52,7 +52,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
               title: Text("It's a match.", style: B.display(28), textAlign: TextAlign.center),
               content: Text('You and ${p['display_name']} have 3 days to get a 5-minute call in. Say hi in Talk.',
                   textAlign: TextAlign.center),
@@ -137,7 +137,7 @@ class _Cards extends StatelessWidget {
             onTap: () => onOpen(person['user_id'] as String),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(6),
                 boxShadow: [BoxShadow(color: const Color(0xFF000000).withOpacity(.35), blurRadius: 36, spreadRadius: -18, offset: const Offset(0, 16))],
               ),
               child: Stack(fit: StackFit.expand, children: [
@@ -166,7 +166,7 @@ class _Cards extends StatelessWidget {
                   bottom: 10,
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: B.card, borderRadius: BorderRadius.circular(4)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                       Text('${person['display_name']}, ${person['age']}', style: B.display(24)),
                       const SizedBox(height: 3),

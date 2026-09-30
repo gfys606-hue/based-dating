@@ -175,7 +175,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _privacyToggle() => Container(
         padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
-        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(3)),
         child: Row(children: [
           Expanded(
             child: Text('Use my searches to improve my matches and circles',
