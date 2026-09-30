@@ -16,6 +16,8 @@ dependencies:
   google_fonts: ^6.2.1
   livekit_client: ^2.4.0
   shared_preferences: ^2.3.2
+  firebase_core: ^4.1.1
+  firebase_messaging: ^16.0.2
 
 dev_dependencies:
   flutter_test:
