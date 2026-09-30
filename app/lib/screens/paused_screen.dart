@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/push.dart';
 import 'onboarding_screen.dart';
 
 /// Shown when the account is paused (usually photos), suspended (under review), or banned.
@@ -42,7 +43,7 @@ class PausedScreen extends StatelessWidget {
                   child: const Text('Fix my photos'),
                 ),
               TextButton(onPressed: onFixed, child: const Text('Check again')),
-              TextButton(onPressed: () => Api.db.auth.signOut(), child: const Text('Sign out')),
+              TextButton(onPressed: Push.signOut, child: const Text('Sign out')),
             ],
           ),
         ),

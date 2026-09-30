@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
@@ -64,7 +65,7 @@ class YouScreen extends StatelessWidget {
             child: Column(children: [
               row(Icons.refresh, 'Refresh account status', onStatusChanged),
               Divider(height: 1, color: B.fill),
-              row(Icons.logout, 'Sign out', () => Api.db.auth.signOut(), color: B.urgent),
+              row(Icons.logout, 'Sign out', Push.signOut, color: B.urgent),
               Divider(height: 1, color: B.fill),
               row(Icons.delete_forever_outlined, 'Delete account', () => _confirmDelete(context), color: B.urgent),
             ]),
