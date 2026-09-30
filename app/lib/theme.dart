@@ -13,41 +13,41 @@ class B {
   static Color _c(int light, int dark) => Color(isDark ? dark : light);
 
   // Text
-  static Color get ink => _c(0xFF15181D, 0xFFECEEF2); // main text
-  static Color get ink2 => _c(0xFF3B4048, 0xFFC3C8D0); // secondary text
-  static Color get muted => _c(0xFF5A6068, 0xFF9AA1AB); // captions
+  static Color get ink => _c(0xFF15181D, 0xFFF5F6F8); // main text
+  static Color get ink2 => _c(0xFF3B4048, 0xFFD3D7DE); // secondary text
+  static Color get muted => _c(0xFF5A6068, 0xFFA9B0BA); // captions
 
   // Surfaces
-  static Color get bg => _c(0xFFF7F5F1, 0xFF0B0C0F); // page background
-  static Color get card => _c(0xFFFFFFFF, 0xFF15171C);
-  static Color get line => _c(0xFFE4E0D8, 0xFF272A31);
-  static Color get fill => _c(0xFFEFEAE2, 0xFF23272E); // soft fills: toggles, placeholders, dividers
-  static Color get avatarFill => _c(0xFFD9CDBD, 0xFF2C3038);
+  static Color get bg => _c(0xFFF7F5F1, 0xFF171A21); // page background (dark: deep slate, not black)
+  static Color get card => _c(0xFFFFFFFF, 0xFF212530);
+  static Color get line => _c(0xFFE4E0D8, 0xFF363B48);
+  static Color get fill => _c(0xFFEFEAE2, 0xFF2B303C); // soft fills: toggles, placeholders, dividers
+  static Color get avatarFill => _c(0xFFD9CDBD, 0xFF3A4050);
 
   // Dark panels (floating menu, call panel, your chat bubbles). Dark in both modes; text on them is white.
-  static Color get panel => _c(0xFF15181D, 0xFF232833);
-  static Color get panelRaised => _c(0xFF2A2F36, 0xFF323846);
+  static Color get panel => _c(0xFF15181D, 0xFF1D212A);
+  static Color get panelRaised => _c(0xFF2A2F36, 0xFF303647);
   static const onPanelMuted = Color(0xFF9BA0A7);
   static const panelAccent = Color(0xFFA9BDF5); // light royal blue for small text on panels
 
   // Royal blue: the ONE action color
-  static Color get accent => _c(0xFF4169E1, 0xFF5B7FEA);
-  static Color get accentSoft => _c(0xFFE3E9FB, 0xFF1C2540);
-  static Color get accentMid => _c(0xFFAFC0F2, 0xFF33457A); // radar rings
+  static Color get accent => _c(0xFF4169E1, 0xFF6A8DF2);
+  static Color get accentSoft => _c(0xFFE3E9FB, 0xFF26325A);
+  static Color get accentMid => _c(0xFFAFC0F2, 0xFF3F538F); // radar rings
   static Color get accentStrong => _c(0xFF2A4BB8, 0xFF9DB2F2); // accent-colored text on soft fills
 
   // Status
   static Color get urgent => _c(0xFF1E3FAE, 0xFF8FA8F3); // under 24h (deep royal blue)
-  static Color get urgentSoft => _c(0xFFDCE4FA, 0xFF1A2444);
-  static Color get soon => _c(0xFF4169E1, 0xFF5B7FEA); // under 2 days (royal blue)
-  static Color get soonSoft => _c(0xFFE8EDFC, 0xFF1C2540);
+  static Color get urgentSoft => _c(0xFFDCE4FA, 0xFF24305A);
+  static Color get soon => _c(0xFF4169E1, 0xFF6A8DF2); // under 2 days (royal blue)
+  static Color get soonSoft => _c(0xFFE8EDFC, 0xFF26325A);
   static Color get ok => _c(0xFF2F6B47, 0xFF6FC08E);
-  static Color get okSoft => _c(0xFFEAF3EC, 0xFF1C2E23);
+  static Color get okSoft => _c(0xFFEAF3EC, 0xFF223A2C);
   static Color get okInk => _c(0xFF1F4D32, 0xFF9FD8B2); // text on okSoft
 
   static const radius = 12.0;
   static const navHeight = 70.0;
-  static const navClearance = 104.0; // bottom padding so content scrolls above the floating menu
+  static const navClearance = 28.0; // bottom padding at the end of scrolling pages
 
   // Barely-there shadows; edges come from fine hairlines instead.
   static List<BoxShadow> get shadow => isDark
@@ -63,12 +63,12 @@ class B {
 
   // Type: an elegant serif for display/headings (speakeasy menu feel), a crisp sans for everything else.
   static TextStyle display(double size) =>
-      GoogleFonts.playfairDisplay(fontSize: size, fontWeight: FontWeight.w600, letterSpacing: -0.01 * size, color: ink, height: 1.1);
+      GoogleFonts.playfairDisplay(fontSize: size, fontWeight: FontWeight.w700, letterSpacing: -0.005 * size, color: ink, height: 1.1);
 
   static TextStyle heading(double size) =>
-      GoogleFonts.playfairDisplay(fontSize: size, fontWeight: FontWeight.w600, color: ink, height: 1.2);
+      GoogleFonts.playfairDisplay(fontSize: size, fontWeight: FontWeight.w700, color: ink, height: 1.2);
 
-  static TextStyle get label => TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.8, color: muted);
+  static TextStyle get label => TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.6, color: muted);
 
   // ---------- Appearance setting: System / Light / Dark ----------
   static final mode = ValueNotifier<ThemeMode>(ThemeMode.system);
@@ -88,6 +88,16 @@ class B {
     } catch (_) {}
   }
 
+  /// Body text a touch heavier than default so it reads crisp on dark backgrounds.
+  static TextTheme _bolder(TextTheme t) => t.copyWith(
+        bodyLarge: t.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+        bodyMedium: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+        bodySmall: t.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+        titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        titleSmall: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        labelLarge: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      );
+
   static ThemeData theme() {
     final scheme = ColorScheme.fromSeed(
       seedColor: accent,
@@ -105,7 +115,7 @@ class B {
       dividerColor: line,
     );
     return base.copyWith(
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(bodyColor: ink, displayColor: ink),
+      textTheme: _bolder(GoogleFonts.interTextTheme(base.textTheme)).apply(bodyColor: ink, displayColor: ink),
       iconTheme: IconThemeData(color: ink2),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -113,7 +123,7 @@ class B {
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.4),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.4),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -122,7 +132,7 @@ class B {
           minimumSize: const Size(0, 52),
           side: BorderSide(color: line, width: 1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.4),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.4),
         ),
       ),
       textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: accent)),
