@@ -24,6 +24,12 @@ env:
   # Public, browser-safe values (protected by row-level security in the database)
   SUPABASE_URL: https://dzfnetcoyxjyjtmorfgk.supabase.co
   SUPABASE_ANON_KEY: sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ
+  # Push notifications (Firebase). Public app config, not secrets: GitHub → Settings → Secrets and variables → Actions → Variables.
+  # Leave unset and the app simply builds without push.
+  FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+  FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
+  FIREBASE_SENDER_ID: ${{ vars.FIREBASE_SENDER_ID }}
+  FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
 
 jobs:
   build:
@@ -51,7 +57,7 @@ jobs:
 
       - name: Android permissions (camera, microphone, location, internet)
         run: |
-          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <application#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <application#' android/app/src/main/AndroidManifest.xml
           sed -i 's#android:label="based_dating"#android:label="Based"#' android/app/src/main/AndroidManifest.xml
 
       - name: Google Play setup (app ID + release signing)
@@ -87,7 +93,11 @@ jobs:
           flutter build apk --release --split-per-abi \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
-            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=FIREBASE_API_KEY=$FIREBASE_API_KEY \
+            --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
+            --dart-define=FIREBASE_SENDER_ID=$FIREBASE_SENDER_ID \
+            --dart-define=FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID
           mkdir -p build/web/test
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/web/test/based-test.apk
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/web/test/based-test-older-phones.apk
@@ -115,7 +125,11 @@ jobs:
           flutter build appbundle --release \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
-            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=FIREBASE_API_KEY=$FIREBASE_API_KEY \
+            --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
+            --dart-define=FIREBASE_SENDER_ID=$FIREBASE_SENDER_ID \
+            --dart-define=FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID
 
       - uses: actions/upload-artifact@v4
         with:

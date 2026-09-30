@@ -1,0 +1,42 @@
+# Deploys the Supabase server functions whenever they change on main.
+# One-time setup: create a personal access token at supabase.com/dashboard/account/tokens
+# and add it here as the repository secret SUPABASE_ACCESS_TOKEN.
+# (Function secrets such as FIREBASE_SERVICE_ACCOUNT or LIVEKIT_* are still set in the Supabase dashboard.)
+name: Deploy Supabase functions
+
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/functions/**', '.github/workflows/deploy-functions.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-functions
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: dzfnetcoyxjyjtmorfgk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for access token
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "::notice::Add the SUPABASE_ACCESS_TOKEN repository secret to deploy functions automatically."
+
+      - uses: supabase/setup-cli@v1
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        with:
+          version: latest
+
+      - name: Deploy
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        working-directory: .
+        run: |
+          supabase functions deploy photo-check     --project-ref "$PROJECT_REF" --use-api
+          supabase functions deploy call-token      --project-ref "$PROJECT_REF" --use-api
+          supabase functions deploy livekit-webhook --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
+          supabase functions deploy push            --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
