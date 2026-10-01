@@ -3,8 +3,10 @@ import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
 import '../theme.dart';
+import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
 import '../widgets/ui.dart';
+import 'unedited_screen.dart';
 
 /// Edit profile: photos (replace, delete 4–6, reorder), name, interests, feed distance.
 class EditProfileScreen extends StatefulWidget {
@@ -21,6 +23,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   List<Map<String, dynamic>> _topics = [];
   Set<int> _picked = {};
   final _name = TextEditingController();
+  final _stance = TextEditingController();
+  Map<String, dynamic>? _me; // my profile as others see it: voice, stance, lately
   String _range = 'global';
   bool _loading = true;
   bool _busy = false;
@@ -35,12 +39,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _name.dispose();
+    _stance.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
     try {
-      final r = await Future.wait([Api.myProfile(), Api.myPhotos(), Api.topics(), Api.myTopicIds()]);
+      final r = await Future.wait([Api.myProfile(), Api.myPhotos(), Api.topics(), Api.myTopicIds(), Api.profile(Api.me)]);
       if (!mounted) return;
       final p = r[0] as Map<String, dynamic>?;
       setState(() {
@@ -49,11 +54,107 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _photos = List<Map<String, dynamic>>.from(r[1] as List);
         _topics = List<Map<String, dynamic>>.from(r[2] as List);
         _picked = r[3] as Set<int>;
+        _me = r[4] as Map<String, dynamic>?;
+        _stance.text = (_me?['stance'] as Map?)?['statement'] as String? ?? '';
         _loading = false;
       });
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _reloadMe() async {
+    final me = await Api.profile(Api.me);
+    if (mounted) setState(() => _me = me);
+  }
+
+  Future<void> _recordVoice() async {
+    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const UneditedScreen()));
+    if (saved == true) await _reloadMe();
+  }
+
+  Future<void> _saveStance() async {
+    await _run(() async {
+      await Api.setStance(_stance.text);
+      await _reloadMe();
+    }, done: _stance.text.trim().isEmpty ? 'Statement removed.' : 'Statement saved.');
+  }
+
+  Widget _selfExpression() {
+    final voice = _me?['voice'] == null ? null : Map<String, dynamic>.from(_me!['voice'] as Map);
+    final stance = _me?['stance'] == null ? null : Map<String, dynamic>.from(_me!['stance'] as Map);
+    final lately = List<Map<String, dynamic>>.from(_me?['lately'] ?? const []);
+    final nextAt = voice?['next_at'] == null ? null : DateTime.tryParse(voice!['next_at'] as String);
+    final hoursLeft = nextAt == null ? 0 : nextAt.difference(DateTime.now()).inMinutes / 60;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      // Unedited
+      if (voice != null)
+        VoiceNoteCard(
+          voice: voice,
+          trailing: hoursLeft > 0
+              ? Text('New question in ${hoursLeft.ceil()}h', style: TextStyle(color: B.muted, fontSize: 11.5))
+              : TextButton(onPressed: _busy ? null : _recordVoice, child: const Text('New question')),
+        )
+      else
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: B.cardBox(),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            SectionLabel('Unedited', color: B.accentStrong),
+            const SizedBox(height: 8),
+            Text('Answer a question we pick, out loud.', style: B.heading(19)),
+            const SizedBox(height: 6),
+            Text('One take, up to 15 seconds, no re-recording. People hear how you actually talk.',
+                style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
+            const SizedBox(height: 12),
+            FilledButton.icon(onPressed: _busy ? null : _recordVoice, icon: const Icon(Icons.mic), label: const Text('GET MY QUESTION')),
+          ]),
+        ),
+      const SizedBox(height: 12),
+      // Respectfully agree or disagree
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: B.cardBox(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          SectionLabel('Respectfully agree or disagree', color: B.accentStrong),
+          const SizedBox(height: 6),
+          Text('One thing you believe that people can disagree with, and you\'re fine with that.',
+              style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _stance,
+            maxLength: 140,
+            minLines: 2,
+            maxLines: 3,
+            decoration: const InputDecoration(hintText: 'e.g. A great breakfast beats a great dinner.'),
+          ),
+          if (stance != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('${stance['agree'] ?? 0} agree · ${stance['disagree'] ?? 0} respectfully disagree · only you see this',
+                  style: TextStyle(color: B.muted, fontSize: 12)),
+            ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton(
+              onPressed: _busy ? null : _saveStance,
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 42)),
+              child: const Text('SAVE STATEMENT'),
+            ),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 16),
+      // Lately (automatic)
+      LatelyStrip(
+        items: lately,
+        emptyText: 'Fills in by itself from what you post, comment on and react to, and the events you go to. Nobody writes it, including you.',
+      ),
+      if (lately.isNotEmpty) ...[
+        const SizedBox(height: 6),
+        Text('Filled in automatically from what you do on Based.', style: TextStyle(color: B.muted, fontSize: 12)),
+      ],
+    ]);
   }
 
   Future<void> _reloadPhotos() async {
@@ -186,6 +287,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     childAspectRatio: 0.78,
                     children: [for (var slot = 1; slot <= 6; slot++) _slot(slot)],
                   ),
+                  const SizedBox(height: 26),
+                  SectionLabel('Show who you are'),
+                  const SizedBox(height: 10),
+                  _selfExpression(),
                   const SizedBox(height: 26),
                   SectionLabel('Name'),
                   const SizedBox(height: 8),
