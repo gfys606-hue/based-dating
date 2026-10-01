@@ -52,6 +52,48 @@ class Api {
     return Map<String, dynamic>.from(res.data as Map);
   }
 
+  /// Put a new picture into an existing slot (keeps the slot filled the whole time,
+  /// so the account never blips to "paused"), or into an empty slot.
+  static Future<Map<String, dynamic>> replacePhoto(int position, Uint8List bytes) async {
+    final path = '$me/p${position}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await db.storage.from('photos').uploadBinary(path, bytes);
+    final existing = await db.from('photos').select().eq('user_id', me).eq('position', position).maybeSingle();
+    Map<String, dynamic> row;
+    if (existing == null) {
+      row = await db.from('photos').insert({'user_id': me, 'storage_path': path, 'position': position}).select().single();
+    } else {
+      row = await db.from('photos').update({'storage_path': path}).eq('id', existing['id']).select().single();
+      try {
+        await db.storage.from('photos').remove([existing['storage_path'] as String]);
+      } catch (_) {}
+    }
+    final res = await db.functions.invoke('photo-check', body: {'type': 'photo', 'photo_id': row['id']});
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  /// Delete one of photos 4–6 (1–3 can only be replaced).
+  static Future<void> deletePhoto(String photoId) async {
+    final path = await db.rpc('delete_photo', params: {'p_photo': photoId}) as String?;
+    if (path != null) {
+      try {
+        await db.storage.from('photos').remove([path]);
+      } catch (_) {}
+    }
+  }
+
+  /// New order for all photos (first = slot 1). Re-checks any photo that moved into slots 1–3.
+  static Future<void> reorderPhotos(List<String> ids) async {
+    final recheck = await db.rpc('reorder_photos', params: {'p_ids': ids}) as List?;
+    for (final id in recheck ?? const []) {
+      await db.functions.invoke('photo-check', body: {'type': 'photo', 'photo_id': id});
+    }
+  }
+
+  static Future<Set<int>> myTopicIds() async {
+    final rows = await db.from('user_topics').select('topic_id').eq('user_id', me);
+    return {for (final r in rows) r['topic_id'] as int};
+  }
+
   static Future<List<Map<String, dynamic>>> myPhotos() =>
       db.from('photos').select().eq('user_id', me).order('position');
 
