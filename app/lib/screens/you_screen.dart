@@ -4,6 +4,7 @@ import '../services/api.dart';
 import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'edit_profile_screen.dart';
 import 'profile_view_screen.dart';
 
 /// You: your profile and account.
@@ -41,6 +42,15 @@ class YouScreen extends StatelessWidget {
               ),
               Icon(Icons.chevron_right, color: B.muted),
             ]),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: B.cardBox(),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            color: B.card,
+            child: row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
           ),
         ),
         const SizedBox(height: 20),
