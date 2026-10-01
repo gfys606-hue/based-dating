@@ -176,6 +176,31 @@ class Api {
   static Future<void> markNoticesRead(List<int> ids) =>
       db.from('notifications').update({'read': true}).inFilter('id', ids);
 
+  // ---------- self-expression: Unedited voice, stance, (Lately comes with the profile) ----------
+  static Future<Map<String, dynamic>> drawVoiceQuestion() async =>
+      Map<String, dynamic>.from(await db.rpc('draw_voice_question') as Map);
+
+  /// Upload the one take and attach it to the question you were given.
+  static Future<void> saveVoiceAnswer(Uint8List bytes, int durationMs, {required bool webm}) async {
+    final path = '$me/v_${DateTime.now().millisecondsSinceEpoch}.${webm ? 'webm' : 'm4a'}';
+    await db.storage.from('voice').uploadBinary(path, bytes,
+        fileOptions: FileOptions(contentType: webm ? 'audio/webm' : 'audio/mp4'));
+    final old = await db.rpc('save_voice_answer', params: {'p_path': path, 'p_duration_ms': durationMs}) as String?;
+    if (old != null) {
+      try {
+        await db.storage.from('voice').remove([old]);
+      } catch (_) {}
+    }
+  }
+
+  static Future<String> voiceUrl(String path) => db.storage.from('voice').createSignedUrl(path, 3600);
+
+  static Future<void> setStance(String statement) => db.rpc('set_stance', params: {'p_statement': statement});
+
+  /// verdict: 'agree', 'disagree', or '' to clear.
+  static Future<void> reactStance(String userId, String verdict) =>
+      db.rpc('react_stance', params: {'p_user': userId, 'p_verdict': verdict});
+
   // ---------- feed ----------
   static Future<List<Map<String, dynamic>>> feed({String? range, int? topic, DateTime? before}) async =>
       List<Map<String, dynamic>>.from(await db.rpc('get_feed', params: {
