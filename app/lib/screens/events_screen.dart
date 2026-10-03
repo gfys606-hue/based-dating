@@ -3,8 +3,10 @@ import 'package:intl/intl.dart';
 
 import '../services/api.dart';
 import '../services/friends_api.dart';
+import '../services/places_api.dart';
 import '../services/social_api.dart';
 import '../theme.dart';
+import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
 
@@ -258,6 +260,22 @@ class EventsListState extends State<EventsList> {
                   Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 2),
                   Text(meta, style: TextStyle(color: B.muted, fontSize: 13)),
+                  if (e['place_lat'] != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                        if (e['place_address'] != null)
+                          Text(e['place_address'] as String, style: TextStyle(color: B.muted, fontSize: 12)),
+                        InkWell(
+                          onTap: () => _showMap(e),
+                          child: Text('MAP', style: B.label.copyWith(color: B.accentStrong)),
+                        ),
+                        InkWell(
+                          onTap: () => PlacesApi.directions((e['place_lat'] as num).toDouble(), (e['place_lng'] as num).toDouble()),
+                          child: Text('DIRECTIONS', style: B.label.copyWith(color: B.accentStrong)),
+                        ),
+                      ]),
+                    ),
                   if (e['details'] != null) ...[
                     const SizedBox(height: 6),
                     Text(e['details'] as String, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.ink2)),
@@ -296,6 +314,25 @@ class EventsListState extends State<EventsList> {
       ),
     );
   }
+
+  Future<void> _showMap(Map<String, dynamic> e) => showModalBottomSheet(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(e['place_name'] as String? ?? '', style: B.heading(22)),
+              if (e['place_address'] != null) Text(e['place_address'] as String, style: TextStyle(color: B.muted)),
+              const SizedBox(height: 12),
+              PlaceMap(height: 260, pins: [
+                {'lat': e['place_lat'], 'lng': e['place_lng'], 'label': e['place_name']}
+              ]),
+              const SizedBox(height: 12),
+              DirectionsButton(lat: (e['place_lat'] as num).toDouble(), lng: (e['place_lng'] as num).toDouble()),
+            ]),
+          ),
+        ),
+      );
 
   /// Small label on the card: who the plan is for (or its circle / topic for open plans).
   String? _audienceLabel(Map<String, dynamic> e) {
@@ -390,6 +427,7 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
   int? _capacity;
   bool _busy = false;
   String? _error;
+  Map<String, dynamic>? _venue; // picked from OpenStreetMap / saved spots
   String _audience = 'public'; // public | friends | inner | custom (circle plans always go to the circle)
   final Set<String> _picked = {};
   List<Map<String, dynamic>>? _friends;
@@ -454,7 +492,8 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
       await SocialApi.createEvent(
         title: _title.text.trim(),
         startsAt: _when,
-        place: _place.text.trim().isEmpty ? null : _place.text.trim(),
+        place: _venue != null ? null : (_place.text.trim().isEmpty ? null : _place.text.trim()),
+        placeId: _venue?['place_id'] as String?,
         details: _details.text.trim().isEmpty ? null : _details.text.trim(),
         circleId: widget.circleId,
         capacity: _capacity,
@@ -490,7 +529,18 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
           label: Text(DateFormat('EEE, MMM d · h:mm a').format(_when)),
         ),
         const SizedBox(height: 10),
-        TextField(controller: _place, decoration: const InputDecoration(hintText: 'Where? (optional)')),
+        OutlinedButton.icon(
+          onPressed: () async {
+            final p = await pickPlace(context);
+            if (p != null) setState(() => _venue = p);
+          },
+          icon: Icon(_venue == null ? Icons.place_outlined : Icons.location_on, color: _venue == null ? null : B.gold),
+          label: Text(_venue == null ? 'Pick the place (exact pin)' : '${_venue!['name']}'),
+        ),
+        if (_venue == null) ...[
+          const SizedBox(height: 6),
+          TextField(controller: _place, decoration: const InputDecoration(hintText: 'Or just type where (optional)')),
+        ],
         const SizedBox(height: 10),
         TextField(controller: _details, maxLines: 3, decoration: const InputDecoration(hintText: 'Details (optional)')),
         const SizedBox(height: 10),

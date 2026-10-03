@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../services/api.dart';
 import '../services/friends_api.dart';
+import '../services/places_api.dart';
 import '../widgets/module_rail.dart';
 import 'discover_screen.dart';
 import 'friends_screen.dart';
 import 'home_screen.dart';
+import 'spots_screen.dart';
 import 'talk_screen.dart';
 import 'you_screen.dart';
 
@@ -18,7 +20,7 @@ class ShellPage {
 }
 
 /// The app shell: every destination lives on the left rail (no bottom bar).
-/// Home (Your day) · Discover · Talk · You · Friends, then any extra modules.
+/// Home (Your day) · Discover · Talk · You · Friends · Spots, then any extra modules.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.onStatusChanged, this.extras = const []});
   final VoidCallback onStatusChanged;
@@ -31,18 +33,19 @@ class _HomeShellState extends State<HomeShell> {
   int _tab = 0;
   bool _talkBadge = false;
   bool _friendsBadge = false;
-  final _opened = <int>{0, 1, 2, 3, 4}; // extra modules are built the first time they're opened
+  final _opened = <int>{0, 1, 2, 3, 4, 5}; // extra modules are built the first time they're opened
 
   /// Which view Discover shows: 0 = people, 1 = posts. Home can switch it.
   final discoverMode = ValueNotifier<int>(0);
 
   // Bumped to make a tab reload its data when you switch to it.
-  final _refresh = [ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0)];
+  final _refresh = [ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0)];
 
   @override
   void initState() {
     super.initState();
     _checkBadge();
+    PlacesApi.refreshMyLocation(); // distances use where you are now, not where you signed up
   }
 
   Future<void> _checkBadge() async {
@@ -69,8 +72,8 @@ class _HomeShellState extends State<HomeShell> {
     _checkBadge();
   }
 
-  /// Extra module 1..n → rail index 5..
-  void _openModule(int module) => goTab(4 + module);
+  /// Extra module 1..n → rail index 6..
+  void _openModule(int module) => goTab(5 + module);
 
   @override
   Widget build(BuildContext context) {
@@ -80,11 +83,12 @@ class _HomeShellState extends State<HomeShell> {
       RailItem('Talk', Icons.chat_bubble_outline, Icons.chat_bubble, badge: _talkBadge),
       const RailItem('You', Icons.person_outline, Icons.person),
       RailItem('Friends', Icons.people_outline, Icons.people, badge: _friendsBadge),
+      const RailItem('Spots', Icons.place_outlined, Icons.place),
       for (final e in widget.extras) e.item,
     ];
     return Scaffold(
       body: Row(children: [
-        ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 4),
+        ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 5),
         Expanded(
           child: SafeArea(
             left: false,
@@ -94,8 +98,9 @@ class _HomeShellState extends State<HomeShell> {
               TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
               YouScreen(onStatusChanged: widget.onStatusChanged),
               FriendsScreen(refresh: _refresh[4], onChanged: _checkBadge),
+              SpotsScreen(refresh: _refresh[5]),
               for (var i = 0; i < widget.extras.length; i++)
-                _opened.contains(5 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
+                _opened.contains(6 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
             ]),
           ),
         ),
