@@ -5,6 +5,7 @@ import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'edit_profile_screen.dart';
+import 'invite_screens.dart';
 import 'profile_view_screen.dart';
 
 /// You: your profile and account.
@@ -50,7 +51,21 @@ class YouScreen extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: Material(
             color: B.card,
-            child: row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
+            child: Column(children: [
+              row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
+              Divider(height: 1, color: B.fill),
+              row(Icons.vpn_key_outlined, 'Invite friends', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyInvitesScreen()))),
+              FutureBuilder(
+                future: Api.myProfile(),
+                builder: (context, snap) => snap.data?['is_admin'] == true
+                    ? Column(children: [
+                        Divider(height: 1, color: B.fill),
+                        row(Icons.door_front_door_outlined, 'The door (admin)',
+                            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminDoorScreen()))),
+                      ])
+                    : const SizedBox.shrink(),
+              ),
+            ]),
           ),
         ),
         const SizedBox(height: 20),

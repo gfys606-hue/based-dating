@@ -53,6 +53,15 @@ class ProfileBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text('${profile['name']}, ${profile['age']}', style: B.display(34)),
+        if (profile['joined_via'] != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(children: [
+              const Icon(Icons.vpn_key, size: 14, color: B.gold),
+              const SizedBox(width: 6),
+              Text('JOINED THROUGH ${(profile['joined_via'] as String).toUpperCase()}', style: B.label.copyWith(color: B.accentStrong)),
+            ]),
+          ),
         if (profile['is_me'] != true) ...[
           const SizedBox(height: 12),
           FriendButton(userId: profile['id'] as String, name: profile['name'] as String),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
+import '../services/invites_api.dart';
 import '../theme.dart';
 import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
@@ -291,6 +292,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   SectionLabel('Show who you are'),
                   const SizedBox(height: 10),
                   _selfExpression(),
+                  if (_me?['show_venue_badge'] != null)
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _me!['show_venue_badge'] == true,
+                      title: const Text('Show where I joined'),
+                      subtitle: const Text('The "Joined through" badge from the venue that let you in'),
+                      onChanged: (v) async {
+                        setState(() => _me!['show_venue_badge'] = v);
+                        try {
+                          await InvitesApi.setShowBadge(v);
+                        } catch (_) {}
+                      },
+                    ),
                   const SizedBox(height: 26),
                   SectionLabel('Name'),
                   const SizedBox(height: 8),
