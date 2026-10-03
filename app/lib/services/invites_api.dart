@@ -50,6 +50,7 @@ class InvitesApi {
   static Future<void> setCodeActive(String code, bool active) =>
       _db.rpc('admin_set_code_active', params: {'p_code': code, 'p_active': active});
   static Future<void> setInviteOnly(bool on) => _db.rpc('admin_set_invite_only', params: {'p_on': on});
+  static Future<void> setFullAccess(bool on) => _db.rpc('admin_set_full_access', params: {'p_on': on});
   static Future<List<Map<String, dynamic>>> waitlist() async => _rows(await _db.rpc('admin_waitlist'));
   static Future<String> admit(int id) async => await _db.rpc('admin_admit_waitlist', params: {'p_id': id}) as String;
 }
