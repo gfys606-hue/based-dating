@@ -198,7 +198,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _openCircle(Map<String, dynamic> c) async {
     try {
-      if (c['joined'] != true) await SocialApi.joinCircle(c['id'] as String);
+      if (c['joined'] != true) {
+        // Circles are invite only: you can't walk in, a member has to nominate you.
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Circles are invite only. If you know someone in it, they can nominate you.')));
+        return;
+      }
       if (!mounted) return;
       await Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => CircleScreen(circle: {'circle_id': c['id'], 'name': c['name']}),
