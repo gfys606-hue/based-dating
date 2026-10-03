@@ -40,6 +40,8 @@ class SocialApi {
     int? topicId,
     String? circleId,
     int? capacity,
+    String? audience, // public | circle | friends | inner | custom
+    List<String>? invitees,
   }) =>
       _db.rpc('create_event', params: {
         'p_title': title,
@@ -49,6 +51,8 @@ class SocialApi {
         'p_topic': topicId,
         'p_circle': circleId,
         'p_capacity': capacity,
+        'p_audience': audience,
+        'p_invitees': invitees,
       });
 
   static Future<void> rsvp(String eventId, String status) =>

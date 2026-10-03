@@ -33,6 +33,23 @@ class FriendsApi {
     return Map<String, dynamic>.from((r['friend_visibility'] as Map?) ?? const {});
   }
 
+  /// What I share with one friend. Pass null for both to go back to the presets.
+  static Future<void> setSharing(String userId, {bool? plans, bool? circles}) =>
+      _db.rpc('set_friend_sharing', params: {'p_user': userId, 'p_plans': plans, 'p_circles': circles});
+
+  /// Quiet mode: hours = 0 turns it off, -1 = until I turn it off.
+  static Future<void> setQuiet(int hours) => _db.rpc('set_quiet', params: {'p_hours': hours});
+
+  /// When quiet mode ends (null = off). Far-future means "until I turn it off".
+  static Future<DateTime?> quietUntil() async {
+    final r = await _db.from('profiles').select('quiet_until').eq('id', Api.me).single();
+    final v = r['quiet_until'] as String?;
+    if (v == null) return null;
+    if (v == 'infinity') return DateTime(9999);
+    final t = DateTime.tryParse(v)?.toLocal();
+    return t == null || t.isBefore(DateTime.now()) ? null : t;
+  }
+
   static Future<List<Map<String, dynamic>>> friends() async => _rows(await _db.rpc('get_friends'));
   static Future<List<Map<String, dynamic>>> requests() async => _rows(await _db.rpc('get_friend_requests'));
 
