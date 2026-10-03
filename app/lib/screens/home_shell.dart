@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/friends_api.dart';
 import '../widgets/module_rail.dart';
 import 'discover_screen.dart';
+import 'friends_screen.dart';
 import 'home_screen.dart';
 import 'talk_screen.dart';
 import 'you_screen.dart';
@@ -16,7 +18,7 @@ class ShellPage {
 }
 
 /// The app shell: every destination lives on the left rail (no bottom bar).
-/// Home (Your day) · Discover · Talk · You, then any extra modules.
+/// Home (Your day) · Discover · Talk · You · Friends, then any extra modules.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.onStatusChanged, this.extras = const []});
   final VoidCallback onStatusChanged;
@@ -28,13 +30,14 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _tab = 0;
   bool _talkBadge = false;
-  final _opened = <int>{0, 1, 2, 3}; // extra modules are built the first time they're opened
+  bool _friendsBadge = false;
+  final _opened = <int>{0, 1, 2, 3, 4}; // extra modules are built the first time they're opened
 
   /// Which view Discover shows: 0 = people, 1 = posts. Home can switch it.
   final discoverMode = ValueNotifier<int>(0);
 
   // Bumped to make a tab reload its data when you switch to it.
-  final _refresh = [ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0)];
+  final _refresh = [ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0)];
 
   @override
   void initState() {
@@ -48,6 +51,12 @@ class _HomeShellState extends State<HomeShell> {
       final waiting = ms.any((m) => m['last_message'] != null && m['last_from_me'] == false);
       if (mounted) setState(() => _talkBadge = waiting);
     } catch (_) {}
+    try {
+      final req = await FriendsApi.requests();
+      final fr = await FriendsApi.friends();
+      final unread = fr.any((f) => f['last_message'] != null && f['last_from_me'] == false);
+      if (mounted) setState(() => _friendsBadge = req.isNotEmpty || unread);
+    } catch (_) {}
   }
 
   void goTab(int i, {int? discover}) {
@@ -60,8 +69,8 @@ class _HomeShellState extends State<HomeShell> {
     _checkBadge();
   }
 
-  /// Extra module 1..n → rail index 4..
-  void _openModule(int module) => goTab(3 + module);
+  /// Extra module 1..n → rail index 5..
+  void _openModule(int module) => goTab(4 + module);
 
   @override
   Widget build(BuildContext context) {
@@ -70,11 +79,12 @@ class _HomeShellState extends State<HomeShell> {
       const RailItem('Discover', Icons.radar_outlined, Icons.radar),
       RailItem('Talk', Icons.chat_bubble_outline, Icons.chat_bubble, badge: _talkBadge),
       const RailItem('You', Icons.person_outline, Icons.person),
+      RailItem('Friends', Icons.people_outline, Icons.people, badge: _friendsBadge),
       for (final e in widget.extras) e.item,
     ];
     return Scaffold(
       body: Row(children: [
-        ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 3),
+        ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 4),
         Expanded(
           child: SafeArea(
             left: false,
@@ -83,8 +93,9 @@ class _HomeShellState extends State<HomeShell> {
               DiscoverScreen(refresh: _refresh[1], mode: discoverMode),
               TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
               YouScreen(onStatusChanged: widget.onStatusChanged),
+              FriendsScreen(refresh: _refresh[4], onChanged: _checkBadge),
               for (var i = 0; i < widget.extras.length; i++)
-                _opened.contains(4 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
+                _opened.contains(5 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
             ]),
           ),
         ),
