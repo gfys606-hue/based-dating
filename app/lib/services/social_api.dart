@@ -42,6 +42,7 @@ class SocialApi {
     int? capacity,
     String? audience, // public | circle | friends | inner | custom
     List<String>? invitees,
+    String? placeId, // a pinned venue (from the place picker)
   }) =>
       _db.rpc('create_event', params: {
         'p_title': title,
@@ -53,6 +54,7 @@ class SocialApi {
         'p_capacity': capacity,
         'p_audience': audience,
         'p_invitees': invitees,
+        'p_place_id': placeId,
       });
 
   static Future<void> rsvp(String eventId, String status) =>
