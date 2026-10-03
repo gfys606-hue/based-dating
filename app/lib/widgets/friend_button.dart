@@ -59,6 +59,12 @@ class _FriendButtonState extends State<FriendButton> {
             onTap: () => Navigator.pop(ctx, 'inner'),
           ),
           ListTile(
+            leading: Icon(Icons.tune, color: B.accentStrong),
+            title: Text('What ${widget.name} sees'),
+            subtitle: Text(_s?['custom_share'] == true ? 'Set just for ${widget.name}' : 'Following your presets'),
+            onTap: () => Navigator.pop(ctx, 'share'),
+          ),
+          ListTile(
             leading: Icon(Icons.person_remove_outlined, color: B.muted),
             title: const Text('Remove friend'),
             subtitle: const Text('Your messages with them are deleted. They aren\'t told.'),
@@ -69,6 +75,55 @@ class _FriendButtonState extends State<FriendButton> {
     );
     if (v == 'inner') await _run(() => FriendsApi.setInner(widget.userId, !inner));
     if (v == 'remove') await _run(() => FriendsApi.remove(widget.userId));
+    if (v == 'share' && mounted) await _shareSheet();
+  }
+
+  /// Per-person sharing: override the presets for this one friend, or go back to them.
+  Future<void> _shareSheet() async {
+    final cur = Map<String, dynamic>.from((_s?['sharing'] as Map?) ?? const {});
+    var plans = cur['plans'] == true;
+    var circles = cur['circles'] == true;
+    final res = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('What ${widget.name} sees', style: B.heading(24)),
+              const SizedBox(height: 4),
+              Text(
+                _s?['quiet'] == true
+                    ? 'You\'re in quiet mode, so right now they see none of this. These settings apply once it ends.'
+                    : 'Just for ${widget.name}. Everyone else keeps your usual settings.',
+                style: TextStyle(color: B.muted, fontSize: 13, height: 1.4),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: plans,
+                title: const Text('My plans'),
+                onChanged: (x) => set(() => plans = x),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: circles,
+                title: const Text('My circles'),
+                onChanged: (x) => set(() => circles = x),
+              ),
+              const SizedBox(height: 6),
+              Row(children: [
+                if (_s?['custom_share'] == true)
+                  TextButton(onPressed: () => Navigator.pop(ctx, 'reset'), child: const Text('Use my presets')),
+                const Spacer(),
+                FilledButton(onPressed: () => Navigator.pop(ctx, 'save'), child: const Text('SAVE')),
+              ]),
+            ]),
+          ),
+        ),
+      ),
+    );
+    if (res == 'save') await _run(() => FriendsApi.setSharing(widget.userId, plans: plans, circles: circles));
+    if (res == 'reset') await _run(() => FriendsApi.setSharing(widget.userId));
   }
 
   @override
