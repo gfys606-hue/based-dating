@@ -253,8 +253,8 @@ class EventsListState extends State<EventsList> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  if (e['circle_name'] != null || e['topic'] != null)
-                    Text(((e['circle_name'] ?? e['topic']) as String).toUpperCase(), style: B.label.copyWith(color: B.accent)),
+                  if (_audienceLabel(e) != null)
+                    Text(_audienceLabel(e)!, style: B.label.copyWith(color: B.accent)),
                   Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 2),
                   Text(meta, style: TextStyle(color: B.muted, fontSize: 13)),
@@ -295,6 +295,21 @@ class EventsListState extends State<EventsList> {
         ),
       ),
     );
+  }
+
+  /// Small label on the card: who the plan is for (or its circle / topic for open plans).
+  String? _audienceLabel(Map<String, dynamic> e) {
+    final from = e['mine'] == true ? 'You' : (e['creator_name'] as String? ?? '');
+    switch (e['audience']) {
+      case 'inner':
+        return e['mine'] == true ? 'YOUR INNER CIRCLE' : '${from.toUpperCase()} · INNER CIRCLE';
+      case 'friends':
+        return e['mine'] == true ? 'YOUR FRIENDS' : '${from.toUpperCase()} · FRIENDS';
+      case 'custom':
+        return e['mine'] == true ? 'INVITED · ${e['invited_count'] ?? ''}' : '${from.toUpperCase()} INVITED YOU';
+    }
+    final l = (e['circle_name'] ?? e['topic']) as String?;
+    return l?.toUpperCase();
   }
 
   /// Who's going (only shown once you've RSVP'd), so you can find and add people you met there.
@@ -375,6 +390,42 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
   int? _capacity;
   bool _busy = false;
   String? _error;
+  String _audience = 'public'; // public | friends | inner | custom (circle plans always go to the circle)
+  final Set<String> _picked = {};
+  List<Map<String, dynamic>>? _friends;
+
+  Future<void> _pickPeople() async {
+    _friends ??= await FriendsApi.friends().catchError((_) => <Map<String, dynamic>>[]);
+    if (!mounted) return;
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * .7),
+            child: ListView(shrinkWrap: true, padding: const EdgeInsets.fromLTRB(18, 18, 18, 12), children: [
+              Text('Who\'s invited', style: B.heading(22)),
+              const SizedBox(height: 6),
+              if (_friends!.isEmpty) Text('Add friends first, then you can invite them here.', style: TextStyle(color: B.muted)),
+              for (final f in _friends!)
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _picked.contains(f['user_id']),
+                  secondary: Avatar(path: f['photo'] as String?, size: 36),
+                  title: Text(f['name'] as String),
+                  subtitle: f['is_inner'] == true ? const Text('Inner circle') : null,
+                  onChanged: (v) => set(() => v == true ? _picked.add(f['user_id'] as String) : _picked.remove(f['user_id'])),
+                ),
+              const SizedBox(height: 8),
+              FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('DONE')),
+            ]),
+          ),
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
 
   Future<void> _pickWhen() async {
     final d = await showDatePicker(
@@ -394,6 +445,10 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
       setState(() => _error = 'Give it a name.');
       return;
     }
+    if (widget.circleId == null && _audience == 'custom' && _picked.isEmpty) {
+      setState(() => _error = 'Pick at least one friend.');
+      return;
+    }
     setState(() { _busy = true; _error = null; });
     try {
       await SocialApi.createEvent(
@@ -403,10 +458,20 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
         details: _details.text.trim().isEmpty ? null : _details.text.trim(),
         circleId: widget.circleId,
         capacity: _capacity,
+        audience: widget.circleId != null ? 'circle' : _audience,
+        invitees: _audience == 'custom' && widget.circleId == null ? _picked.toList() : null,
       );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      setState(() { _busy = false; _error = e.toString().contains('future') ? 'Pick a time in the future.' : 'Couldn\'t create it. Try again.'; });
+      final msg = e.toString();
+      setState(() {
+        _busy = false;
+        _error = msg.contains('future')
+            ? 'Pick a time in the future.'
+            : msg.contains('at least one') || msg.contains('only invite')
+                ? 'Pick at least one friend.'
+                : 'Couldn\'t create it. Try again.';
+      });
     }
   }
 
@@ -443,6 +508,32 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
             ]),
           ),
         ]),
+        if (widget.circleId == null) ...[
+          const SizedBox(height: 14),
+          const SectionLabel('Who sees it'),
+          const SizedBox(height: 8),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for (final a in const [('public', 'Everyone nearby'), ('friends', 'Friends'), ('inner', 'Inner circle'), ('custom', 'Pick people')])
+              ChoiceChip(
+                label: Text(a.$1 == 'custom' && _picked.isNotEmpty ? 'Picked (${_picked.length})' : a.$2),
+                selected: _audience == a.$1,
+                onSelected: (_) {
+                  setState(() => _audience = a.$1);
+                  if (a.$1 == 'custom') _pickPeople();
+                },
+              ),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            switch (_audience) {
+              'friends' => 'All your friends see it and get a heads-up.',
+              'inner' => 'Only your inner circle sees it and gets a heads-up.',
+              'custom' => 'Only the people you pick see it and get a heads-up.',
+              _ => 'Anyone nearby can find it. Nobody gets pinged.',
+            },
+            style: TextStyle(color: B.muted, fontSize: 12.5),
+          ),
+        ],
         if (_error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: TextStyle(color: B.urgent))),
         const SizedBox(height: 14),
         FilledButton(onPressed: _busy ? null : _create, child: Text(_busy ? 'Creating…' : 'Create')),

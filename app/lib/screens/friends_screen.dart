@@ -22,6 +22,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   List<Map<String, dynamic>> _requests = [];
   bool _loading = true;
   String _query = '';
+  DateTime? _quiet;
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Future<void> _load() async {
     try {
       final r = await Future.wait([FriendsApi.friends(), FriendsApi.requests()]);
+      _quiet = await FriendsApi.quietUntil().catchError((_) => null);
       if (mounted) {
         setState(() {
           _friends = r[0];
@@ -86,6 +88,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
           ]),
           const SizedBox(height: 4),
           Text('People you\'ve met. Add someone from their profile.', style: TextStyle(color: B.muted, fontSize: 13)),
+          const SizedBox(height: 12),
+          QuietModeBar(until: _quiet, onChanged: _load),
           const SizedBox(height: 14),
           if (_friends.length > 6)
             Padding(
@@ -307,4 +311,81 @@ Future<void> showFriendVisibilitySheet(BuildContext context) async {
       ),
     ),
   );
+}
+
+
+/// One switch that hides your plans and circles from every friend (inner circle too) until it ends.
+/// Plans you send to people on purpose still reach them.
+class QuietModeBar extends StatelessWidget {
+  const QuietModeBar({super.key, required this.until, required this.onChanged});
+  final DateTime? until;
+  final VoidCallback onChanged;
+
+  String get _when {
+    final u = until!;
+    if (u.year >= 9999) return 'until you turn it off';
+    final now = DateTime.now();
+    final sameDay = u.year == now.year && u.month == now.month && u.day == now.day;
+    return 'until ${sameDay ? DateFormat('h:mm a').format(u) : DateFormat('EEE h:mm a').format(u)}';
+  }
+
+  Future<void> _pick(BuildContext context) async {
+    final now = DateTime.now();
+    final morning = DateTime(now.year, now.month, now.day + (now.hour >= 6 ? 1 : 0), 6);
+    final hoursToMorning = morning.difference(now).inMinutes ~/ 60 + 1;
+    final h = await showModalBottomSheet<int>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Quiet mode', style: B.heading(24)),
+              const SizedBox(height: 4),
+              Text('Hides your plans and circles from all your friends, inner circle included. '
+                  'Nobody is removed, and plans you send to people still reach them.',
+                  style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
+            ]),
+          ),
+          if (until != null)
+            ListTile(leading: const Icon(Icons.wb_sunny_outlined), title: const Text('Turn it off now'), onTap: () => Navigator.pop(ctx, 0)),
+          ListTile(leading: const Icon(Icons.timer_outlined), title: const Text('For 3 hours'), onTap: () => Navigator.pop(ctx, 3)),
+          ListTile(leading: const Icon(Icons.bedtime_outlined), title: const Text('Until tomorrow morning'), onTap: () => Navigator.pop(ctx, hoursToMorning)),
+          ListTile(leading: const Icon(Icons.work_outline), title: const Text('For a week'), onTap: () => Navigator.pop(ctx, 24 * 7)),
+          ListTile(leading: const Icon(Icons.nights_stay_outlined), title: const Text('Until I turn it off'), onTap: () => Navigator.pop(ctx, -1)),
+        ]),
+      ),
+    );
+    if (h == null) return;
+    try {
+      await FriendsApi.setQuiet(h);
+    } catch (_) {}
+    onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final on = until != null;
+    return InkWell(
+      onTap: () => _pick(context),
+      borderRadius: BorderRadius.circular(B.radius),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: on ? B.panel : null,
+          borderRadius: BorderRadius.circular(B.radius),
+          border: Border.all(color: on ? B.panel : B.line),
+        ),
+        child: Row(children: [
+          Icon(on ? Icons.nights_stay : Icons.nights_stay_outlined, size: 18, color: on ? B.gold : B.muted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(on ? 'Quiet mode on · $_when' : 'Quiet mode: off',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: on ? Colors.white : B.ink)),
+          ),
+          Text(on ? 'CHANGE' : 'TURN ON', style: B.label.copyWith(color: on ? B.gold : B.accentStrong)),
+        ]),
+      ),
+    );
+  }
 }
