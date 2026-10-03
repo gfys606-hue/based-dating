@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/api.dart';
 import '../theme.dart';
 import '../widgets/friend_button.dart';
+import '../widgets/report_sheet.dart';
 import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
 
@@ -14,7 +15,41 @@ class ProfileViewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(actions: [
+        if (userId != Api.me)
+          PopupMenuButton<String>(
+            onSelected: (v) async {
+              final p = await Api.profile(userId);
+              final name = p?['name'] as String? ?? 'this person';
+              if (!context.mounted) return;
+              if (v == 'report') {
+                if (await showReportSheet(context, userId: userId, name: name, where: 'profile') && context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              } else if (v == 'block') {
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text('Block $name?'),
+                    content: const Text('You won\'t see each other anywhere on Based. They aren\'t told.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('BLOCK')),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  await Api.block(userId);
+                  if (context.mounted) Navigator.of(context).pop();
+                }
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'report', child: Text('Report')),
+              PopupMenuItem(value: 'block', child: Text('Block')),
+            ],
+          ),
+      ]),
       body: FutureBuilder(
         future: Api.profile(userId),
         builder: (context, snap) {

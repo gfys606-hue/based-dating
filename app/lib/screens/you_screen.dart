@@ -4,6 +4,7 @@ import '../services/api.dart';
 import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
 import 'invite_screens.dart';
 import 'profile_view_screen.dart';
@@ -62,6 +63,9 @@ class YouScreen extends StatelessWidget {
                         Divider(height: 1, color: B.fill),
                         row(Icons.door_front_door_outlined, 'The door (admin)',
                             () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminDoorScreen()))),
+                        Divider(height: 1, color: B.fill),
+                        row(Icons.shield_outlined, 'Safety review (admin)',
+                            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminReviewScreen()))),
                       ])
                     : const SizedBox.shrink(),
               ),
