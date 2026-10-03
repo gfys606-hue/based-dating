@@ -3,10 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/auth_screen.dart';
 import 'screens/home_shell.dart';
+import 'screens/invite_screens.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/paused_screen.dart';
 import 'screens/platform_shell.dart';
 import 'services/api.dart';
+import 'services/invites_api.dart';
 import 'services/push.dart';
 import 'theme.dart';
 
@@ -120,8 +122,39 @@ class _StatusRouterState extends State<_StatusRouter> {
           case 'banned':
             return PausedScreen(status: status, reason: p?['pause_reason'] as String?, onFixed: _refresh);
           default:
+            if (p == null) return _DoorCheck(onDone: _refresh); // brand-new account: needs an invite code first
             return OnboardingScreen(existing: p, onDone: _refresh);
         }
+      },
+    );
+  }
+}
+
+
+/// A new account (no profile yet): ask for an invite code while Based is invite-only, otherwise start onboarding.
+class _DoorCheck extends StatefulWidget {
+  const _DoorCheck({required this.onDone});
+  final VoidCallback onDone;
+  @override
+  State<_DoorCheck> createState() => _DoorCheckState();
+}
+
+class _DoorCheckState extends State<_DoorCheck> {
+  late Future<Map<String, dynamic>> _access = InvitesApi.access();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _access,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final a = snap.data ?? const {'invite_only': true, 'redeemed': false};
+        if (a['invite_only'] == true && a['redeemed'] != true) {
+          return InviteGateScreen(onDone: () => setState(() => _access = InvitesApi.access()));
+        }
+        return OnboardingScreen(existing: null, onDone: widget.onDone);
       },
     );
   }
