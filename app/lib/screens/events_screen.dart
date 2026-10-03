@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
+import 'venue_screens.dart';
 
 /// Events: your free time (used to match you with people and circles) and plans near you.
 class EventsScreen extends StatefulWidget {
@@ -260,6 +261,7 @@ class EventsListState extends State<EventsList> {
                   Text(e['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 2),
                   Text(meta, style: TextStyle(color: B.muted, fontSize: 13)),
+                  if (e['place_id'] != null) TableRequestChip(key: ValueKey('t${e['event_id']}'), event: e),
                   if (e['place_lat'] != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 6),

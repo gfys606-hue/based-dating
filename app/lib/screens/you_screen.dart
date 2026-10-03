@@ -7,6 +7,8 @@ import '../widgets/ui.dart';
 import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
 import 'invite_screens.dart';
+import 'venue_screens.dart';
+import '../services/venue_api.dart';
 import 'profile_view_screen.dart';
 
 /// You: your profile and account.
@@ -56,6 +58,32 @@ class YouScreen extends StatelessWidget {
               row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
               Divider(height: 1, color: B.fill),
               row(Icons.vpn_key_outlined, 'Invite friends', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyInvitesScreen()))),
+              FutureBuilder(
+                future: Future.wait([
+                  VenueApi.myVenues().catchError((_) => <Map<String, dynamic>>[]),
+                  VenueApi.myBars().catchError((_) => <Map<String, dynamic>>[]),
+                ]),
+                builder: (context, snap) {
+                  final venues = snap.data?[0] ?? const <Map<String, dynamic>>[];
+                  final bars = snap.data?[1] ?? const <Map<String, dynamic>>[];
+                  return Column(children: [
+                    for (final v in venues) ...[
+                      Divider(height: 1, color: B.fill),
+                      row(Icons.storefront_outlined,
+                          'My venue: ${v['name']}${((v['pending_tables'] as int? ?? 0) > 0) ? ' · ${v['pending_tables']} new' : ''}',
+                          () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => MyVenueScreen(venue: v)))),
+                    ],
+                    Divider(height: 1, color: B.fill),
+                    row(Icons.local_bar_outlined, 'I run a venue',
+                        () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VenueApplyScreen()))),
+                    if (bars.isNotEmpty) ...[
+                      Divider(height: 1, color: B.fill),
+                      row(Icons.do_not_disturb_on_outlined, 'Venue access',
+                          () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyBarsScreen()))),
+                    ],
+                  ]);
+                },
+              ),
               FutureBuilder(
                 future: Api.myProfile(),
                 builder: (context, snap) => snap.data?['is_admin'] == true

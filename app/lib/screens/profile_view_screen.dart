@@ -88,6 +88,15 @@ class ProfileBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text('${profile['name']}, ${profile['age']}', style: B.display(34)),
+        if (profile['venue_mark'] == true)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(children: [
+              Icon(Icons.do_not_disturb_on_outlined, size: 14, color: B.urgent),
+              const SizedBox(width: 6),
+              Text('BARRED BY 3 VENUES THIS YEAR', style: B.label.copyWith(color: B.urgent)),
+            ]),
+          ),
         if (profile['joined_via'] != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),

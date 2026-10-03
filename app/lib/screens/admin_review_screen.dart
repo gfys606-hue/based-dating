@@ -5,6 +5,7 @@ import '../services/api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
+import 'venue_screens.dart';
 
 List<Map<String, dynamic>> _rows(dynamic res) =>
     List<Map<String, dynamic>>.from((res as List).map((e) => Map<String, dynamic>.from(e as Map)));
@@ -27,13 +28,13 @@ class AdminReviewScreen extends StatelessWidget {
   const AdminReviewScreen({super.key});
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Safety review', style: B.heading(22)),
-            bottom: const TabBar(tabs: [Tab(text: 'Reports'), Tab(text: 'Photos')]),
+            bottom: const TabBar(tabs: [Tab(text: 'Reports'), Tab(text: 'Photos'), Tab(text: 'Venues')]),
           ),
-          body: const TabBarView(children: [_ReportsTab(), _PhotosTab()]),
+          body: const TabBarView(children: [_ReportsTab(), _PhotosTab(), AdminVenuesTab()]),
         ),
       );
 }
