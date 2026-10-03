@@ -15,6 +15,21 @@ class SocialApi {
   static Future<List<Map<String, dynamic>>> myCircles() async => _rows(await _db.rpc('get_my_circles'));
   static Future<String> findMyCircle() async => await _db.rpc('find_my_circle') as String;
   static Future<void> joinCircle(String id) => _db.rpc('join_circle', params: {'p_circle': id});
+  static Future<String> createCircle(String name, {int? topicId}) async =>
+      await _db.rpc('create_circle', params: {'p_name': name, 'p_topic': topicId}) as String;
+
+  // Nominations: members nominate and vote; the person only ever sees an invite.
+  static Future<String> nominate(String circleId, String userId, {String? note}) async =>
+      await _db.rpc('nominate_to_circle', params: {'p_circle': circleId, 'p_user': userId, 'p_note': note}) as String;
+  static Future<String> vote(String nominationId, bool yes) async =>
+      await _db.rpc('vote_on_nomination', params: {'p_nom': nominationId, 'p_yes': yes}) as String;
+  static Future<List<Map<String, dynamic>>> nominations(String circleId) async =>
+      _rows(await _db.rpc('get_circle_nominations', params: {'p_circle': circleId}));
+  static Future<List<Map<String, dynamic>>> candidates(String circleId) async =>
+      _rows(await _db.rpc('get_circle_candidates', params: {'p_circle': circleId}));
+  static Future<List<Map<String, dynamic>>> circleInvites() async => _rows(await _db.rpc('get_my_circle_invites'));
+  static Future<void> answerCircleInvite(String nominationId, bool accept) =>
+      _db.rpc('answer_circle_invite', params: {'p_nom': nominationId, 'p_accept': accept});
   static Future<void> leaveCircle(String id) => _db.rpc('leave_circle', params: {'p_circle': id});
   static Future<List<Map<String, dynamic>>> circleMembers(String id) async =>
       _rows(await _db.rpc('get_circle_members', params: {'p_circle': id}));
