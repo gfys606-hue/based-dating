@@ -230,12 +230,13 @@ class Api {
   // ---------- safety ----------
   static Future<void> block(String userId) => db.rpc('block_user', params: {'p_target': userId});
 
-  static Future<void> report(String userId, String category, {String? details, String? matchId}) =>
+  static Future<void> report(String userId, String category, {String? details, String? matchId, String? context}) =>
       db.rpc('report_user', params: {
         'p_target': userId,
         'p_category': category,
         'p_details': details,
         'p_match': matchId,
+        'p_context': context,
       });
 
   // ---------- account ----------
