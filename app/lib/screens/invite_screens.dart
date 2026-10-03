@@ -285,6 +285,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   List<Map<String, dynamic>> _stats = [];
   List<Map<String, dynamic>> _wait = [];
   bool? _inviteOnly;
+  bool? _fullAccess;
 
   @override
   void initState() {
@@ -300,6 +301,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
           _stats = r[0] as List<Map<String, dynamic>>;
           _wait = r[1] as List<Map<String, dynamic>>;
           _inviteOnly = (r[2] as Map<String, dynamic>)['invite_only'] == true;
+          _fullAccess = (r[2] as Map<String, dynamic>)['full_access_for_new'] != false;
         });
       }
     } catch (e) {
@@ -404,6 +406,20 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                 ? null
                 : (v) async {
                     await InvitesApi.setInviteOnly(v).catchError((_) {});
+                    _load();
+                  },
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _fullAccess ?? true,
+            title: const Text('Full access for new members'),
+            subtitle: Text(_fullAccess == false
+                ? 'New members get dating only. Circles, Events and plans stay for testers.'
+                : 'Anyone who joins with a code gets Circles, Events and plans too.'),
+            onChanged: _fullAccess == null
+                ? null
+                : (v) async {
+                    await InvitesApi.setFullAccess(v).catchError((_) {});
                     _load();
                   },
           ),
