@@ -6,6 +6,7 @@ import '../theme.dart';
 import '../widgets/live_chat.dart';
 import '../widgets/ui.dart';
 import 'events_screen.dart';
+import 'profile_view_screen.dart';
 
 /// Circles: small groups (up to 8) of people who fit together:
 /// shared interests, overlapping free time, and nearby. Based places you; you just show up.
@@ -213,11 +214,15 @@ class _CircleScreenState extends State<CircleScreen> {
                 for (final m in _members)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Column(children: [
-                      Avatar(path: m['photo'] as String?, size: 48),
-                      const SizedBox(height: 4),
-                      Text(m['name'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                    ]),
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: m['user_id'] as String))),
+                      child: Column(children: [
+                        Avatar(path: m['photo'] as String?, size: 48),
+                        const SizedBox(height: 4),
+                        Text(m['name'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                      ]),
+                    ),
                   ),
               ],
             ),

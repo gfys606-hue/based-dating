@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/api.dart';
+import '../services/friends_api.dart';
 import '../services/social_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'profile_view_screen.dart';
 
 /// Events: your free time (used to match you with people and circles) and plans near you.
 class EventsScreen extends StatefulWidget {
@@ -262,8 +264,15 @@ class EventsListState extends State<EventsList> {
                   ],
                   const SizedBox(height: 10),
                   Row(children: [
-                    Text(cap == null ? '$going going' : '$going / $cap going',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    if (my != null || e['mine'] == true)
+                      InkWell(
+                        onTap: () => _showPeople(e),
+                        child: Text(cap == null ? '$going going  ›' : '$going / $cap going  ›',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: B.accentStrong)),
+                      )
+                    else
+                      Text(cap == null ? '$going going' : '$going / $cap going',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                     const Spacer(),
                     if (e['mine'] == true)
                       TextButton(
@@ -283,6 +292,45 @@ class EventsListState extends State<EventsList> {
               ),
             ),
           ]),
+        ),
+      ),
+    );
+  }
+
+  /// Who's going (only shown once you've RSVP'd), so you can find and add people you met there.
+  Future<void> _showPeople(Map<String, dynamic> e) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * .7),
+          child: FutureBuilder(
+            future: FriendsApi.eventPeople(e['event_id'] as String),
+            builder: (ctx, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()));
+              }
+              final people = snap.data ?? const [];
+              return ListView(shrinkWrap: true, padding: const EdgeInsets.fromLTRB(18, 18, 18, 12), children: [
+                Text(e['title'] as String, style: B.heading(22)),
+                const SizedBox(height: 4),
+                Text('Tap someone to see their profile or add them as a friend.', style: TextStyle(color: B.muted, fontSize: 13)),
+                const SizedBox(height: 10),
+                for (final p in people)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Avatar(path: p['photo'] as String?, size: 40),
+                    title: Text(p['user_id'] == Api.me ? '${p['name']} (you)' : p['name'] as String),
+                    subtitle: Text(p['rsvp'] == 'going' ? 'Going' : 'Maybe'),
+                    onTap: p['user_id'] == Api.me
+                        ? null
+                        : () => Navigator.of(ctx).push(
+                            MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: p['user_id'] as String))),
+                  ),
+              ]);
+            },
+          ),
         ),
       ),
     );

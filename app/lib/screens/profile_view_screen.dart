@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/api.dart';
 import '../theme.dart';
+import '../widgets/friend_button.dart';
 import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
 
@@ -52,6 +53,10 @@ class ProfileBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text('${profile['name']}, ${profile['age']}', style: B.display(34)),
+        if (profile['is_me'] != true) ...[
+          const SizedBox(height: 12),
+          FriendButton(userId: profile['id'] as String, name: profile['name'] as String),
+        ],
         if (lately.isNotEmpty) ...[
           const SizedBox(height: 14),
           LatelyStrip(items: lately),
