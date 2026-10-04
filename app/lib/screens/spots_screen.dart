@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../services/places_api.dart';
 import '../services/social_api.dart';
+import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
@@ -19,6 +20,7 @@ class SpotsScreen extends StatefulWidget {
 class _SpotsScreenState extends State<SpotsScreen> {
   List<Map<String, dynamic>> _here = [];
   List<Map<String, dynamic>> _spots = [];
+  List<Map<String, dynamic>> _partners = [];
   bool _loading = true;
 
   @override
@@ -44,6 +46,10 @@ class _SpotsScreenState extends State<SpotsScreen> {
           _spots = r[1];
         });
       }
+    } catch (_) {}
+    try {
+      final p = await VenueApi.partners();
+      if (mounted) setState(() => _partners = p);
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
@@ -133,6 +139,28 @@ class _SpotsScreenState extends State<SpotsScreen> {
               ),
             ),
           for (final s in _spots) _spotTile(s),
+
+          // ---- Partner venues: places that work with Based (tables for your herd, passes for friends) ----
+          if (_partners.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            SectionLabel('Partner venues', color: B.accentStrong),
+            const SizedBox(height: 4),
+            Text('They work with Based: ask for a table when your herd heads out.',
+                style: TextStyle(color: B.muted, fontSize: 12.5)),
+            const SizedBox(height: 6),
+            for (final p in _partners)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.verified_outlined, color: B.gold),
+                title: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: Text([
+                  '${(p['distance_km'] as num).toStringAsFixed(1)} km',
+                  if ((p['friends_here'] as num? ?? 0) > 0) '${p['friends_here']} friends here now',
+                  if (p['address'] != null) p['address'] as String,
+                ].join(' · ')),
+                trailing: TextButton(onPressed: () => _plan(p), child: const Text('PLAN')),
+              ),
+          ],
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../services/venue_api.dart';
@@ -83,14 +84,15 @@ class MyVenueScreen extends StatelessWidget {
   final Map<String, dynamic> venue;
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 3,
+        length: 4,
         child: Scaffold(
           appBar: AppBar(
             title: Text(venue['name'] as String, style: B.heading(22)),
-            bottom: const TabBar(tabs: [Tab(text: 'Tables'), Tab(text: 'People'), Tab(text: 'Bars')]),
+            bottom: const TabBar(tabs: [Tab(text: 'Tables'), Tab(text: 'Passes'), Tab(text: 'People'), Tab(text: 'Bars')]),
           ),
           body: TabBarView(children: [
             _TablesTab(venue: venue),
+            _PassesTab(venueId: venue['venue_id'] as String, name: venue['name'] as String),
             _PeopleTab(venueId: venue['venue_id'] as String),
             _BarsTab(venueId: venue['venue_id'] as String),
           ]),
@@ -325,6 +327,208 @@ class _BarsTab extends StatelessWidget {
       );
 }
 
+/// Passes: each venue gets a set number of one-time invite codes (100 to start) to hand out however
+/// the owner likes — regulars, staff, a card on the bar. Someone who joins with one shows the venue badge.
+class _PassesTab extends StatefulWidget {
+  const _PassesTab({required this.venueId, required this.name});
+  final String venueId;
+  final String name;
+  @override
+  State<_PassesTab> createState() => _PassesTabState();
+}
+
+class _PassesTabState extends State<_PassesTab> {
+  Map<String, dynamic>? _p;
+  bool _busy = false;
+  bool _showUsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final p = await VenueApi.passes(widget.venueId);
+      if (mounted) setState(() => _p = p);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_err(e))));
+    }
+  }
+
+  Future<void> _make() async {
+    final left = (_p?['left'] as num?)?.toInt() ?? 0;
+    final options = <int>{...[5, 10, 25, 50].where((n) => n <= left), if (left < 50) left}.toList()..sort();
+    final n = await showModalBottomSheet<int>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(title: Text('Make passes', style: B.heading(20)), subtitle: Text('$left left. Each one lets one person in.')),
+          for (final o in options) ListTile(title: Text('$o passes'), onTap: () => Navigator.pop(ctx, o)),
+        ]),
+      ),
+    );
+    if (n == null || n <= 0) return;
+    setState(() => _busy = true);
+    try {
+      final codes = await VenueApi.createPasses(widget.venueId, n);
+      await _load();
+      if (mounted) _showSheet(codes);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_err(e))));
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  String _sheetText(List<String> codes) => [
+        'Based passes from ${widget.name}',
+        'Get the app at based-social.com and enter your code. Each code works once.',
+        '',
+        ...codes,
+      ].join('\n');
+
+  void _showSheet(List<String> codes) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${codes.length} passes'),
+        content: SizedBox(
+          width: 340,
+          child: SingleChildScrollView(
+            child: Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final c in codes) _PassCard(code: c, venue: widget.name),
+            ]),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: _sheetText(codes)));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied. Paste into a doc to print.')));
+            },
+            child: const Text('COPY ALL'),
+          ),
+          FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('DONE')),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = _p;
+    if (p == null) return const Center(child: CircularProgressIndicator());
+    final codes = List<Map<String, dynamic>>.from(((p['codes'] as List?) ?? const []).map((e) => Map<String, dynamic>.from(e as Map)));
+    final unused = codes.where((c) => c['used'] != true && c['active'] == true).toList();
+    final used = codes.where((c) => c['used'] == true).toList();
+    final left = (p['left'] as num?)?.toInt() ?? 0;
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(padding: const EdgeInsets.all(16), children: [
+        Text(
+            'Hand these out however you like: regulars, staff, a card by the till. '
+            'Based is invite-only, so a pass from you is how people get in. '
+            'Anyone who joins with one carries your badge.',
+            style: TextStyle(color: B.muted, height: 1.4)),
+        const SizedBox(height: 14),
+        Row(children: [
+          _Stat(n: '${p['allowance']}', label: 'total'),
+          _Stat(n: '$left', label: 'not made yet'),
+          _Stat(n: '${unused.length}', label: 'ready to give'),
+          _Stat(n: '${p['joined']}', label: 'joined'),
+        ]),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: _busy || left == 0 ? null : _make,
+              icon: const Icon(Icons.confirmation_number_outlined, size: 18),
+              label: Text(left == 0 ? 'ALL PASSES MADE' : 'MAKE PASSES'),
+            ),
+          ),
+          if (unused.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () => _showSheet(unused.map((c) => c['code'] as String).toList()),
+              child: const Text('PRINT SHEET'),
+            ),
+          ],
+        ]),
+        if (left == 0 && unused.isEmpty) ...[
+          const SizedBox(height: 8),
+          Text('That\'s all of them for now. Based may add more later.', style: TextStyle(color: B.muted, fontSize: 12.5)),
+        ],
+        const SizedBox(height: 18),
+        if (unused.isNotEmpty) ...[
+          const SectionLabel('Ready to give'),
+          for (final c in unused)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(c['code'] as String, style: const TextStyle(fontFamily: 'monospace', letterSpacing: 1.5)),
+              trailing: IconButton(
+                icon: const Icon(Icons.copy, size: 18),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: c['code'] as String));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied.')));
+                },
+              ),
+            ),
+        ],
+        if (used.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => setState(() => _showUsed = !_showUsed),
+            child: Text(_showUsed ? 'Hide used passes' : 'Show ${used.length} used'),
+          ),
+          if (_showUsed)
+            for (final c in used)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(c['code'] as String, style: TextStyle(color: B.muted, decoration: TextDecoration.lineThrough)),
+                subtitle: c['joined'] == null ? null : Text('${c['joined']} joined'),
+              ),
+        ],
+      ]),
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.n, required this.label});
+  final String n;
+  final String label;
+  @override
+  Widget build(BuildContext context) => Expanded(
+        child: Column(children: [
+          Text(n, style: B.heading(24)),
+          Text(label, textAlign: TextAlign.center, style: TextStyle(color: B.muted, fontSize: 11.5)),
+        ]),
+      );
+}
+
+/// One pass as a little card (screenshot or print these).
+class _PassCard extends StatelessWidget {
+  const _PassCard({required this.code, required this.venue});
+  final String code;
+  final String venue;
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 160,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(border: Border.all(color: B.muted.withOpacity(0.4)), borderRadius: BorderRadius.circular(10)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('BASED', style: B.heading(14)),
+          Text('a pass from $venue', style: TextStyle(color: B.muted, fontSize: 10.5)),
+          const SizedBox(height: 6),
+          SelectableText(code,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 15, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
+          Text('based-social.com', style: TextStyle(color: B.muted, fontSize: 10)),
+        ]),
+      );
+}
+
 /// You → Venue access: bars on you, and the appeal.
 class MyBarsScreen extends StatefulWidget {
   const MyBarsScreen({super.key});
@@ -398,6 +602,7 @@ class AdminVenuesTab extends StatefulWidget {
 class _AdminVenuesTabState extends State<AdminVenuesTab> {
   List<Map<String, dynamic>> _apps = [];
   List<Map<String, dynamic>> _bars = [];
+  List<Map<String, dynamic>> _venues = [];
   bool _loading = true;
 
   @override
@@ -408,10 +613,33 @@ class _AdminVenuesTabState extends State<AdminVenuesTab> {
 
   Future<void> _load() async {
     try {
-      final r = await Future.wait([VenueApi.applications(), VenueApi.barRequests()]);
-      if (mounted) setState(() { _apps = r[0]; _bars = r[1]; });
+      final r = await Future.wait([VenueApi.applications(), VenueApi.barRequests(), VenueApi.allVenues()]);
+      if (mounted) setState(() { _apps = r[0]; _bars = r[1]; _venues = r[2]; });
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _editAllowance(Map<String, dynamic> v) async {
+    final c = TextEditingController(text: '${v['pass_allowance']}');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Passes for ${v['name']}'),
+        content: TextField(
+          controller: c,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(helperText: '${v['passes_made']} already made · ${v['joined']} joined'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('SAVE')),
+        ],
+      ),
+    );
+    final n = int.tryParse(c.text.trim());
+    if (ok != true || n == null) return;
+    await VenueApi.setPassAllowance(v['venue_id'] as String, n).catchError((_) {});
+    _load();
   }
 
   Future<void> _decideBar(Map<String, dynamic> b, String d) async {
@@ -450,6 +678,17 @@ class _AdminVenuesTabState extends State<AdminVenuesTab> {
               IconButton(icon: const Icon(Icons.close), onPressed: () async { await VenueApi.decideApplication(a['id'] as int, false).catchError((_) {}); _load(); }),
               IconButton(icon: const Icon(Icons.check, color: B.gold), onPressed: () async { await VenueApi.decideApplication(a['id'] as int, true).catchError((_) {}); _load(); }),
             ]),
+          ),
+        const SizedBox(height: 18),
+        const SectionLabel('Partner venues and passes'),
+        if (_venues.isEmpty) Padding(padding: const EdgeInsets.all(12), child: Text('No venues yet.', style: TextStyle(color: B.muted))),
+        for (final v in _venues)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(v['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text('${v['staff'] ?? 'no staff'} · ${v['passes_made']}/${v['pass_allowance']} passes made · ${v['joined']} joined'),
+            trailing: const Icon(Icons.edit_outlined, size: 18),
+            onTap: () => _editAllowance(v),
           ),
         const SizedBox(height: 18),
         const SectionLabel('Bar requests and appeals'),

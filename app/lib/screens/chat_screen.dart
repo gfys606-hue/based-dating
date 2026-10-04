@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/api.dart';
+import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'call_screen.dart';
@@ -98,6 +99,8 @@ class _ChatScreenState extends State<ChatScreen> {
     switch (action) {
       case 'profile':
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: _otherId)));
+      case 'venue':
+        await _suggestVenue();
       case 'not_feeling_it':
         final ok = await _confirm('Not feeling it?', 'This ends the match politely. It never counts against you.');
         if (ok) {
@@ -131,6 +134,42 @@ class _ChatScreenState extends State<ChatScreen> {
           if (mounted) Navigator.of(context).pop();
         }
     }
+  }
+
+  /// Partner venues nearby: public, staffed places that work with Based. A safe first meet.
+  Future<void> _suggestVenue() async {
+    final list = await VenueApi.partners().catchError((_) => <Map<String, dynamic>>[]);
+    if (!mounted) return;
+    final pick = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
+            child: Text('Somewhere good to meet', style: B.heading(22)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text('Partner venues: public, staffed, and they know Based.', style: TextStyle(color: B.muted, fontSize: 13)),
+          ),
+          if (list.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text('No partner venues near you yet.', style: TextStyle(color: B.muted)),
+            ),
+          for (final v in list.take(6))
+            ListTile(
+              leading: const Icon(Icons.verified_outlined, color: B.gold),
+              title: Text(v['name'] as String),
+              subtitle: Text('${(v['distance_km'] as num).toStringAsFixed(1)} km${v['address'] == null ? '' : ' · ${v['address']}'}'),
+              onTap: () => Navigator.pop(ctx, v),
+            ),
+        ]),
+      ),
+    );
+    if (pick == null) return;
+    final where = pick['address'] == null ? '${pick['name']}' : '${pick['name']} (${pick['address']})';
+    await _guard(() => Api.send(_matchId, 'How about meeting at $where?'));
   }
 
   Future<bool> _confirm(String title, String body) async =>
@@ -269,6 +308,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onSelected: _menu,
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'profile', child: Text('View profile')),
+              PopupMenuItem(value: 'venue', child: Text('Suggest a place to meet')),
               PopupMenuItem(value: 'not_feeling_it', child: Text('Not feeling it')),
               PopupMenuItem(value: 'report', child: Text('Report')),
               PopupMenuItem(value: 'block', child: Text('Block')),

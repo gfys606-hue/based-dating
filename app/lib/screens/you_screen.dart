@@ -9,7 +9,45 @@ import 'edit_profile_screen.dart';
 import 'invite_screens.dart';
 import 'venue_screens.dart';
 import '../services/venue_api.dart';
+import '../services/invites_api.dart';
 import 'profile_view_screen.dart';
+
+/// Green / yellow / red: how visible your activity is keeping you, with one tip.
+/// Hidden unless Based switches it on in The door.
+class _ActivityLight extends StatelessWidget {
+  const _ActivityLight();
+  @override
+  Widget build(BuildContext context) => FutureBuilder(
+        future: InvitesApi.myActivity().catchError((_) => <String, dynamic>{}),
+        builder: (context, snap) {
+          final a = snap.data;
+          if (a == null || a['show'] != true) return const SizedBox.shrink();
+          final color = switch (a['light']) {
+            'green' => const Color(0xFF2E9E5B),
+            'yellow' => const Color(0xFFE0A526),
+            _ => const Color(0xFFD0453A),
+          };
+          final label = switch (a['light']) { 'green' => 'You\'re seen', 'yellow' => 'Slipping a little', _ => 'Mostly hidden' };
+          return Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: B.cardBox(),
+              child: Row(children: [
+                Container(width: 14, height: 14, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                    if (a['tip'] != null) Text(a['tip'] as String, style: TextStyle(color: B.muted, fontSize: 13, height: 1.35)),
+                  ]),
+                ),
+              ]),
+            ),
+          );
+        },
+      );
+}
 
 /// You: your profile and account.
 class YouScreen extends StatelessWidget {
@@ -48,6 +86,7 @@ class YouScreen extends StatelessWidget {
             ]),
           ),
         ),
+        const _ActivityLight(),
         const SizedBox(height: 10),
         Container(
           decoration: B.cardBox(),

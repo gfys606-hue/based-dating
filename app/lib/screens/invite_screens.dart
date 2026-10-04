@@ -34,6 +34,23 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
   String? _error;
   String? _welcome;
 
+  @override
+  void initState() {
+    super.initState();
+    _tryCommunity();
+  }
+
+  /// A confirmed school or work email from a community Based has opened up gets straight in.
+  Future<void> _tryCommunity() async {
+    try {
+      final name = await InvitesApi.redeemCommunity();
+      if (name == null || !mounted) return;
+      setState(() => _welcome = 'You\'re in through $name.');
+      await Future<void>.delayed(const Duration(milliseconds: 1400));
+      widget.onDone();
+    } catch (_) {}
+  }
+
   Future<void> _redeem() async {
     if (_code.text.trim().isEmpty) return;
     setState(() {
@@ -286,6 +303,8 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   List<Map<String, dynamic>> _wait = [];
   bool? _inviteOnly;
   bool? _fullAccess;
+  bool? _activityLight;
+  List<Map<String, dynamic>> _communities = [];
 
   @override
   void initState() {
@@ -295,13 +314,15 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
 
   Future<void> _load() async {
     try {
-      final r = await Future.wait([InvitesApi.stats(), InvitesApi.waitlist(), InvitesApi.access()]);
+      final r = await Future.wait([InvitesApi.stats(), InvitesApi.waitlist(), InvitesApi.access(), InvitesApi.communities()]);
       if (mounted) {
         setState(() {
           _stats = r[0] as List<Map<String, dynamic>>;
           _wait = r[1] as List<Map<String, dynamic>>;
           _inviteOnly = (r[2] as Map<String, dynamic>)['invite_only'] == true;
           _fullAccess = (r[2] as Map<String, dynamic>)['full_access_for_new'] != false;
+          _activityLight = (r[2] as Map<String, dynamic>)['show_activity_light'] == true;
+          _communities = r[3] as List<Map<String, dynamic>>;
         });
       }
     } catch (e) {
@@ -376,6 +397,33 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
     _load();
   }
 
+  Future<void> _addCommunity() async {
+    final name = TextEditingController();
+    final domains = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add a community'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: name, decoration: const InputDecoration(labelText: 'Name', hintText: 'University of Calgary')),
+          TextField(controller: domains, decoration: const InputDecoration(labelText: 'Email domains', hintText: 'ucalgary.ca, mru.ca')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('ADD')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final list = domains.text.split(RegExp(r'[,\s]+')).where((d) => d.trim().isNotEmpty).toList();
+    try {
+      await InvitesApi.addCommunity(name.text.trim(), list);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
+    _load();
+  }
+
   Future<void> _admit(Map<String, dynamic> w) async {
     try {
       final code = await InvitesApi.admit(w['id'] as int);
@@ -423,8 +471,41 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                     _load();
                   },
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _activityLight ?? false,
+            title: const Text('Show members their activity light'),
+            subtitle: Text(_activityLight == true
+                ? 'Members see green / yellow / red on their You page, with a tip.'
+                : 'Hidden. Activity still shapes who gets seen, quietly.'),
+            onChanged: _activityLight == null
+                ? null
+                : (v) async {
+                    await InvitesApi.setActivityLight(v).catchError((_) {});
+                    _load();
+                  },
+          ),
           const SizedBox(height: 10),
           FilledButton.icon(onPressed: _newBatch, icon: const Icon(Icons.add), label: const Text('NEW VENUE CODES')),
+          const SizedBox(height: 22),
+          Row(children: [
+            const Expanded(child: SectionLabel('Communities')),
+            TextButton.icon(onPressed: _addCommunity, icon: const Icon(Icons.add, size: 18), label: const Text('ADD')),
+          ]),
+          Text('Anyone with a confirmed email from these domains gets straight in.', style: TextStyle(color: B.muted, fontSize: 12.5)),
+          if (_communities.isEmpty)
+            Padding(padding: const EdgeInsets.only(top: 8), child: Text('None yet.', style: TextStyle(color: B.muted))),
+          for (final c in _communities)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text('${(c['domains'] as List).join(', ')} · ${c['joined']} joined'),
+              value: c['active'] == true,
+              onChanged: (v) async {
+                await InvitesApi.setCommunityActive(c['id'] as String, v).catchError((_) {});
+                _load();
+              },
+            ),
           const SizedBox(height: 22),
           const SectionLabel('Sign-ups by source'),
           const SizedBox(height: 8),
