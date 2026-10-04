@@ -21,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _matches = [];
   List<Map<String, dynamic>> _people = [];
+  bool _datingOn = false;
   Map<String, dynamic>? _post;
   List<Map<String, dynamic>> _notices = [];
   bool _loading = true;
@@ -45,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Api.matchBatch(),
         Api.feed(range: 'region'),
         Api.unreadNotices().catchError((_) => <Map<String, dynamic>>[]),
+        Api.myProfile().then((p) => p == null ? <Map<String, dynamic>>[] : [p]).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       final posts = results[2].where((p) => p['author_id'] != Api.me).toList();
@@ -53,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _people = results[1].take(3).toList();
         _post = posts.isEmpty ? null : posts.first;
         _notices = results[3];
+        _datingOn = results[4].isNotEmpty && results[4].first['dating_on'] == true;
         _loading = false;
       });
     } catch (e) {
@@ -143,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 18),
           ],
 
+          if (_datingOn) ...[
           Row(children: [
             Expanded(child: Text('New near you', style: B.heading(18))),
             TextButton(onPressed: () => widget.goTab(1, discover: 0), child: const Text('See all')),
@@ -157,6 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(child: _PersonTile(person: _people[i], onTap: () => widget.goTab(1, discover: 0))),
               ],
             ]),
+          ],
 
           if (_post != null) ...[
             const SizedBox(height: 20),

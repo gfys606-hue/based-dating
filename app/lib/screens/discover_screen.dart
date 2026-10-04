@@ -22,6 +22,7 @@ class DiscoverScreen extends StatefulWidget {
 class _DiscoverScreenState extends State<DiscoverScreen> {
   late Future<List<Map<String, dynamic>>> _batch = Api.matchBatch();
   final List<String> _done = [];
+  bool? _datingOn;
   int _view = 0; // 0 cards, 1 radar
 
   @override
@@ -29,6 +30,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     super.initState();
     widget.mode.addListener(_rebuild);
     widget.refresh.addListener(_reload);
+    _loadDating();
+  }
+
+  Future<void> _loadDating() async {
+    try {
+      final p = await Api.myProfile();
+      if (mounted) setState(() => _datingOn = p?['dating_on'] == true);
+    } catch (_) {
+      if (mounted) setState(() => _datingOn = false);
+    }
+  }
+
+  Future<void> _setDating(bool on) async {
+    setState(() => _datingOn = on);
+    try {
+      await Api.setDating(on);
+    } catch (_) {}
+    _reload();
   }
 
   @override
@@ -39,7 +58,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   void _rebuild() => setState(() {});
-  void _reload() => setState(() { _done.clear(); _batch = Api.matchBatch(); });
+  void _reload() {
+    setState(() { _done.clear(); _batch = Api.matchBatch(); });
+    _loadDating();
+  }
 
   Future<void> _act(Map<String, dynamic> p, bool like) async {
     final id = p['user_id'] as String;
@@ -87,18 +109,36 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           Text('Discover', style: B.display(32)),
           const SizedBox(height: 12),
           Row(children: [
-            PillChip(label: 'People', selected: !posts, onTap: () => widget.mode.value = 0),
+            PillChip(label: 'Dating', selected: !posts, onTap: () => widget.mode.value = 0),
             const SizedBox(width: 6),
             PillChip(label: 'Posts', selected: posts, onTap: () => widget.mode.value = 1),
             const Spacer(),
-            if (!posts) Segmented(options: const ['Cards', 'Radar'], index: _view, onChanged: (i) => setState(() => _view = i)),
+            if (!posts && _datingOn == true)
+              Segmented(options: const ['Cards', 'Radar'], index: _view, onChanged: (i) => setState(() => _view = i)),
           ]),
         ]),
       ),
       Expanded(
         child: posts
             ? const PostsView()
-            : FutureBuilder(
+            : _datingOn == null
+                ? const Center(child: CircularProgressIndicator())
+                : _datingOn == false
+                    ? _DatingOff(onTurnOn: () => _setDating(true))
+                    : Column(children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 0, 18, 4),
+                          child: Row(children: [
+                            const Icon(Icons.favorite, size: 14, color: B.gold),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text('Dating is on · only other daters see you here',
+                                  style: TextStyle(color: B.muted, fontSize: 12.5)),
+                            ),
+                            TextButton(onPressed: () => _setDating(false), child: const Text('TURN OFF')),
+                          ]),
+                        ),
+                        Expanded(child: FutureBuilder(
                 future: _batch,
                 builder: (context, snap) {
                   if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
@@ -108,7 +148,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       ? _Cards(person: people.first, left: people.length, onAct: _act, onOpen: _openProfile)
                       : _Radar(people: people, onOpen: _openProfile);
                 },
-              ),
+              )),
+                      ]),
       ),
     ]);
   }
@@ -324,4 +365,34 @@ class _Empty extends StatelessWidget {
           ]),
         ),
       );
+}
+
+
+/// Dating is off: Based is for meeting people; dating is an extra view you choose to turn on.
+class _DatingOff extends StatelessWidget {
+  const _DatingOff({required this.onTurnOn});
+  final VoidCallback onTurnOn;
+  @override
+  Widget build(BuildContext context) => ListView(padding: const EdgeInsets.fromLTRB(18, 10, 18, 30), children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.favorite_border, color: B.gold, size: 28),
+            const SizedBox(height: 12),
+            Text('Dating is off', style: B.heading(24).copyWith(color: Colors.white)),
+            const SizedBox(height: 6),
+            Text(
+              'Turn it on to see people who might interest you. Only people who also have dating on '
+              'can see you here, or see that yours is on. Everyone else just sees you as a member.',
+              style: TextStyle(color: B.onPanelMuted, height: 1.45),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onTurnOn, child: const Text('TURN ON DATING')),
+          ]),
+        ),
+        const SizedBox(height: 14),
+        Text('You can switch it off anytime. Conversations you already have stay open.',
+            style: TextStyle(color: B.muted, fontSize: 12.5)),
+      ]);
 }

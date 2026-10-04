@@ -88,6 +88,15 @@ class ProfileBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text('${profile['name']}, ${profile['age']}', style: B.display(34)),
+        if (profile['dating_on'] == true && profile['is_me'] != true)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(children: [
+              const Icon(Icons.favorite, size: 14, color: B.gold),
+              const SizedBox(width: 6),
+              Text('DATING', style: B.label.copyWith(color: B.accentStrong)),
+            ]),
+          ),
         if (profile['venue_mark'] == true)
           Padding(
             padding: const EdgeInsets.only(top: 4),

@@ -101,6 +101,16 @@ class YouScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
+        const SectionLabel('Dating'),
+        const SizedBox(height: 10),
+        Container(
+          decoration: B.cardBox(),
+          child: FutureBuilder(
+            future: Api.myProfile(),
+            builder: (context, snap) => _DatingSwitch(initial: snap.data?['dating_on'] == true, key: ValueKey(snap.data?['dating_on'])),
+          ),
+        ),
+        const SizedBox(height: 20),
         const SectionLabel('Appearance'),
         const SizedBox(height: 10),
         ValueListenableBuilder<ThemeMode>(
@@ -164,4 +174,32 @@ class YouScreen extends StatelessWidget {
       }
     }
   }
+}
+
+
+class _DatingSwitch extends StatefulWidget {
+  const _DatingSwitch({super.key, required this.initial});
+  final bool initial;
+  @override
+  State<_DatingSwitch> createState() => _DatingSwitchState();
+}
+
+class _DatingSwitchState extends State<_DatingSwitch> {
+  late bool _on = widget.initial;
+  @override
+  Widget build(BuildContext context) => SwitchListTile(
+        value: _on,
+        title: const Text('Dating'),
+        subtitle: Text(_on
+            ? 'On. You see people who might interest you, and only other daters can see you there.'
+            : 'Off. You\'re just a member: circles, friends and plans.'),
+        onChanged: (v) async {
+          setState(() => _on = v);
+          try {
+            await Api.setDating(v);
+          } catch (_) {
+            if (mounted) setState(() => _on = !v);
+          }
+        },
+      );
 }
