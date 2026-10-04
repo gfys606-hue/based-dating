@@ -210,6 +210,15 @@ class Api {
         'p_limit': 30,
       }));
 
+  // Steer the feed: weight -2 hide, -1 less, 0 neutral, 1 more, 2 lots more
+  static Future<void> setTopicPref(int topicId, int weight) =>
+      db.rpc('set_topic_pref', params: {'p_topic': topicId, 'p_weight': weight});
+  static Future<void> setAuthorPref(String authorId, int weight) =>
+      db.rpc('set_author_pref', params: {'p_author': authorId, 'p_weight': weight});
+  static Future<Map<String, dynamic>> feedPrefs() async =>
+      Map<String, dynamic>.from(await db.rpc('get_feed_prefs') as Map);
+  static Future<void> resetFeed() => db.rpc('reset_feed');
+
   static Future<void> post({required int topicId, required String kind, required String body}) =>
       db.from('posts').insert({'author_id': me, 'topic_id': topicId, 'kind': kind, 'body': body});
 
