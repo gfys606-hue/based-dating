@@ -27,6 +27,9 @@ class Api {
         'seeking': seeking,
       });
 
+  /// Dating is a switch: only people with it on see each other in the dating view.
+  static Future<void> setDating(bool on) => db.rpc('set_dating', params: {'p_on': on});
+
   static Future<void> updateProfile(Map<String, dynamic> fields) =>
       db.from('profiles').update(fields).eq('id', me);
 
