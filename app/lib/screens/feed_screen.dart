@@ -29,6 +29,82 @@ class _PostsViewState extends State<PostsView> {
     _refresh();
   }
 
+  /// Your feed, your rules: what you've steered, and a reset.
+  Future<void> _tune() async {
+    Map<String, dynamic> prefs;
+    try {
+      prefs = await Api.feedPrefs();
+    } catch (_) {
+      prefs = {};
+    }
+    if (!mounted) return;
+    String label(int w) => switch (w) { -2 => 'Hidden', -1 => 'Less', 1 => 'More', 2 => 'Lots more', _ => '' };
+    final changed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          final topics = List<Map<String, dynamic>>.from((prefs['topics'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)));
+          final people = List<Map<String, dynamic>>.from((prefs['people'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)));
+          return SafeArea(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * .75),
+              child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(20), children: [
+                Text('Your feed, your rules', style: B.heading(24)),
+                const SizedBox(height: 4),
+                Text('Tap "Why this?" on any post to steer it. Everything you\'ve told it is here, and you can start over anytime.',
+                    style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
+                const SizedBox(height: 12),
+                if (topics.isEmpty && people.isEmpty) Text('Nothing steered yet.', style: TextStyle(color: B.ink2)),
+                if (topics.isNotEmpty) const SectionLabel('Topics'),
+                for (final t in topics)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(t['name'] as String),
+                    subtitle: Text(label(t['weight'] as int)),
+                    trailing: TextButton(
+                      onPressed: () async {
+                        await Api.setTopicPref(t['topic_id'] as int, 0);
+                        set(() => (prefs['topics'] as List).removeWhere((x) => (x as Map)['topic_id'] == t['topic_id']));
+                      },
+                      child: const Text('UNDO'),
+                    ),
+                  ),
+                if (people.isNotEmpty) const SectionLabel('People'),
+                for (final p in people)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(p['name'] as String),
+                    subtitle: Text(label(p['weight'] as int)),
+                    trailing: TextButton(
+                      onPressed: () async {
+                        await Api.setAuthorPref(p['user_id'] as String, 0);
+                        set(() => (prefs['people'] as List).removeWhere((x) => (x as Map)['user_id'] == p['user_id']));
+                      },
+                      child: const Text('UNDO'),
+                    ),
+                  ),
+                const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await Api.resetFeed();
+                    if (ctx.mounted) Navigator.pop(ctx, true);
+                  },
+                  icon: const Icon(Icons.restart_alt),
+                  label: const Text('RESET MY FEED'),
+                ),
+              ]),
+            ),
+          );
+        },
+      ),
+    );
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fresh start. Your feed is back to your interests and who you know.')));
+    }
+    _refresh();
+  }
+
   Future<void> _compose() async {
     final topics = await Api.topics();
     if (!mounted) return;
@@ -92,6 +168,13 @@ class _PostsViewState extends State<PostsView> {
               icon: const Icon(Icons.edit, size: 18),
               label: const Text('Post'),
             ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _tune,
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+              icon: const Icon(Icons.tune, size: 18),
+              label: const Text('Tune'),
+            ),
             const SizedBox(width: 10),
             for (var i = 0; i < _labels.length; i++) ...[
               Center(child: PillChip(label: _labels[i], selected: i == _range, onTap: () => _setRange(i))),
@@ -118,7 +201,7 @@ class _PostsViewState extends State<PostsView> {
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, B.navClearance),
                 itemCount: posts.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, i) => _PostCard(post: posts[i]),
+                itemBuilder: (context, i) => _PostCard(post: posts[i], onSteered: _refresh),
               );
             },
           ),
@@ -129,8 +212,9 @@ class _PostsViewState extends State<PostsView> {
 }
 
 class _PostCard extends StatefulWidget {
-  const _PostCard({required this.post});
+  const _PostCard({required this.post, this.onSteered});
   final Map<String, dynamic> post;
+  final VoidCallback? onSteered;
   @override
   State<_PostCard> createState() => _PostCardState();
 }
@@ -158,6 +242,18 @@ class _PostCardState extends State<_PostCard> {
             Text('${p['topic']}${km == null ? '' : ' · $km km'}', style: TextStyle(fontSize: 12, color: B.muted)),
           ]),
         ),
+        if (p['why'] != null)
+          InkWell(
+            onTap: () => _why(context),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(children: [
+                Icon(Icons.info_outline, size: 13, color: B.muted),
+                const SizedBox(width: 4),
+                Flexible(child: Text('${p['why']} · Why this?', style: TextStyle(fontSize: 12, color: B.muted))),
+              ]),
+            ),
+          ),
         const SizedBox(height: 8),
         if (p['kind'] == 'question') const SectionLabel('Question'),
         Text(p['body'] as String? ?? '', style: const TextStyle(fontSize: 15, height: 1.45)),
@@ -186,6 +282,56 @@ class _PostCardState extends State<_PostCard> {
         ]),
       ]),
     );
+  }
+
+  /// Why this post is here, and buttons to steer: more/less of the topic, less from this person.
+  Future<void> _why(BuildContext context) async {
+    final p = widget.post;
+    final mine = p['author_id'] == Api.me;
+    final topicId = p['topic_id'] as int?;
+    final done = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Why you\'re seeing this', style: B.heading(22)),
+              const SizedBox(height: 4),
+              Text('${p['why']}.', style: TextStyle(color: B.ink2, fontSize: 15)),
+            ]),
+          ),
+          if (topicId != null) ...[
+            ListTile(leading: const Icon(Icons.add_circle_outline), title: Text('More ${p['topic']}'), onTap: () => Navigator.pop(ctx, 'topic+')),
+            ListTile(leading: const Icon(Icons.remove_circle_outline), title: Text('Less ${p['topic']}'), onTap: () => Navigator.pop(ctx, 'topic-')),
+            ListTile(leading: const Icon(Icons.visibility_off_outlined), title: Text('Hide ${p['topic']}'), onTap: () => Navigator.pop(ctx, 'topicx')),
+          ],
+          if (!mine) ...[
+            ListTile(leading: const Icon(Icons.person_add_alt), title: Text('More from ${p['author_name']}'), onTap: () => Navigator.pop(ctx, 'author+')),
+            ListTile(leading: const Icon(Icons.person_remove_alt_1_outlined), title: Text('Less from ${p['author_name']}'), onTap: () => Navigator.pop(ctx, 'author-')),
+          ],
+        ]),
+      ),
+    );
+    if (done == null) return;
+    try {
+      switch (done) {
+        case 'topic+':
+          await Api.setTopicPref(topicId!, 1);
+        case 'topic-':
+          await Api.setTopicPref(topicId!, -1);
+        case 'topicx':
+          await Api.setTopicPref(topicId!, -2);
+        case 'author+':
+          await Api.setAuthorPref(p['author_id'] as String, 1);
+        case 'author-':
+          await Api.setAuthorPref(p['author_id'] as String, -1);
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Got it. Change it anytime under Tune.')));
+      }
+      widget.onSteered?.call();
+    } catch (_) {}
   }
 
   Future<void> _openComments(BuildContext context, String postId) async {
