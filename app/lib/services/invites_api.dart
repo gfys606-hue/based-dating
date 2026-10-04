@@ -53,4 +53,16 @@ class InvitesApi {
   static Future<void> setFullAccess(bool on) => _db.rpc('admin_set_full_access', params: {'p_on': on});
   static Future<List<Map<String, dynamic>>> waitlist() async => _rows(await _db.rpc('admin_waitlist'));
   static Future<String> admit(int id) async => await _db.rpc('admin_admit_waitlist', params: {'p_id': id}) as String;
+
+  // ---------- communities (a confirmed school / work email gets straight in) ----------
+  static Future<String?> redeemCommunity() async => await _db.rpc('redeem_community') as String?;
+  static Future<List<Map<String, dynamic>>> communities() async => _rows(await _db.rpc('admin_communities'));
+  static Future<void> addCommunity(String name, List<String> domains) =>
+      _db.rpc('admin_add_community', params: {'p_name': name, 'p_domains': domains});
+  static Future<void> setCommunityActive(String id, bool active) =>
+      _db.rpc('admin_set_community_active', params: {'p_id': id, 'p_active': active});
+
+  // ---------- activity light ----------
+  static Future<Map<String, dynamic>> myActivity() async => _map(await _db.rpc('my_activity'));
+  static Future<void> setActivityLight(bool on) => _db.rpc('admin_set_activity_light', params: {'p_on': on});
 }

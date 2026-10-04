@@ -25,7 +25,15 @@ class VenueApi {
   static Future<void> decideTable(String requestId, String decision, {int? size, String? note}) =>
       _db.rpc('decide_table', params: {'p_request': requestId, 'p_decision': decision, 'p_size': size, 'p_note': note});
 
+  // ---------- passes (owners hand these out however they like) ----------
+  static Future<Map<String, dynamic>> passes(String venueId) async =>
+      Map<String, dynamic>.from(await _db.rpc('get_venue_passes', params: {'p_venue': venueId}) as Map);
+  static Future<List<String>> createPasses(String venueId, int count) async =>
+      List<String>.from(await _db.rpc('owner_create_passes', params: {'p_venue': venueId, 'p_count': count}) as List);
+
   // ---------- members ----------
+  static Future<List<Map<String, dynamic>>> partners({int km = 15}) async =>
+      _rows(await _db.rpc('get_partner_venues', params: {'p_km': km}));
   static Future<void> requestTable(String eventId, int party, {String? note}) =>
       _db.rpc('request_table', params: {'p_event': eventId, 'p_party': party, 'p_note': note});
   static Future<Map<String, dynamic>?> tableStatus(String eventId) async {
@@ -40,6 +48,9 @@ class VenueApi {
   static Future<List<Map<String, dynamic>>> applications() async => _rows(await _db.rpc('admin_venue_applications'));
   static Future<void> decideApplication(int id, bool ok) =>
       _db.rpc('admin_decide_venue_application', params: {'p_id': id, 'p_ok': ok});
+  static Future<List<Map<String, dynamic>>> allVenues() async => _rows(await _db.rpc('admin_venues'));
+  static Future<void> setPassAllowance(String venueId, int allowance) =>
+      _db.rpc('admin_set_pass_allowance', params: {'p_venue': venueId, 'p_allowance': allowance});
   static Future<List<Map<String, dynamic>>> barRequests() async => _rows(await _db.rpc('admin_bar_requests'));
   static Future<void> decideBar(String barId, String decision, {String? note}) =>
       _db.rpc('admin_decide_bar', params: {'p_bar': barId, 'p_decision': decision, 'p_note': note});
