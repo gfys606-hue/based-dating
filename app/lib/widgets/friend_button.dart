@@ -52,10 +52,10 @@ class _FriendButtonState extends State<FriendButton> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
             leading: Icon(inner ? Icons.star : Icons.star_outline, color: B.gold),
-            title: Text(inner ? 'Remove from inner circle' : 'Add to inner circle'),
+            title: Text(inner ? 'Remove from your Tight' : 'Add to your Tight'),
             subtitle: Text(inner
                 ? '${widget.name} will only see what all your friends see.'
-                : '${widget.name} will see everything: your plans and your circles.'),
+                : '${widget.name} will see everything: your plans and your herds.'),
             onTap: () => Navigator.pop(ctx, 'inner'),
           ),
           ListTile(
@@ -107,7 +107,7 @@ class _FriendButtonState extends State<FriendButton> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 value: circles,
-                title: const Text('My circles'),
+                title: const Text('My herds'),
                 onChanged: (x) => set(() => circles = x),
               ),
               const SizedBox(height: 6),
@@ -138,7 +138,7 @@ class _FriendButtonState extends State<FriendButton> {
         button = OutlinedButton.icon(
           onPressed: _busy ? null : _friendMenu,
           icon: Icon(inner ? Icons.star : Icons.check, size: 18, color: inner ? B.gold : B.accentStrong),
-          label: Text(inner ? 'INNER CIRCLE' : 'FRIENDS'),
+          label: Text(inner ? 'TIGHT' : 'FRIENDS'),
         );
       case 'outgoing':
         button = OutlinedButton.icon(
@@ -177,7 +177,7 @@ class _FriendButtonState extends State<FriendButton> {
       ],
       if (status == 'friends' && _s?['their_inner'] == true) ...[
         const SizedBox(height: 6),
-        Text('You\'re in ${widget.name}\'s inner circle.', style: TextStyle(color: B.muted, fontSize: 12.5)),
+        Text('You\'re in ${widget.name}\'s Tight.', style: TextStyle(color: B.muted, fontSize: 12.5)),
       ],
     ]);
   }
