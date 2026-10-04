@@ -157,7 +157,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
             Text('You\'re at ${m['place_name']}',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
             Text(
-              '${m['audience'] == 'friends' ? 'Friends' : 'Inner circle'} can see it until ${DateFormat('h:mm a').format(until)}',
+              '${m['audience'] == 'friends' ? 'Friends' : 'Your Tight'} can see it until ${DateFormat('h:mm a').format(until)}',
               style: TextStyle(color: B.onPanelMuted, fontSize: 12.5),
             ),
           ]),
@@ -318,7 +318,7 @@ class _HereNowSheetState extends State<_HereNowSheet> {
           const SectionLabel('Who sees it'),
           const SizedBox(height: 6),
           Wrap(spacing: 6, children: [
-            ChoiceChip(label: const Text('Inner circle'), selected: _audience == 'inner', onSelected: (_) => setState(() => _audience = 'inner')),
+            ChoiceChip(label: const Text('Tight'), selected: _audience == 'inner', onSelected: (_) => setState(() => _audience = 'inner')),
             ChoiceChip(label: const Text('All friends'), selected: _audience == 'friends', onSelected: (_) => setState(() => _audience = 'friends')),
           ]),
           SwitchListTile(
@@ -428,7 +428,7 @@ class _QuickPlanSheetState extends State<_QuickPlanSheet> {
           const SectionLabel('Who sees it'),
           const SizedBox(height: 6),
           Wrap(spacing: 6, children: [
-            ChoiceChip(label: const Text('Inner circle'), selected: _audience == 'inner', onSelected: (_) => setState(() => _audience = 'inner')),
+            ChoiceChip(label: const Text('Tight'), selected: _audience == 'inner', onSelected: (_) => setState(() => _audience = 'inner')),
             ChoiceChip(label: const Text('Friends'), selected: _audience == 'friends', onSelected: (_) => setState(() => _audience = 'friends')),
             ChoiceChip(label: const Text('Everyone nearby'), selected: _audience == 'public', onSelected: (_) => setState(() => _audience = 'public')),
           ]),

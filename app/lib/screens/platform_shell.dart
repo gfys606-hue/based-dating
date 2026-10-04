@@ -18,7 +18,7 @@ class PlatformShell extends StatelessWidget {
     return HomeShell(
       onStatusChanged: onStatusChanged,
       extras: [
-        ShellPage(const RailItem('Circles', Icons.bubble_chart_outlined, Icons.bubble_chart), (_) => const CirclesScreen()),
+        ShellPage(const RailItem('Herd', Icons.groups_outlined, Icons.groups), (_) => const CirclesScreen()),
         ShellPage(const RailItem('Search', Icons.search, Icons.search), (open) => SearchScreen(openModule: open)),
         ShellPage(const RailItem('Events', Icons.event_outlined, Icons.event), (_) => const EventsScreen()),
         ShellPage(const RailItem('Market', Icons.storefront_outlined, Icons.storefront), (_) => const MarketScreen()),

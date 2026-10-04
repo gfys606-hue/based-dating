@@ -109,7 +109,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           Text('Discover', style: B.display(32)),
           const SizedBox(height: 12),
           Row(children: [
-            PillChip(label: 'Dating', selected: !posts, onTap: () => widget.mode.value = 0),
+            PillChip(label: 'Ouch', selected: !posts, onTap: () => widget.mode.value = 0),
             const SizedBox(width: 6),
             PillChip(label: 'Posts', selected: posts, onTap: () => widget.mode.value = 1),
             const Spacer(),
@@ -132,7 +132,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             const Icon(Icons.favorite, size: 14, color: B.gold),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text('Dating is on · only other daters see you here',
+                              child: Text('Ouch is on · only others with Ouch on see you here',
                                   style: TextStyle(color: B.muted, fontSize: 12.5)),
                             ),
                             TextButton(onPressed: () => _setDating(false), child: const Text('TURN OFF')),
@@ -380,15 +380,15 @@ class _DatingOff extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Icon(Icons.favorite_border, color: B.gold, size: 28),
             const SizedBox(height: 12),
-            Text('Dating is off', style: B.heading(24).copyWith(color: Colors.white)),
+            Text('Ouch is off', style: B.heading(24).copyWith(color: Colors.white)),
             const SizedBox(height: 6),
             Text(
-              'Turn it on to see people who might interest you. Only people who also have dating on '
-              'can see you here, or see that yours is on. Everyone else just sees you as a member.',
+              'Ouch is dating on Based. Turn it on to see people who might interest you. Only people who also '
+              'have Ouch on can see you here, or see that yours is on. Everyone else just sees you as a member.',
               style: TextStyle(color: B.onPanelMuted, height: 1.45),
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onTurnOn, child: const Text('TURN ON DATING')),
+            FilledButton(onPressed: onTurnOn, child: const Text('TURN ON OUCH')),
           ]),
         ),
         const SizedBox(height: 14),

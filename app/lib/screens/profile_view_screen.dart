@@ -94,7 +94,7 @@ class ProfileBody extends StatelessWidget {
             child: Row(children: [
               const Icon(Icons.favorite, size: 14, color: B.gold),
               const SizedBox(width: 6),
-              Text('DATING', style: B.label.copyWith(color: B.accentStrong)),
+              Text('OUCH', style: B.label.copyWith(color: B.accentStrong)),
             ]),
           ),
         if (profile['venue_mark'] == true)

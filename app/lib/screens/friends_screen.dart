@@ -107,7 +107,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
             const SizedBox(height: 14),
           ],
           if (inner.isNotEmpty) ...[
-            SectionLabel('Inner circle', color: B.accentStrong),
+            SectionLabel('Tight', color: B.accentStrong),
             const SizedBox(height: 10),
             for (final f in inner) _friendTile(f),
             const SizedBox(height: 14),
@@ -122,7 +122,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
               padding: const EdgeInsets.all(28),
               decoration: B.cardBox(),
               child: Text(
-                'No friends yet. After you\'ve talked to a match, or met someone in a circle or at an event, '
+                'No friends yet. After you\'ve talked to a match, or met someone in your herd or at an event, '
                 'open their profile and tap Add friend.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: B.muted, height: 1.4),
@@ -276,7 +276,7 @@ Future<void> showFriendVisibilitySheet(BuildContext context) async {
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('What friends can see', style: B.heading(24)),
             const SizedBox(height: 6),
-            Text('Your inner circle always sees everything. These switches are for everyone else on your friends list.',
+            Text('Your Tight always sees everything. These switches are for everyone else on your friends list.',
                 style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
             const SizedBox(height: 8),
             SwitchListTile(
@@ -289,8 +289,8 @@ Future<void> showFriendVisibilitySheet(BuildContext context) async {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: circles,
-              title: const Text('My circles'),
-              subtitle: const Text('Which circles I\'m in'),
+              title: const Text('My herds'),
+              subtitle: const Text('Which herds I\'m in'),
               onChanged: (x) => set(() => circles = x),
             ),
             const SizedBox(height: 8),
@@ -342,7 +342,7 @@ class QuietModeBar extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Quiet mode', style: B.heading(24)),
               const SizedBox(height: 4),
-              Text('Hides your plans and circles from all your friends, inner circle included. '
+              Text('Hides your plans and herds from all your friends, your Tight included. '
                   'Nobody is removed, and plans you send to people still reach them.',
                   style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
             ]),

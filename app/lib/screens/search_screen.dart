@@ -77,7 +77,7 @@ class _SearchScreenState extends State<SearchScreen> {
             autofocus: false,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: 'People, interests, circles, events, stuff for sale…',
+              hintText: 'People, interests, herds, events, stuff for sale…',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _loading
                   ? const Padding(padding: EdgeInsets.all(14), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)))
@@ -116,14 +116,14 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
           ],
           if (_list('circles').isNotEmpty) ...[
-            _label('Circles'),
+            _label('Herds'),
             for (final c in _list('circles'))
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(backgroundColor: B.accentSoft, child: Icon(Icons.bubble_chart, color: B.accent)),
                 title: Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text('${c['members']} members'),
-                trailing: c['joined'] == true ? Text('Joined', style: TextStyle(color: B.muted)) : Text('Join', style: TextStyle(color: B.accent, fontWeight: FontWeight.w700)),
+                trailing: c['joined'] == true ? Text('Joined', style: TextStyle(color: B.muted)) : Text('Invite only', style: TextStyle(color: B.muted)),
                 onTap: () => _openCircle(c),
               ),
           ],
@@ -178,7 +178,7 @@ class _SearchScreenState extends State<SearchScreen> {
         decoration: BoxDecoration(color: B.fill, borderRadius: BorderRadius.circular(3)),
         child: Row(children: [
           Expanded(
-            child: Text('Use my searches to improve my matches and circles',
+            child: Text('Use my searches to improve my matches and herds',
                 style: TextStyle(fontSize: 13, color: B.ink2)),
           ),
           Switch(
@@ -201,7 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
       if (c['joined'] != true) {
         // Circles are invite only: you can't walk in, a member has to nominate you.
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Circles are invite only. If you know someone in it, they can nominate you.')));
+            content: Text('Herds are invite only. If you know someone in it, they can nominate you.')));
         return;
       }
       if (!mounted) return;
@@ -212,7 +212,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString().contains('full') ? 'That circle is full.' : 'Couldn\'t join. Try again.')));
+            SnackBar(content: Text(e.toString().contains('full') ? 'That herd is full.' : 'Couldn\'t join. Try again.')));
       }
     }
   }

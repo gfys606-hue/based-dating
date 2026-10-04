@@ -36,7 +36,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
       final inv = await SocialApi.circleInvites().catchError((_) => <Map<String, dynamic>>[]);
       if (mounted) setState(() { _circles = c; _invites = inv; _loading = false; _error = null; });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'Couldn\'t load your circles.'; });
+      if (mounted) setState(() { _loading = false; _error = 'Couldn\'t load your herds.'; });
     }
   }
 
@@ -45,7 +45,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Start a circle'),
+        title: const Text('Start a herd'),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           TextField(
             controller: name,
@@ -72,7 +72,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
       if (mounted) await _openCircle(c);
     } catch (e) {
       if (mounted) {
-        final m = e.toString().contains('10 circles') ? 'You\'re in 10 circles already. Leave one to start another.' : 'Couldn\'t start it. Try again.';
+        final m = (e.toString().contains('10 herds') || e.toString().contains('10 circles')) ? 'You\'re in 10 herds already. Leave one to start another.' : 'Couldn\'t start it. Try again.';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
       }
     } finally {
@@ -90,7 +90,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final m = e.toString().contains('full') ? 'That circle is full right now.' : 'Couldn\'t do that. Try again.';
+        final m = e.toString().contains('full') ? 'That herd is full right now.' : 'Couldn\'t do that. Try again.';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
       }
     }
@@ -109,9 +109,9 @@ class _CirclesScreenState extends State<CirclesScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
           children: [
-            Text('Circles', style: B.display(32)),
+            Text('Herd', style: B.display(32)),
             const SizedBox(height: 6),
-            Text('Your people, by invitation. Members decide together who comes in.',
+            Text('Your herd, by invitation. Members decide together who comes in.',
                 style: TextStyle(color: B.ink2, height: 1.4)),
             const SizedBox(height: 18),
             if (_invites.isNotEmpty) ...[
@@ -127,7 +127,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
             else if (_error != null)
               Text(_error!, style: TextStyle(color: B.urgent))
             else if (_circles.isNotEmpty) ...[
-              const SectionLabel('Your circles'),
+              const SectionLabel('Your herds'),
               const SizedBox(height: 10),
               for (final c in _circles) _circleTile(c),
             ],
@@ -166,12 +166,12 @@ class _CirclesScreenState extends State<CirclesScreen> {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(_circles.isEmpty ? 'Start your circle' : 'Start another circle', style: B.heading(20).copyWith(color: Colors.white)),
+          Text(_circles.isEmpty ? 'Start your herd' : 'Start another herd', style: B.heading(20).copyWith(color: Colors.white)),
           const SizedBox(height: 4),
-          Text('Name it, then nominate the people you want in. Your circle votes on everyone after that.',
+          Text('Name it, then nominate the people you want in. Your herd votes on everyone after that.',
               style: TextStyle(color: B.onPanelMuted, height: 1.4)),
           const SizedBox(height: 14),
-          FilledButton(onPressed: _starting ? null : _start, child: Text(_starting ? 'Starting…' : 'START A CIRCLE')),
+          FilledButton(onPressed: _starting ? null : _start, child: Text(_starting ? 'Starting…' : 'START A HERD')),
         ]),
       );
 
@@ -236,8 +236,8 @@ class _CircleScreenState extends State<CircleScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Leave this circle?'),
-        content: const Text('To come back later, a member would need to nominate you again.'),
+        title: const Text('Leave this herd?'),
+        content: const Text('To come back later, a member of the herd would need to nominate you again.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Stay')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Leave')),
@@ -256,13 +256,13 @@ class _CircleScreenState extends State<CircleScreen> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.circle['name'] as String? ?? 'Circle'),
+          title: Text(widget.circle['name'] as String? ?? 'Herd'),
           actions: [
             PopupMenuButton<String>(
               onSelected: (v) {
                 if (v == 'leave') _leave();
               },
-              itemBuilder: (_) => const [PopupMenuItem(value: 'leave', child: Text('Leave circle'))],
+              itemBuilder: (_) => const [PopupMenuItem(value: 'leave', child: Text('Leave herd'))],
             ),
           ],
           bottom: const TabBar(tabs: [Tab(text: 'Chat'), Tab(text: 'Plans'), Tab(text: 'Grow')]),
@@ -298,7 +298,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 onSend: (b) => SocialApi.sendCircleMessage(_id, b),
                 names: names,
                 showNames: true,
-                hint: 'Message the circle',
+                hint: 'Message the herd',
               ),
               EventsList(circleId: _id),
               _GrowTab(circleId: _id, memberIds: _members.map((m) => m['user_id'] as String).toSet()),
@@ -349,7 +349,7 @@ class _GrowTabState extends State<_GrowTab> {
       builder: (ctx) => AlertDialog(
         title: Text('Nominate $name?'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('The circle votes. If enough say yes, $name gets an invite. They never see the vote.',
+          Text('The herd votes. If enough say yes, $name gets an invite. They never see the vote.',
               style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
           const SizedBox(height: 10),
           TextField(controller: note, maxLength: 200, decoration: const InputDecoration(hintText: 'Why? (optional, members only)')),
@@ -363,7 +363,7 @@ class _GrowTabState extends State<_GrowTab> {
     if (ok != true) return;
     try {
       final st = await SocialApi.nominate(widget.circleId, userId, note: note.text.trim().isEmpty ? null : note.text.trim());
-      _toast(st == 'invited' ? 'That was enough votes. $name has been invited.' : 'Nominated. The circle will vote.');
+      _toast(st == 'invited' ? 'That was enough votes. $name has been invited.' : 'Nominated. The herd will vote.');
     } catch (e) {
       final s = e.toString();
       _toast(s.contains('recently')
@@ -431,7 +431,7 @@ class _GrowTabState extends State<_GrowTab> {
       child: ListView(padding: const EdgeInsets.all(16), children: [
         OutlinedButton.icon(onPressed: _pickFriend, icon: const Icon(Icons.person_add_alt_1), label: const Text('NOMINATE A FRIEND')),
         const SizedBox(height: 6),
-        Text('Someone gets in when 25% of the circle plus 1 say yes. Nobody can veto, and the person never sees the vote.',
+        Text('Someone gets in when 25% of the herd plus 1 say yes. Nobody can veto, and the person never sees the vote.',
             style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
         const SizedBox(height: 18),
         if (voting.isNotEmpty) ...[
@@ -441,7 +441,7 @@ class _GrowTabState extends State<_GrowTab> {
           const SizedBox(height: 14),
         ],
         if (_cands.isNotEmpty) ...[
-          const SectionLabel('People your circle might want'),
+          const SectionLabel('People your herd might want'),
           const SizedBox(height: 8),
           for (final c in _cands)
             ListTile(

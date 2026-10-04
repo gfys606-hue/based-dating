@@ -414,8 +414,8 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
             value: _fullAccess ?? true,
             title: const Text('Full access for new members'),
             subtitle: Text(_fullAccess == false
-                ? 'New members get dating only. Circles, Events and plans stay for testers.'
-                : 'Anyone who joins with a code gets Circles, Events and plans too.'),
+                ? 'New members get Ouch (dating) only. Herd, Events and plans stay for testers.'
+                : 'Anyone who joins with a code gets Herd, Events and plans too.'),
             onChanged: _fullAccess == null
                 ? null
                 : (v) async {

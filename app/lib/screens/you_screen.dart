@@ -101,7 +101,7 @@ class YouScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        const SectionLabel('Dating'),
+        const SectionLabel('Ouch'),
         const SizedBox(height: 10),
         Container(
           decoration: B.cardBox(),
@@ -189,10 +189,10 @@ class _DatingSwitchState extends State<_DatingSwitch> {
   @override
   Widget build(BuildContext context) => SwitchListTile(
         value: _on,
-        title: const Text('Dating'),
+        title: const Text('Ouch (dating)'),
         subtitle: Text(_on
-            ? 'On. You see people who might interest you, and only other daters can see you there.'
-            : 'Off. You\'re just a member: circles, friends and plans.'),
+            ? 'On. You see people who might interest you, and only others with Ouch on can see you there.'
+            : 'Off. You\'re just a member: your herd, friends and plans.'),
         onChanged: (v) async {
           setState(() => _on = v);
           try {

@@ -211,7 +211,7 @@ class EventsListState extends State<EventsList> {
                   if (await showCreateEventSheet(context, circleId: widget.circleId)) load();
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Plan something with this circle'),
+                label: const Text('Plan something with this herd'),
               ),
             ),
           if (_events.isEmpty)
@@ -341,7 +341,7 @@ class EventsListState extends State<EventsList> {
     final from = e['mine'] == true ? 'You' : (e['creator_name'] as String? ?? '');
     switch (e['audience']) {
       case 'inner':
-        return e['mine'] == true ? 'YOUR INNER CIRCLE' : '${from.toUpperCase()} · INNER CIRCLE';
+        return e['mine'] == true ? 'YOUR TIGHT' : '${from.toUpperCase()} · TIGHT';
       case 'friends':
         return e['mine'] == true ? 'YOUR FRIENDS' : '${from.toUpperCase()} · FRIENDS';
       case 'custom':
@@ -454,7 +454,7 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
                   value: _picked.contains(f['user_id']),
                   secondary: Avatar(path: f['photo'] as String?, size: 36),
                   title: Text(f['name'] as String),
-                  subtitle: f['is_inner'] == true ? const Text('Inner circle') : null,
+                  subtitle: f['is_inner'] == true ? const Text('Tight') : null,
                   onChanged: (v) => set(() => v == true ? _picked.add(f['user_id'] as String) : _picked.remove(f['user_id'])),
                 ),
               const SizedBox(height: 8),
@@ -521,7 +521,7 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(18, 18, 18, 18 + MediaQuery.of(context).viewInsets.bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(widget.circleId == null ? 'Plan something' : 'Plan with your circle', style: B.heading(22)),
+        Text(widget.circleId == null ? 'Plan something' : 'Plan with your herd', style: B.heading(22)),
         const SizedBox(height: 14),
         TextField(controller: _title, decoration: const InputDecoration(hintText: 'What? (e.g. Sunday fishing at Sheep River)')),
         const SizedBox(height: 10),
@@ -565,7 +565,7 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
           const SectionLabel('Who sees it'),
           const SizedBox(height: 8),
           Wrap(spacing: 6, runSpacing: 6, children: [
-            for (final a in const [('public', 'Everyone nearby'), ('friends', 'Friends'), ('inner', 'Inner circle'), ('custom', 'Pick people')])
+            for (final a in const [('public', 'Everyone nearby'), ('friends', 'Friends'), ('inner', 'Tight'), ('custom', 'Pick people')])
               ChoiceChip(
                 label: Text(a.$1 == 'custom' && _picked.isNotEmpty ? 'Picked (${_picked.length})' : a.$2),
                 selected: _audience == a.$1,
@@ -579,7 +579,7 @@ class _CreateEventSheetState extends State<_CreateEventSheet> {
           Text(
             switch (_audience) {
               'friends' => 'All your friends see it and get a heads-up.',
-              'inner' => 'Only your inner circle sees it and gets a heads-up.',
+              'inner' => 'Only your Tight sees it and gets a heads-up.',
               'custom' => 'Only the people you pick see it and get a heads-up.',
               _ => 'Anyone nearby can find it. Nobody gets pinged.',
             },
