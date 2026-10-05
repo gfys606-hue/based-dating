@@ -154,6 +154,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
                 leading: const Icon(Icons.verified_outlined, color: B.gold),
                 title: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text([
+                  if (p['featured'] == true) 'Featured',
                   '${(p['distance_km'] as num).toStringAsFixed(1)} km',
                   if ((p['friends_here'] as num? ?? 0) > 0) '${p['friends_here']} friends here now',
                   if (p['address'] != null) p['address'] as String,

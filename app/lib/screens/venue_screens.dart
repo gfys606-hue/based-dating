@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../services/membership_api.dart';
 import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/place_widgets.dart';
@@ -686,9 +687,21 @@ class _AdminVenuesTabState extends State<AdminVenuesTab> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(v['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: Text('${v['staff'] ?? 'no staff'} · ${v['passes_made']}/${v['pass_allowance']} passes made · ${v['joined']} joined'),
-            trailing: const Icon(Icons.edit_outlined, size: 18),
-            onTap: () => _editAllowance(v),
+            subtitle: Text('${v['staff'] ?? 'no staff'} · ${v['passes_made']}/${v['pass_allowance']} passes made · ${v['joined']} joined'
+                '${v['featured_until'] != null && DateTime.parse(v['featured_until'] as String).isAfter(DateTime.now()) ? ' · featured until ${DateFormat('MMM d').format(DateTime.parse(v['featured_until'] as String).toLocal())}' : ''}'),
+            trailing: PopupMenuButton<String>(
+              onSelected: (a) async {
+                if (a == 'passes') return _editAllowance(v);
+                await MembershipApi.setFeatured(v['venue_id'] as String, int.parse(a)).catchError((_) {});
+                _load();
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'passes', child: Text('Change passes')),
+                PopupMenuItem(value: '30', child: Text('Feature for 30 days')),
+                PopupMenuItem(value: '90', child: Text('Feature for 90 days')),
+                PopupMenuItem(value: '0', child: Text('Stop featuring')),
+              ],
+            ),
           ),
         const SizedBox(height: 18),
         const SectionLabel('Bar requests and appeals'),

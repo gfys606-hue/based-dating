@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/api.dart';
 import '../services/invites_api.dart';
+import '../services/membership_api.dart';
 import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
@@ -304,6 +305,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   bool? _inviteOnly;
   bool? _fullAccess;
   bool? _activityLight;
+  bool? _paidOpen;
   List<Map<String, dynamic>> _communities = [];
 
   @override
@@ -313,6 +315,9 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   }
 
   Future<void> _load() async {
+    MembershipApi.mine().then((m) {
+      if (mounted) setState(() => _paidOpen = m['open'] == true);
+    }).catchError((_) {});
     try {
       final r = await Future.wait([InvitesApi.stats(), InvitesApi.waitlist(), InvitesApi.access(), InvitesApi.communities()]);
       if (mounted) {
@@ -485,8 +490,43 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                     _load();
                   },
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _paidOpen ?? false,
+            title: const Text('Paid memberships'),
+            subtitle: Text(_paidOpen == true
+                ? 'Plus and Inner can be bought. Picks, undo and travel mode need a plan.'
+                : 'Free for everyone: 50 picks, undo and travel mode. Nothing can be charged.'),
+            onChanged: _paidOpen == null
+                ? null
+                : (v) async {
+                    final ok = !v ||
+                        await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Start charging?'),
+                                content: const Text('Members lose the free perks unless they buy Plus or Inner. '
+                                    'Make sure the Stripe keys and prices are set first.'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                  FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('TURN ON')),
+                                ],
+                              ),
+                            ) ==
+                            true;
+                    if (!ok) return;
+                    await MembershipApi.setOpen(v).catchError((_) {});
+                    _load();
+                  },
+          ),
           const SizedBox(height: 10),
           FilledButton.icon(onPressed: _newBatch, icon: const Icon(Icons.add), label: const Text('NEW VENUE CODES')),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => const _CompSheet()),
+            icon: const Icon(Icons.workspace_premium_outlined),
+            label: const Text('MEMBERSHIPS AND COMPS'),
+          ),
           const SizedBox(height: 22),
           Row(children: [
             const Expanded(child: SectionLabel('Communities')),
@@ -615,4 +655,100 @@ class _NewBatchSheetState extends State<_NewBatchSheet> {
       ]),
     );
   }
+}
+
+/// The door → Memberships and comps: see who's paying, and give someone Plus or Inner for free.
+class _CompSheet extends StatefulWidget {
+  const _CompSheet();
+  @override
+  State<_CompSheet> createState() => _CompSheetState();
+}
+
+class _CompSheetState extends State<_CompSheet> {
+  final _q = TextEditingController();
+  List<Map<String, dynamic>> _rows = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _search();
+  }
+
+  Future<void> _search() async {
+    setState(() => _loading = true);
+    try {
+      final r = await MembershipApi.members(query: _q.text);
+      if (mounted) setState(() => _rows = r);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _grant(Map<String, dynamic> r) async {
+    final pick = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(title: Text(r['name'] as String? ?? 'Member', style: B.heading(20))),
+          for (final o in const [
+            ['plus:30', 'Plus for 30 days'],
+            ['plus:365', 'Plus for a year'],
+            ['inner:30', 'Inner for 30 days'],
+            ['inner:365', 'Inner for a year'],
+            ['free:0', 'Remove comp'],
+          ])
+            ListTile(title: Text(o[1]), onTap: () => Navigator.pop(ctx, o[0])),
+        ]),
+      ),
+    );
+    if (pick == null) return;
+    final parts = pick.split(':');
+    try {
+      await MembershipApi.grant(r['user_id'] as String, parts[0], days: int.parse(parts[1]));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
+    _search();
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .8),
+            child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(18), children: [
+              Text('Memberships', style: B.heading(22)),
+              const SizedBox(height: 4),
+              Text('Paying and comped members. Search anyone by name or email to comp them.',
+                  style: TextStyle(color: B.muted, fontSize: 13)),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _q,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _search(),
+                decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Name or email'),
+              ),
+              if (_loading) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
+              if (!_loading && _rows.isEmpty)
+                Padding(padding: const EdgeInsets.all(16), child: Text('No one yet.', style: TextStyle(color: B.muted))),
+              for (final r in _rows)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(r['name'] as String? ?? '(no profile)'),
+                  subtitle: Text([
+                    r['email'] ?? '',
+                    switch (r['tier']) { 'inner' => 'Inner', 'plus' => 'Plus', _ => 'Free' },
+                    if (r['source'] == 'admin') 'comped',
+                    if (r['until'] != null) 'until ${DateFormat('MMM d, y').format(DateTime.parse(r['until'] as String).toLocal())}',
+                  ].where((s) => '$s'.isNotEmpty).join(' · ')),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _grant(r),
+                ),
+            ]),
+          ),
+        ),
+      );
 }

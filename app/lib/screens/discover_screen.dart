@@ -3,10 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/membership_api.dart';
 import '../theme.dart';
 import '../widgets/signed_photo.dart';
 import '../widgets/ui.dart';
 import 'feed_screen.dart';
+import 'membership_screen.dart';
 import 'profile_view_screen.dart';
 
 /// Discover: People (as Cards or on the Radar) or Posts.
@@ -22,6 +24,7 @@ class DiscoverScreen extends StatefulWidget {
 class _DiscoverScreenState extends State<DiscoverScreen> {
   late Future<List<Map<String, dynamic>>> _batch = Api.matchBatch();
   final List<String> _done = [];
+  String? _lastPassed;
   bool? _datingOn;
   int _view = 0; // 0 cards, 1 radar
 
@@ -89,9 +92,34 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         }
       } else {
         await Api.pass(id);
+        if (mounted) setState(() => _lastPassed = id);
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  /// Plus: bring back the last person you passed on.
+  Future<void> _undo() async {
+    try {
+      final id = await MembershipApi.undoPass();
+      if (!mounted) return;
+      setState(() {
+        if (id != null) _done.remove(id);
+        _lastPassed = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final plus = '$e'.contains('Plus');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(plus ? 'Undo comes with Plus.' : 'Couldn\'t undo. Try again.'),
+        action: plus
+            ? SnackBarAction(
+                label: 'SEE PLANS',
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen())),
+              )
+            : null,
+      ));
     }
   }
 
@@ -135,6 +163,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                               child: Text('Ouch is on · only others with Ouch on see you here',
                                   style: TextStyle(color: B.muted, fontSize: 12.5)),
                             ),
+                            if (_lastPassed != null)
+                              IconButton(tooltip: 'Undo pass', icon: const Icon(Icons.undo, size: 20), onPressed: _undo),
                             TextButton(onPressed: () => _setDating(false), child: const Text('TURN OFF')),
                           ]),
                         ),

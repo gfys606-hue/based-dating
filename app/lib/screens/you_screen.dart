@@ -7,6 +7,7 @@ import '../widgets/ui.dart';
 import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
 import 'invite_screens.dart';
+import 'membership_screen.dart';
 import 'venue_screens.dart';
 import '../services/venue_api.dart';
 import '../services/invites_api.dart';
@@ -97,6 +98,8 @@ class YouScreen extends StatelessWidget {
               row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
               Divider(height: 1, color: B.fill),
               row(Icons.vpn_key_outlined, 'Invite friends', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyInvitesScreen()))),
+              Divider(height: 1, color: B.fill),
+              row(Icons.workspace_premium_outlined, 'Membership', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()))),
               FutureBuilder(
                 future: Future.wait([
                   VenueApi.myVenues().catchError((_) => <Map<String, dynamic>>[]),

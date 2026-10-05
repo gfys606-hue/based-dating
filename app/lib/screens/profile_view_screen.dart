@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/membership_api.dart';
 import '../theme.dart';
 import '../widgets/friend_button.dart';
 import '../widgets/report_sheet.dart';
@@ -96,6 +97,21 @@ class ProfileBody extends StatelessWidget {
               const SizedBox(width: 6),
               Text('OUCH', style: B.label.copyWith(color: B.accentStrong)),
             ]),
+          ),
+        if (profile['is_me'] != true)
+          FutureBuilder(
+            // Only shows when you're both Inner
+            future: MembershipApi.innerMark(profile['id'] as String).catchError((_) => false),
+            builder: (context, snap) => snap.data == true
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(children: [
+                      const Icon(Icons.workspace_premium, size: 14, color: B.gold),
+                      const SizedBox(width: 6),
+                      Text('INNER', style: B.label.copyWith(color: B.gold)),
+                    ]),
+                  )
+                : const SizedBox.shrink(),
           ),
         if (profile['venue_mark'] == true)
           Padding(
