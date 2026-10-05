@@ -42,6 +42,7 @@ class MembershipApi {
       _rows(await _db.rpc('admin_members', params: {'p_query': (query ?? '').trim().isEmpty ? null : query!.trim()}));
   static Future<void> grant(String userId, String tier, {int days = 30}) =>
       _db.rpc('admin_grant_membership', params: {'p_user': userId, 'p_tier': tier, 'p_days': days});
+  static Future<void> setOpen(bool on) => _db.rpc('admin_set_memberships_open', params: {'p_on': on});
   static Future<void> setFeatured(String venueId, int days) =>
       _db.rpc('admin_set_featured', params: {'p_venue': venueId, 'p_days': days});
 }
