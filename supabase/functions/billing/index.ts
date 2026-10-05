@@ -38,6 +38,10 @@ Deno.serve(async (req) => {
   if (!user) return json({ error: "Sign in first." }, 401);
 
   const body = await req.json().catch(() => ({}));
+
+  // Paid tiers are switched on in The door. Until then nobody can be charged.
+  const { data: open } = await admin.rpc("memberships_open");
+  if (open !== true && body.action !== "portal") return json({ error: "Everything's free during early access." }, 409);
   const back = Deno.env.get("BILLING_RETURN_URL") ?? "https://based-social.com";
 
   const { data: existing } = await admin.rpc("stripe_customer_for", { p_user: user.id });
