@@ -40,3 +40,5 @@ jobs:
           supabase functions deploy call-token      --project-ref "$PROJECT_REF" --use-api
           supabase functions deploy livekit-webhook --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
           supabase functions deploy push            --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
+          supabase functions deploy billing         --project-ref "$PROJECT_REF" --use-api
+          supabase functions deploy stripe-webhook  --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
