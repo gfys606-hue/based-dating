@@ -69,6 +69,9 @@ jobs:
       - name: App icon
         run: dart run flutter_launcher_icons
 
+      - name: Home screen setup (iPhone and Android "Add to Home Screen")
+        run: python3 tool/web_home_screen.py
+
       - name: Check code
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
