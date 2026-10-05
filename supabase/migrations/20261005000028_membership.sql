@@ -23,6 +23,23 @@ create table if not exists public.memberships (
 alter table public.memberships enable row level security;   -- functions only
 create index if not exists memberships_stripe_customer on public.memberships (stripe_customer);
 
+-- Paid tiers start closed: while they are, everyone gets the everyday perks (50 picks, undo, travel mode)
+-- for free and nobody can be charged. The exclusive perks (extra invites, the Inner mark) need a real tier.
+insert into public.app_settings (key, value) values ('memberships_open', 'false') on conflict (key) do nothing;
+
+create or replace function public.memberships_open()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select (value)::text::boolean from app_settings where key = 'memberships_open'), false);
+$$;
+
+create or replace function public.admin_set_memberships_open(p_on boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform require_admin();
+  insert into app_settings (key, value) values ('memberships_open', to_jsonb(coalesce(p_on, false)))
+  on conflict (key) do update set value = excluded.value;
+end $$;
+
 -- travel mode columns (used below)
 alter table public.profiles add column if not exists travel_lat   double precision;
 alter table public.profiles add column if not exists travel_lng   double precision;
@@ -43,13 +60,14 @@ $$;
 
 create or replace function public.daily_pick_cap(p_user uuid)
 returns int language sql stable security definer set search_path = public as $$
-  select case when membership_tier(p_user) = 'free' then 25 else 50 end;
+  select case when memberships_open() and membership_tier(p_user) = 'free' then 25 else 50 end;
 $$;
 
 create or replace function public.my_membership()
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'tier', membership_tier(auth.uid()),
+    'open', memberships_open(),
     'source', m.source, 'status', m.status,
     'renews', case when m.cancel_at_period_end then null else m.current_period_end end,
     'ends',   case when m.cancel_at_period_end then m.current_period_end else null end,
@@ -163,7 +181,7 @@ begin
   elsif now_tier = 'plus' and p_was = 'free' then
     perform notify(p_user, 'membership', 'Plus is on: 50 Ouch picks a day, and undo.');
   end if;
-  if now_tier <> 'inner' then perform end_travel_for(p_user); end if;
+  if memberships_open() and now_tier <> 'inner' then perform end_travel_for(p_user); end if;
 end $$;
 
 -- ---------- Plus: undo the last pass ----------
@@ -173,7 +191,7 @@ declare
   me uuid := auth.uid();
   v_to uuid;
 begin
-  if membership_tier(me) = 'free' then raise exception 'Undo comes with Plus.'; end if;
+  if memberships_open() and membership_tier(me) = 'free' then raise exception 'Undo comes with Plus.'; end if;
   select to_user into v_to from passes
    where from_user = me and created_at > now() - interval '1 day'
    order by created_at desc limit 1;
@@ -219,7 +237,7 @@ declare
   me uuid := auth.uid();
   p profiles;
 begin
-  if membership_tier(me) <> 'inner' then raise exception 'Travel mode comes with Inner.'; end if;
+  if memberships_open() and membership_tier(me) <> 'inner' then raise exception 'Travel mode comes with Inner.'; end if;
   if p_lat is null or p_lng is null or abs(p_lat) > 90 or abs(p_lng) > 180 then raise exception 'Pick a place.'; end if;
   select * into p from profiles where id = me;
   perform set_config('based.travel', 'on', true);
@@ -457,7 +475,7 @@ do $$
 declare f text;
 begin
   foreach f in array array[
-    'public.my_membership()', 'public.undo_last_pass()', 'public.start_travel(double precision,double precision,text,int)',
+    'public.my_membership()', 'public.undo_last_pass()', 'public.admin_set_memberships_open(boolean)', 'public.start_travel(double precision,double precision,text,int)',
     'public.end_travel()', 'public.inner_mark(uuid)', 'public.get_partner_venues(int)', 'public.admin_venues()',
     'public.admin_set_featured(uuid,int)', 'public.admin_grant_membership(uuid,text,int)', 'public.admin_members(text)',
     'public.get_match_batch(int)', 'public.like_user(uuid)'] loop
@@ -465,7 +483,7 @@ begin
     execute format('grant execute on function %s to authenticated', f);
   end loop;
   foreach f in array array[
-    'public.membership_tier(uuid)', 'public.daily_pick_cap(uuid)',
+    'public.membership_tier(uuid)', 'public.daily_pick_cap(uuid)', 'public.memberships_open()',
     'public.apply_subscription(uuid,text,text,timestamptz,boolean,text,text)', 'public.set_stripe_customer(uuid,text)',
     'public.stripe_customer_for(uuid)', 'public.user_for_stripe_customer(text)', 'public.grant_inner_bonus(uuid)',
     'public.refill_inner_invites()', 'public.after_tier_change(uuid,text)', 'public.end_travel_for(uuid)',
