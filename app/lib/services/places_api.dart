@@ -71,6 +71,28 @@ class PlacesApi {
     ].where((r) => r['lat'] != null && r['lng'] != null).toList();
   }
 
+  /// Cities and towns anywhere (travel mode). Returns [{name, address, lat, lng}].
+  static Future<List<Map<String, dynamic>>> searchCity(String query) async {
+    final q = query.trim();
+    if (q.length < 2) return [];
+    final uri = Uri.https('nominatim.openstreetmap.org', '/search',
+        {'format': 'jsonv2', 'q': q, 'limit': '6', 'featureType': 'settlement', 'addressdetails': '1'});
+    final res = await http.get(uri, headers: {
+      if (!kIsWeb) 'User-Agent': 'BasedSocial/1.0 (https://based-social.com)',
+      'Accept-Language': 'en',
+    });
+    if (res.statusCode != 200) throw 'Search is busy. Try again in a moment.';
+    return [
+      for (final r in (jsonDecode(res.body) as List).cast<Map<String, dynamic>>())
+        {
+          'name': _name(r),
+          'address': (r['display_name'] as String? ?? '').split(',').skip(1).map((e) => e.trim()).where((e) => e.isNotEmpty).take(2).join(', '),
+          'lat': double.tryParse('${r['lat']}'),
+          'lng': double.tryParse('${r['lon']}'),
+        }
+    ].where((r) => r['lat'] != null && r['lng'] != null).toList();
+  }
+
   static String _name(Map<String, dynamic> r) {
     final n = (r['name'] as String?)?.trim();
     if (n != null && n.isNotEmpty) return n;
