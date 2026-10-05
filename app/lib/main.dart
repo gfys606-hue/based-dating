@@ -11,6 +11,7 @@ import 'services/api.dart';
 import 'services/invites_api.dart';
 import 'services/push.dart';
 import 'theme.dart';
+import 'widgets/door_intro.dart';
 
 // Run with:
 // flutter run --dart-define=SUPABASE_URL=https://xxxx.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJ...
@@ -69,7 +70,7 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: Push.messenger,
       theme: B.theme(),
-      home: const AuthGate(),
+      home: const DoorIntro(child: AuthGate()),
     );
   }
 }
