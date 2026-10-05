@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Test Based · Android</title>
+<title>Test Based</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;1,600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light dark;--ink:#0E1A45;--ink2:#3A4468;--muted:#5B6384;--bg:#F7F3E8;--line:#E4DCC8;--accent:#1B3A9E;--card:#fff;--gold:#F5C542;--ongold:#0E1A45}
@@ -24,8 +24,9 @@ h1,h2,.logo{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700;lette
 <a class="logo" href="/">Based<span>.</span></a>
 <p class="slogan">The door is not for everyone.</p>
 <h1>Test the Based app</h1>
-<p>Early test build for Android. Things will break. Tell us when they do.</p>
+<p>Early test build for Android and iPhone. Things will break. Tell us when they do.</p>
 
+<div id="android">
 <div class="card">
   <a class="btn" id="dl" href="based-test.apk" download="based-test.apk">Download for Android</a>
   <a class="btn2" id="dl32" href="based-test-older-phones.apk" download="based-test-older-phones.apk">Older phone (32-bit)? Use this one</a>
@@ -41,15 +42,34 @@ h1,h2,.logo{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700;lette
   </ol>
   <p class="muted">Getting "App not installed" on an update? Uninstall the old Based test app first, then install again.</p>
 </div>
+</div>
+
+<div class="card" id="iphone">
+  <h2 style="margin:0 0 6px;font-size:19px">On iPhone</h2>
+  <p style="margin:0 0 8px">There's no App Store version yet. Put Based on your home screen instead. It opens full screen with its own icon, like an app.</p>
+  <ol>
+    <li>Open <a href="/">based-social.com</a> in <b>Safari</b> (not Chrome or another browser).</li>
+    <li>Tap the <b>Share</b> button: the square with an arrow, at the bottom of the screen.</li>
+    <li>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+    <li>Open Based from your home screen and log in with your email.</li>
+  </ol>
+  <a class="btn2" href="/">Open based-social.com</a>
+  <p class="muted" style="margin:12px 0 0">It updates by itself, so there's nothing to reinstall. Notifications don't work on iPhone yet, so check in on your matches.</p>
+</div>
 
 <div class="card">
-  <h2 style="margin:0 0 6px;font-size:19px">Circles, Search, Events &amp; Market</h2>
+  <h2 style="margin:0 0 6px;font-size:19px">Herd, Search, Events &amp; Market</h2>
   <p>These show up as tabs down the left side once your account is set as a tester. Ask to be added.</p>
 </div>
 
-<p class="muted">iPhone version coming later. You can also use Based in your browser at <a href="/">based-social.com</a>.</p>
+<p class="muted">On a computer? Use Based in your browser at <a href="/">based-social.com</a>.</p>
 </main>
 <script>
+// iPhone/iPad visitors see their steps first
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+  var a = document.getElementById('android'), i = document.getElementById('iphone');
+  a.parentNode.insertBefore(i, a);
+}
 fetch('build.json',{cache:'no-store'}).then(r=>r.json()).then(b=>{
   var d=new Date(b.date);
   document.getElementById('info').textContent='Build '+b.build+' · '+d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+b.size_mb+' MB';
