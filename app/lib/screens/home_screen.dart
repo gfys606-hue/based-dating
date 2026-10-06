@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/api.dart';
+import '../services/city_api.dart';
 import '../theme.dart';
 import '../widgets/signed_photo.dart';
 import '../widgets/ui.dart';
@@ -40,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _load() async {
+    CityApi.mine().catchError((_) => null);
     try {
       final results = await Future.wait([
         Api.myMatches(),
@@ -105,6 +107,20 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('The door is not for everyone.', style: B.sloganStyle),
+                // the city you're meeting people in (pick it in Edit profile)
+                ValueListenableBuilder(
+                  valueListenable: CityApi.current,
+                  builder: (context, city, _) => city == null
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 3),
+                          child: Row(children: [
+                            const Icon(Icons.place_outlined, size: 13, color: B.gold),
+                            const SizedBox(width: 4),
+                            Text((city['name'] as String).toUpperCase(), style: B.label.copyWith(color: B.gold)),
+                          ]),
+                        ),
+                ),
                 const SizedBox(height: 8),
                 Text('${DateFormat('EEEE').format(now)} $partOfDay'.toUpperCase(), style: B.label),
                 const SizedBox(height: 4),

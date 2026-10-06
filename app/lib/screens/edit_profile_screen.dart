@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
+import '../services/city_api.dart';
 import '../services/invites_api.dart';
 import '../theme.dart';
 import '../widgets/self_expression.dart';
@@ -27,6 +28,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _stance = TextEditingController();
   Map<String, dynamic>? _me; // my profile as others see it: voice, stance, lately
   String _range = 'global';
+  List<Map<String, dynamic>> _cities = [];
+  String? _city;
   bool _loading = true;
   bool _busy = false;
   bool _dirty = false;
@@ -45,6 +48,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _load() async {
+    Future.wait([CityApi.open(), CityApi.mine()]).then((r) {
+      if (mounted) {
+        setState(() {
+          _cities = r[0] as List<Map<String, dynamic>>;
+          _city = (r[1] as Map<String, dynamic>?)?['slug'] as String?;
+        });
+      }
+    }).catchError((_) {});
     try {
       final r = await Future.wait([Api.myProfile(), Api.myPhotos(), Api.topics(), Api.myTopicIds(), Api.profile(Api.me)]);
       if (!mounted) return;
@@ -314,6 +325,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(hintText: 'First name', counterText: ''),
                     onChanged: (_) => setState(() => _dirty = true),
+                  ),
+                  const SizedBox(height: 22),
+                  SectionLabel('Your city'),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _cities.any((c) => c['slug'] == _city) ? _city : null,
+                    isExpanded: true,
+                    decoration: const InputDecoration(prefixIcon: Icon(Icons.place_outlined)),
+                    hint: const Text('Pick a city'),
+                    items: [
+                      for (final c in _cities)
+                        DropdownMenuItem(
+                          value: c['slug'] as String,
+                          child: Text([c['name'], c['region']].whereType<String>().join(', ')),
+                        ),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (v) {
+                            if (v == null || v == _city) return;
+                            final was = _city;
+                            setState(() => _city = v);
+                            _run(() async {
+                              try {
+                                await CityApi.set(v);
+                              } catch (e) {
+                                if (mounted) setState(() => _city = was);
+                                rethrow;
+                              }
+                            }, done: 'City saved.');
+                          },
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _cities.length <= 1
+                        ? 'Based is only in ${_cities.isEmpty ? 'one city' : _cities.first['name']} for now. More cities open as it grows.'
+                        : 'Ouch shows you people in this city.',
+                    style: TextStyle(color: B.muted, fontSize: 12.5),
                   ),
                   const SizedBox(height: 22),
                   SectionLabel('Feed distance'),

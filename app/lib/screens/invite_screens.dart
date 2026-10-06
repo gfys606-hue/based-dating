@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/api.dart';
+import '../services/city_api.dart';
 import '../services/invites_api.dart';
 import '../services/membership_api.dart';
 import '../services/push.dart';
@@ -307,6 +308,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   bool? _activityLight;
   bool? _paidOpen;
   List<Map<String, dynamic>> _communities = [];
+  List<Map<String, dynamic>> _cities = [];
 
   @override
   void initState() {
@@ -315,6 +317,9 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   }
 
   Future<void> _load() async {
+    CityApi.all().then((c) {
+      if (mounted) setState(() => _cities = c);
+    }).catchError((_) {});
     MembershipApi.mine().then((m) {
       if (mounted) setState(() => _paidOpen = m['open'] == true);
     }).catchError((_) {});
@@ -399,6 +404,34 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
         ),
       ),
     );
+    _load();
+  }
+
+  Future<void> _addCity() async {
+    final name = TextEditingController();
+    final region = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add a city'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: name, decoration: const InputDecoration(labelText: 'City', hintText: 'Edmonton')),
+          TextField(controller: region, decoration: const InputDecoration(labelText: 'Province or state', hintText: 'Alberta')),
+          const SizedBox(height: 8),
+          const Text('It starts closed. Switch it on when you\'re ready to open it.', style: TextStyle(fontSize: 12.5)),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('ADD')),
+        ],
+      ),
+    );
+    if (ok != true || name.text.trim().isEmpty) return;
+    try {
+      await CityApi.add(name.text.trim(), region: region.text.trim().isEmpty ? null : region.text.trim());
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
     _load();
   }
 
@@ -543,6 +576,28 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
               value: c['active'] == true,
               onChanged: (v) async {
                 await InvitesApi.setCommunityActive(c['id'] as String, v).catchError((_) {});
+                _load();
+              },
+            ),
+          const SizedBox(height: 22),
+          Row(children: [
+            const Expanded(child: SectionLabel('Cities')),
+            TextButton.icon(onPressed: _addCity, icon: const Icon(Icons.add, size: 18), label: const Text('ADD')),
+          ]),
+          Text('Open cities show in everyone\'s city pull-down. Ouch only matches people in the same city.',
+              style: TextStyle(color: B.muted, fontSize: 12.5)),
+          for (final c in _cities)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text([c['name'], c['region']].whereType<String>().join(', '), style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text('${c['members']} members · ${c['active'] == true ? 'open' : 'not open yet'}'),
+              value: c['active'] == true,
+              onChanged: (v) async {
+                try {
+                  await CityApi.setOpen(c['slug'] as String, v);
+                } catch (e) {
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+                }
                 _load();
               },
             ),
