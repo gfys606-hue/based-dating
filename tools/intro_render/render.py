@@ -42,7 +42,7 @@ def fbm(p, oct=4):
 
 # ------------------------------------------------------------------ scene
 # materials
-WALL, WAINS, TRIM, FLOOR, CEIL, DOOR, BRASS, STAIR, SWALL, EMIT, CORD, DARK = range(12)
+WALL, WAINS, TRIM, FLOOR, CEIL, DOOR, BRASS, STAIR, SWALL, EMIT, CORD, DARK, PANEL, RUG, BOOK, SHELF = range(16)
 GLOSS = {FLOOR: (0.18, 40.0), WAINS: (0.08, 30.0), DOOR: (0.06, 25.0), TRIM: (0.08, 30.0), BRASS: (0.9, 120.0), STAIR: (0.08, 20.0)}
 
 class Scene:
@@ -51,10 +51,14 @@ class Scene:
         self.sph = []  # (center, radius, mat, emission or None)
         self.lights = []  # dict(pos, radius, color, power)
 
-    def box(self, x0, x1, y0, y1, z0, z1, mat):
+    def box(self, x0, x1, y0, y1, z0, z1, mat, col=None, group=None):
         self.bmin.append((min(x0, x1), min(y0, y1), min(z0, z1)))
         self.bmax.append((max(x0, x1), max(y0, y1), max(z0, z1)))
         self.bmat.append(mat)
+        if not hasattr(self, "bcol"):
+            self.bcol, self.bgroup = [], []
+        self.bcol.append(col if col is not None else (0, 0, 0))
+        self.bgroup.append(group if group is not None else "_")
 
     def sphere(self, c, r, mat, emit=None):
         self.sph.append((np.array(c, F), F(r), mat, emit))
@@ -63,6 +67,8 @@ class Scene:
         self.bmin = np.array(self.bmin, F)
         self.bmax = np.array(self.bmax, F)
         self.bmat = np.array(self.bmat, np.int32)
+        self.bcol = np.array(self.bcol, F)
+        self.bgroup = np.array(self.bgroup)
 
 
 def build(door=True, lights=("bulb", "sconce", "below")):
@@ -158,6 +164,9 @@ def _slab(bmn, bmx, ox, oy, oz, ix, iy, iz):
     return tn, tf
 
 def _groups(s):
+    if getattr(s, "_grp", None) is None and getattr(s, "use_labels", False):
+        sets = [np.nonzero(s.bgroup == g)[0] for g in dict.fromkeys(s.bgroup.tolist())]
+        s._grp = [(s.bmin[g].min(0), s.bmax[g].max(0), g) for g in sets if len(g)]
     if getattr(s, "_grp", None) is None:
         # split boxes into the hallway part and the stairwell part (z beyond the back wall)
         cz = (s.bmin[:, 2] + s.bmax[:, 2]) / 2
@@ -233,6 +242,7 @@ def trace(s, ro, rd, tmax=np.inf):
         if sel.any():
             nrm[sel] = (p[sel] - c) / r
             mat[sel] = m
+    s._last_bi = np.where(si >= 0, -1, bi)
     return t2, mat, nrm, p, si
 
 def occluded(s, ro, rd, dist):
@@ -241,9 +251,24 @@ def occluded(s, ro, rd, dist):
     return t2 < dist - 1e-3
 
 # ------------------------------------------------------------------ materials
-def albedo(mat, p, n):
+def albedo(mat, p, n, bi=None, s=None):
     N = len(p)
     a = np.zeros((N, 3), F)
+    if s is not None and bi is not None:
+        sel = (mat == BOOK) & (bi >= 0)
+        if sel.any():
+            b = bi[sel]
+            col = s.bcol[b]
+            q = p[sel]
+            rel = (q[:, 1] - s.bmin[b, 1]) / np.maximum(s.bmax[b, 1] - s.bmin[b, 1], 1e-3)
+            spine = n[sel, 2] > 0.5
+            band = spine & (((rel > 0.82) & (rel < 0.86)) | ((rel > 0.12) & (rel < 0.15)))
+            label = spine & (rel > 0.55) & (rel < 0.68) & (_hash(b, b, b * 3) > 0.5)
+            wear = 0.8 + 0.25 * fbm(q * 30.0, 2)
+            c = col * wear[:, None]
+            c = np.where(band[:, None], np.array((0.45, 0.33, 0.12), F), c)
+            c = np.where(label[:, None], c * 0.4 + np.array((0.25, 0.2, 0.12), F), c)
+            a[sel] = c
     def put(m, col):
         sel = mat == m
         if sel.any():
@@ -264,6 +289,30 @@ def albedo(mat, p, n):
             k = (1 - var) + var * (0.55 * grain + 0.45 * streak)
             return np.array(base, F) * k[:, None]
         return f
+    def panel(q, nn):
+        # dark wood wall panelling: vertical boards with grooves, rails top and bottom
+        base = wood((0.075, 0.042, 0.022), along=1, ring=28.0, var=0.5)(q, nn)
+        u = np.where(np.abs(nn[:, 0]) > 0.5, q[:, 2], q[:, 0])
+        groove = np.abs(((u + 10.0) / 0.42) % 1.0 - 0.5) > 0.485
+        rail = (np.abs(q[:, 1] - 0.95) < 0.03) | (q[:, 1] < 0.12)
+        return base * np.where(groove, 0.35, np.where(rail, 0.75, 1.0))[:, None]
+    put(PANEL, panel)
+    def rug(q, nn):
+        # an old oriental rug: border bands and a repeating medallion pattern
+        x, z = q[:, 0], q[:, 2] + 1.6
+        bx = np.minimum(np.abs(x) - 1.05, 0) * -1
+        bz = np.minimum(np.abs(z) - 1.0, 0) * -1
+        edge = np.minimum(bx, bz)
+        border = (edge < 0.16) & (edge > 0.04)
+        mot = 0.5 + 0.25 * np.cos(x * 23) * np.cos(z * 23) + 0.25 * np.cos((x + z) * 11)
+        base = np.array((0.16, 0.035, 0.03), F)
+        navy = np.array((0.04, 0.05, 0.10), F)
+        cream = np.array((0.45, 0.38, 0.26), F)
+        c = np.where(border[:, None], navy, base * (0.75 + 0.5 * mot)[:, None] + cream * 0.12 * (mot > 0.8)[:, None])
+        c = np.where(((edge < 0.025))[:, None], cream * 0.5, c)
+        return c * (0.7 + 0.4 * fbm(q * 25.0, 2))[:, None]
+    put(RUG, rug)
+    put(SHELF, wood((0.10, 0.055, 0.03), along=0, ring=24.0))
     put(WALL, plaster((0.24, 0.22, 0.19)))
     put(SWALL, plaster((0.30, 0.26, 0.21), 1.3))
     put(CEIL, plaster((0.16, 0.155, 0.15)))
@@ -311,7 +360,7 @@ def direct(s, p, n, mat, view, a, with_spec=True):
         vis = np.zeros(len(p), bool)
         idx = np.nonzero(ok)[0]
         vis[idx] = ~occluded(s, p[idx] + n[idx] * 2e-3, l[idx], dist[idx])
-        E = np.array(lt["color"], F) * F(lt["power"]) / (dist * dist)[:, None]
+        E = np.array(lt["color"], F) * F(lt["power"]) / (dist * dist + 4 * lt["radius"] ** 2)[:, None]
         diff = a / F(math.pi) * (cos * vis)[:, None] * E
         out += diff
         if with_spec:
@@ -339,6 +388,7 @@ def cosine_dir(n):
     return b1 * x[:, None] + b2 * y[:, None] + n * z[:, None]
 
 def haze(s, ro, rd, tmax, steps=4, sigma=0.022):
+    sigma = getattr(s, 'haze_sigma', sigma)
     out = np.zeros_like(ro)
     tm = np.minimum(tmax, 12.0)
     for k in range(steps):
@@ -390,23 +440,25 @@ def render(s, cam, w, h, spp, haze_on=True):
                 em |= sel
         surf = hit & ~em
         idx = np.nonzero(surf)[0]
-        a = albedo(mat[idx], p[idx], n[idx])
+        bi0 = s._last_bi
+        a = albedo(mat[idx], p[idx], n[idx], bi0[idx], s)
         po, no, vo = p[idx], n[idx], rd[idx]
         c = direct(s, po, no, mat[idx], vo, a)
         # one bounce of indirect light
         bd = cosine_dir(no)
         t1, m1, n1, p1, s1 = trace(s, po + no * 2e-3, bd)
+        bi1 = s._last_bi
         h1 = np.isfinite(t1)
         ind = np.zeros_like(po)
         j1 = np.nonzero(h1)[0]
         if len(j1):
-            a1 = albedo(m1[j1], p1[j1], n1[j1])
+            a1 = albedo(m1[j1], p1[j1], n1[j1], bi1[j1], s)
             ind[j1] = direct(s, p1[j1], n1[j1], m1[j1], bd[j1], a1, with_spec=False)
             for j, (cc, r, m, emit) in enumerate(s.sph):
                 if emit is not None:
                     sel = s1 == j
                     ind[sel] = 0  # direct already counts lights
-        c += a * ind
+        c += a * np.minimum(ind, 1.5)   # clamp fireflies from bounces right next to a light
         col[idx] = c
         if haze_on:
             col += haze(s, ro, rd, np.where(hit, t, 12.0))
