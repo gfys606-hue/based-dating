@@ -61,10 +61,10 @@ class _DoorIntroState extends State<DoorIntro> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    if (!_show) return widget.child;
+    // The app keeps the same spot in the tree before and after, so it isn't rebuilt from scratch
     return Stack(fit: StackFit.expand, children: [
       widget.child,
-      AnimatedOpacity(
+      if (_show) AnimatedOpacity(
         opacity: _fading ? 0 : 1,
         duration: const Duration(milliseconds: 500),
         child: GestureDetector(
