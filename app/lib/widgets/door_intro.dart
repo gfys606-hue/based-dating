@@ -156,9 +156,9 @@ class _IntroPainter extends CustomPainter {
     final toStairs = _seg(t, 0.90, 0.955, Curves.easeInOut);
     final black = _seg(t, 0.955, 1.0);
 
-    // Fit the square hallway images: fill the height (portrait crops the sides);
-    // on wide screens grow until it's at least 60% of the width.
-    final s = math.max(h, w * 0.6);
+    // Fit the square hallway images so they always cover top to bottom (portrait crops the
+    // sides); on wide screens grow until they're at least 60% of the width.
+    final s = math.max(h * 1.26, w * 0.6);
     final k = s / _size;
     final doorC = _doorway.center;
     final base = Offset(w / 2 - doorC.dx * k, h * 0.44 - doorC.dy * k); // doorway a little above the middle
@@ -190,6 +190,22 @@ class _IntroPainter extends CustomPainter {
     // the bulb's flicker darkens what it lights (the stairwell keeps its own light)
     final dim = (1 - bulb) * (1 - open * 0.6);
     if (dim > 0) canvas.drawRect(plate.inflate(4), Paint()..color = Colors.black.withOpacity(dim.clamp(0.0, 1.0)));
+
+    // soft edges, so wide screens don't show a hard square
+    const feather = _size * 0.16;
+    for (final r in [
+      [const Rect.fromLTWH(0, 0, feather, _size), Alignment.centerLeft, Alignment.centerRight],
+      [const Rect.fromLTWH(_size - feather, 0, feather, _size), Alignment.centerRight, Alignment.centerLeft],
+      [const Rect.fromLTWH(0, _size - feather, _size, feather), Alignment.bottomCenter, Alignment.topCenter],
+      [const Rect.fromLTWH(0, 0, _size, feather), Alignment.topCenter, Alignment.bottomCenter],
+    ]) {
+      final rect = r[0] as Rect;
+      canvas.drawRect(
+          rect.inflate(1),
+          Paint()
+            ..shader = LinearGradient(begin: r[1] as Alignment, end: r[2] as Alignment, colors: const [Colors.black, Colors.transparent])
+                .createShader(rect));
+    }
 
     // 3. light leaking under the closed door, with a shadow crossing behind it
     final df = _door;
@@ -259,10 +275,12 @@ class _IntroPainter extends CustomPainter {
     final doorBottom = onScreen(Offset(0, df.bottom), approach).dy;
     final bigSize = math.min(76.0, w * 0.165);
     final finalY = math.min(h - pad.bottom - bigSize * 1.9, math.max(doorBottom + bigSize * 0.75, h * 0.72));
-    _rise(canvas, size, 'The Door', big.copyWith(fontSize: bigSize, letterSpacing: 2, color: B.gold),
-        _seg(t, 0.60, 0.74, Curves.easeOutCubic), from, Offset(w / 2, finalY), textOut);
-    _rise(canvas, size, 'is not for everyone.', small.copyWith(fontSize: bigSize * 0.48, color: const Color(0xFFEDE3C8)),
-        _seg(t, 0.68, 0.82, Curves.easeOutCubic), from, Offset(w / 2, finalY + bigSize * 0.92), textOut);
+    final rise = _seg(t, 0.60, 0.76, Curves.easeOutCubic);
+    final second = _seg(t, 0.68, 0.80, Curves.easeOut);
+    _rise(canvas, size, 'The Door', big.copyWith(fontSize: bigSize, letterSpacing: 2, color: B.gold), rise, rise,
+        from, Offset(w / 2, finalY), textOut);
+    _rise(canvas, size, 'is not for everyone.', small.copyWith(fontSize: bigSize * 0.48, color: const Color(0xFFEDE3C8)), rise,
+        second, from + Offset(0, bigSize * 0.92 * 0.12), Offset(w / 2, finalY + bigSize * 0.92), textOut);
 
     // 7. film grain and a heavy vignette
     _grain(canvas, size);
@@ -283,7 +301,8 @@ class _IntroPainter extends CustomPainter {
   }
 
   /// A line of text that starts small and dim deep in the stairwell and rises toward you.
-  void _rise(Canvas canvas, Size size, String text, TextStyle style, double p, Offset from, Offset to, double fade) {
+  void _rise(Canvas canvas, Size size, String text, TextStyle style, double p, double show, Offset from, Offset to, double fade) {
+    fade *= show;
     if (p <= 0 || fade <= 0) return;
     final pos = Offset.lerp(from, to, p)!;
     final scale = 0.12 + 0.88 * p;
