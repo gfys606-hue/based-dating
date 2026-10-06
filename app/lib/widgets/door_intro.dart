@@ -9,10 +9,10 @@ import '../theme.dart';
 import 'door_intro_plate.dart';
 
 /// The opening (about 11 seconds, tap to skip), built from rendered images
-/// (tools/intro_render): a bare bulb flickers on over a dark hallway, light leaks
-/// under the door at the end, a shadow crosses behind it, the door cracks open,
-/// holds, then swings wide onto a stairwell going down. "The Door" rises out of
-/// the stairwell, then "is not for everyone.", and you walk through and down.
+/// (tools/intro_render/study.py): a dim study lined with bookcases. The lamps come up,
+/// one red book tilts out like a lever, a seam of light traces the middle bookcase,
+/// it cracks open, holds, then swings wide onto a stairwell going down. "The Door"
+/// rises out of the stairwell, then "is not for everyone.", and you walk through and down.
 /// Plays once each time the app is opened.
 class DoorIntro extends StatefulWidget {
   const DoorIntro({super.key, required this.child});
@@ -118,16 +118,13 @@ class _DoorIntroState extends State<DoorIntro> with SingleTickerProviderStateMix
 double _seg(double t, double a, double b, [Curve curve = Curves.linear]) =>
     curve.transform(((t - a) / (b - a)).clamp(0.0, 1.0));
 
-/// The bulb catching: off, a couple of stutters, then on with a faint hum. Dips when the door cracks.
+/// The lamps coming up, with a faint flicker; they dip for a moment when the case unlatches.
 double _bulb(double t) {
-  if (t < 0.035) return 0;
-  if (t < 0.045) return 0.8;
-  if (t < 0.058) return 0.06;
-  if (t < 0.066) return 0.6;
-  if (t < 0.076) return 0.18;
-  final hum = 0.95 + 0.05 * math.sin(t * 300) * math.sin(t * 41);
-  final dip = (t > 0.36 && t < 0.375) ? 0.55 : 1.0;
-  return math.min(1.0, _seg(t, 0.076, 0.11)) * hum * dip;
+  if (t < 0.03) return 0;
+  final up = _seg(t, 0.03, 0.12, Curves.easeInOut);
+  final flicker = 0.96 + 0.04 * math.sin(t * 220) * math.sin(t * 37);
+  final dip = (t > 0.395 && t < 0.41) ? 0.6 : 1.0;
+  return up * flicker * dip;
 }
 
 class _IntroPainter extends CustomPainter {
@@ -142,14 +139,16 @@ class _IntroPainter extends CustomPainter {
   static const _doorway = Rect.fromLTRB(DoorPlate.dwL, DoorPlate.dwT, DoorPlate.dwR, DoorPlate.dwB);
   static const _door = Rect.fromLTRB(DoorPlate.dfL, DoorPlate.dfT, DoorPlate.dfR, DoorPlate.dfB);
   static const _stairs = Offset(DoorPlate.stX, DoorPlate.stY);
+  static const _lever = Rect.fromLTRB(DoorPlate.lbL, DoorPlate.lbT, DoorPlate.lbR, DoorPlate.lbB);
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     final bulb = _bulb(t);
-    final open = t < 0.48 ? 0.07 * _seg(t, 0.36, 0.41, Curves.easeOut) : 0.07 + 0.93 * _seg(t, 0.48, 0.62, Curves.easeInOutCubic);
-    final shadowPass = _seg(t, 0.24, 0.33, Curves.easeInOut);
-    final under = 0.55 + 0.35 * math.sin(shadowPass * math.pi);
+    // the red book tilts out, a click, a seam of light, the case cracks open, holds, swings
+    final lever = _seg(t, 0.19, 0.27, Curves.easeOutBack) * (1 - _seg(t, 0.40, 0.43));
+    final seam = _seg(t, 0.29, 0.40, Curves.easeIn);
+    final open = t < 0.50 ? 0.06 * _seg(t, 0.40, 0.45, Curves.easeOut) : 0.06 + 0.94 * _seg(t, 0.50, 0.64, Curves.easeInOutCubic);
     final walk = _seg(t, 0.86, 0.97, Curves.easeInCubic);
     final approach = 1 + 0.18 * _seg(t, 0.0, 0.58, Curves.easeInOut);
     final dolly = approach * (1 + 3.2 * walk);
@@ -183,7 +182,7 @@ class _IntroPainter extends CustomPainter {
         ..filterQuality = FilterQuality.medium
         ..color = Colors.white.withOpacity(open.clamp(0.0, 1.0)));
       canvas.save();
-      canvas.clipRect(_doorway);
+      canvas.clipRect(_door); // where the bookcase stood
       canvas.drawImageRect(imgs.open, plate, plate, q);
       canvas.restore();
     }
@@ -207,26 +206,43 @@ class _IntroPainter extends CustomPainter {
                 .createShader(rect));
     }
 
-    // 3. light leaking under the closed door, with a shadow crossing behind it
     final df = _door;
-    if (open < 1) {
-      const n = 30;
-      for (var i = 0; i < n; i++) {
-        final mid = (i + .5) / n;
-        final sx = -0.3 + 1.6 * shadowPass;
-        final shade = (shadowPass > 0 && shadowPass < 1) ? 1 - 0.9 * math.exp(-math.pow((mid - sx) / 0.14, 2)) : 1.0;
-        final x0 = df.left + df.width * i / n, x1 = df.left + df.width * (i + 1) / n;
-        canvas.drawRect(
-            Rect.fromLTRB(x0, df.bottom - 2.5, x1, df.bottom + 3.0),
-            Paint()
-              ..color = _warm.withOpacity(((0.35 + 0.55 * under) * shade * (1 - open)).clamp(0.0, 1.0))
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
-      }
+    // 3a. the lever: one red book tilts out from the shelf (and springs back as the case moves)
+    if (lever > 0) {
+      final lb = _lever;
+      canvas.drawRect(lb, Paint()..color = Colors.black.withOpacity(0.85 * lever.clamp(0.0, 1.0))); // the gap it leaves
+      canvas.save();
+      canvas.translate(lb.center.dx, lb.bottom);
+      final tilt = Matrix4.identity()
+        ..setEntry(3, 2, 1 / DoorPlate.focal)
+        ..rotateX(0.6 * lever);
+      canvas.transform(tilt.storage);
+      canvas.drawImageRect(imgs.closed, lb, Rect.fromLTWH(-lb.width / 2, -lb.height, lb.width, lb.height), q);
+      canvas.restore();
+    }
+    // 3b. a seam of light traces the edges of the hidden door
+    if (seam > 0 && open < 1) {
+      final glow = Paint()
+        ..color = _warm.withOpacity((0.75 * seam * (1 - open)).clamp(0.0, 1.0))
+        ..strokeWidth = 2.2
+        ..style = PaintingStyle.stroke
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+      final path = Path()
+        ..moveTo(df.left, df.bottom)
+        ..lineTo(df.left, df.top)
+        ..lineTo(df.right, df.top)
+        ..lineTo(df.right, df.bottom);
+      canvas.drawPath(path, glow);
+      canvas.drawPath(path, Paint()
+        ..color = const Color(0xFFFFE2B0).withOpacity((0.55 * seam * (1 - open)).clamp(0.0, 1.0))
+        ..strokeWidth = 0.8
+        ..style = PaintingStyle.stroke);
+      // light spilling across the floor from the bottom seam
       canvas.drawOval(
-          Rect.fromCenter(center: Offset(df.center.dx, df.bottom + 16), width: df.width * 1.6, height: 44),
+          Rect.fromCenter(center: Offset(df.center.dx, df.bottom + 10), width: df.width * 1.3, height: 34),
           Paint()
-            ..color = _warm.withOpacity((0.12 * under * (1 - open)).clamp(0.0, 1.0))
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18));
+            ..color = _warm.withOpacity((0.16 * seam * (1 - open)).clamp(0.0, 1.0))
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16));
     }
 
     // 4. the door: hinged on the left, swinging away from us in true perspective
@@ -275,8 +291,8 @@ class _IntroPainter extends CustomPainter {
     final doorBottom = onScreen(Offset(0, df.bottom), approach).dy;
     final bigSize = math.min(76.0, w * 0.165);
     final finalY = math.min(h - pad.bottom - bigSize * 1.9, math.max(doorBottom + bigSize * 0.75, h * 0.72));
-    final rise = _seg(t, 0.60, 0.76, Curves.easeOutCubic);
-    final second = _seg(t, 0.68, 0.80, Curves.easeOut);
+    final rise = _seg(t, 0.62, 0.78, Curves.easeOutCubic);
+    final second = _seg(t, 0.70, 0.82, Curves.easeOut);
     _rise(canvas, size, 'The Door', big.copyWith(fontSize: bigSize, letterSpacing: 2, color: B.gold), rise, rise,
         from, Offset(w / 2, finalY), textOut);
     _rise(canvas, size, 'is not for everyone.', small.copyWith(fontSize: bigSize * 0.48, color: const Color(0xFFEDE3C8)), rise,
