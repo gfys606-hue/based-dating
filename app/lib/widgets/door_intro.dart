@@ -176,7 +176,7 @@ class _DoorIntroState extends State<DoorIntro> with SingleTickerProviderStateMix
           left: 0,
           right: 0,
           child: Opacity(
-            opacity: 0.30 * fadeIn * textOut,
+            opacity: 0.30 * fadeIn * (1 - word2),
             child: Text('tap to enter',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.manrope(color: Colors.white, fontSize: 11, letterSpacing: 3, fontWeight: FontWeight.w600)),
@@ -198,7 +198,7 @@ class _Geometry {
     final dw = bw * 0.52, dh = bh * 0.80;
     door = Rect.fromLTWH(cx - dw / 2, back.bottom - dh, dw, dh);
     textTop = math.min(h * 0.74, back.bottom + (h - back.bottom) * 0.40);
-    stairVp = Offset(door.center.dx, door.top + door.height * 0.64);
+    stairVp = Offset(door.center.dx, door.top + door.height * 0.72);
     stairHorizon = Offset(door.center.dx, door.top + door.height * 0.40);
   }
   final Size size;
@@ -521,6 +521,11 @@ class _HallwayPainter extends CustomPainter {
 
     const n = 15;
     final f = [for (var i = 0; i <= n; i++) math.pow(0.83, i).toDouble()];
+    // A short flat landing past the threshold (flat things vanish at eye level)…
+    Offset flat(Offset p) => hz + (p - hz) * 0.78;
+    final landL = flat(d.bottomLeft), landR = flat(d.bottomRight);
+    final ceilL = flat(d.topLeft), ceilR = flat(d.topRight);
+    // …then the steps drop away toward a point below eye level
     Offset sec(Offset corner, double k) => vp + (corner - vp) * k;
 
     // the back of each tread sits directly above the next nosing, on the line to eye level
@@ -529,15 +534,16 @@ class _HallwayPainter extends CustomPainter {
       return Offset(nextNose.dx, nose.dy + (hz.dy - nose.dy) * s);
     }
 
-    final L = [for (final k in f) sec(d.bottomLeft, k)];
-    final R = [for (final k in f) sec(d.bottomRight, k)];
+    final L = [for (final k in f) sec(landL, k)];
+    final R = [for (final k in f) sec(landR, k)];
     final glow = (double k) => (1 - k) * open; // deeper = closer to the light
 
     // walls with the stepped stringer along the bottom
     for (final isLeft in [true, false]) {
       final P = isLeft ? L : R;
-      final top0 = isLeft ? d.topLeft : d.topRight;
-      final path = Path()..moveTo(top0.dx, top0.dy);
+      final door0 = isLeft ? d.topLeft : d.topRight;
+      final top0 = isLeft ? ceilL : ceilR;
+      final path = Path()..moveTo(door0.dx, door0.dy)..lineTo(top0.dx, top0.dy);
       final topN = sec(top0, f[n]);
       path.lineTo(topN.dx, topN.dy);
       path.lineTo(P[n].dx, P[n].dy);
@@ -546,6 +552,8 @@ class _HallwayPainter extends CustomPainter {
         path.lineTo(bk.dx, bk.dy);
         path.lineTo(P[i].dx, P[i].dy);
       }
+      final sill = isLeft ? d.bottomLeft : d.bottomRight;
+      path.lineTo(sill.dx, sill.dy);
       path.close();
       canvas.drawPath(
           path,
@@ -556,11 +564,12 @@ class _HallwayPainter extends CustomPainter {
             ]));
     }
     // sloping ceiling
-    canvas.drawPath(_quad(d.topLeft, d.topRight, sec(d.topRight, f[n]), sec(d.topLeft, f[n])), Paint()
+    canvas.drawPath(_quad(d.topLeft, d.topRight, ceilR, ceilL), Paint()..color = const Color(0xFF020202));
+    canvas.drawPath(_quad(ceilL, ceilR, sec(ceilR, f[n]), sec(ceilL, f[n])), Paint()
       ..shader = ui.Gradient.linear(d.topCenter, vp, [Colors.black, Color.lerp(Colors.black, const Color(0xFF2A1E14), open)!]));
 
     // the far landing, lit
-    final farRect = Rect.fromPoints(sec(d.topLeft, f[n]), sec(d.bottomRight, f[n]));
+    final farRect = Rect.fromPoints(sec(ceilL, f[n]), sec(landR, f[n]));
     canvas.drawRect(farRect, Paint()..color = Color.lerp(Colors.black, const Color(0xFFB8793A), .8 * open)!);
 
     // treads, deepest first so nearer steps cover the drop behind them
@@ -584,14 +593,24 @@ class _HallwayPainter extends CustomPainter {
         ..strokeWidth = 1.2);
     }
 
+    // the landing, and its edge where the stairs drop away
+    canvas.drawPath(_quad(d.bottomLeft, d.bottomRight, landR, landL), Paint()
+      ..shader = ui.Gradient.linear(d.bottomCenter, Offset(d.center.dx, landL.dy), [
+        Color.lerp(Colors.black, const Color(0xFF2A1C10), open)!,
+        Color.lerp(Colors.black, const Color(0xFF4A3018), open)!,
+      ]));
+    canvas.drawLine(landL, landR, Paint()
+      ..color = const Color(0xFFFFC985).withOpacity(.55 * open)
+      ..strokeWidth = 1.3);
+
     // glow rising from below
     canvas.drawCircle(vp, d.width * 0.95, Paint()
       ..shader = ui.Gradient.radial(vp, d.width * 0.95, [_warm.withOpacity(.45 * open), _warm.withOpacity(.10 * open), Colors.transparent], const [0, .4, 1]));
 
     // handrail on the right wall, parallel to the stairs
-    final railH = d.height * 0.36;
-    final r0 = R[0] - Offset(d.width * 0.04, railH);
-    final r1 = sec(R[0] - Offset(d.width * 0.04, railH), f[n]);
+    final railH = (landR.dy - ceilR.dy) * 0.42;
+    final r0 = R[0] - Offset(d.width * 0.03, railH);
+    final r1 = sec(r0, f[n]);
     canvas.drawLine(r0, r1, Paint()
       ..color = const Color(0xFF8A6238).withOpacity(.75 * open)
       ..strokeWidth = 2.2);
