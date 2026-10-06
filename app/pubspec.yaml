@@ -35,6 +35,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/intro/
 
 # App icon (generated during the build: dart run flutter_launcher_icons)
 flutter_launcher_icons:
