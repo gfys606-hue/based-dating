@@ -12,4 +12,8 @@ class DoorPlate {
   static const stX = 600.0, stY = 838.5;
   // the red book that works the lever
   static const lbL = 614.9, lbT = 555.0, lbR = 620.9, lbB = 635.1;
+  // depths from the camera (metres), for parallax
+  static const frontDepth = 4.16; // the hidden bookcase's front
+  static const stairsDepth = 7.9; // the point down the stairwell
+  static const stairsFocal = 0.688; // the stairs shot's focal length, as a fraction of its size
 }
