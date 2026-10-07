@@ -333,7 +333,7 @@ class _IntroPainter extends CustomPainter {
     final doorDst = Rect.fromLTWH(0, -df.height / 2, df.width, df.height);
     canvas.drawImageRect(imgs.closed, df, doorDst, q);
     // turning away from the lamps it falls into shadow; the flicker applies too
-    final dark = (math.sin(angle) * 0.7 + dim * 0.9).clamp(0.0, 0.95);
+    final dark = (math.sin(angle) * 0.7 + dim).clamp(0.0, 1.0); // dark with the room before the lamps come up
     if (dark > 0) canvas.drawRect(doorDst, Paint()..color = Colors.black.withOpacity(dark));
     canvas.restore();
     // a blade of light down the latch side while it's only ajar
