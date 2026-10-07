@@ -37,6 +37,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/intro/
+  shaders:
+    - shaders/parallax.frag
 
 # App icon (generated during the build: dart run flutter_launcher_icons)
 flutter_launcher_icons:
