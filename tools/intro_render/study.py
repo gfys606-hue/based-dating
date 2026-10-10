@@ -58,10 +58,31 @@ def bookcase(s, x0, x1, tag, rng, lever=False):
             k_ = rng.uniform(0.6, 1.1)
             col = tuple((0.55 * c + 0.45 * 0.07) * k_ for c in col)   # aged and faded
             is_lever = lever and k == 3 and LEVER_BOOK is None and x > (x0 + x1) / 2 + 0.05
-            if is_lever:
-                col = (0.30, 0.05, 0.04)                 # the red one
-                bh = min(clear - 0.02, 0.31)
-                LEVER_BOOK = (x, x + bw, top, top + bh, front)
+            if is_lever:                                 # the lever: a thick old leather-bound volume, standing a little proud
+                bw = 0.07
+                bh = min(clear - 0.012, 0.33)
+                front = FRONT + 0.010
+                bd = 0.24
+                L = R.LEATHER
+                s.box(x, x + bw, top, top + bh, front - bd, front - 0.008, L, group=gb)                 # boards + text block
+                s.box(x + 0.003, x + bw - 0.003, top + 0.002, top + bh - 0.002, front - bd, front - 0.004, L, group=gb)
+                s.box(x + 0.010, x + bw - 0.010, top + 0.004, top + bh - 0.004, front - bd, front, L, group=gb)  # rounded spine
+                ribs = [top + bh * f for f in (0.20, 0.40, 0.60, 0.80)]
+                for yr in ribs:                          # raised bands, each edged with a gilt fillet
+                    s.box(x + 0.006, x + bw - 0.006, yr - 0.005, yr + 0.005, front - bd, front + 0.004, L, group=gb)
+                    for yf in (yr - 0.009, yr + 0.0072):
+                        s.box(x + 0.011, x + bw - 0.011, yf, yf + 0.0018, front - 0.01, front + 0.0008, BRASS, group=gb)
+                label = (ribs[2] + 0.012, ribs[3] - 0.012)  # dark title label between the top bands
+                for yf in (label[0] + 0.004, label[1] - 0.006):
+                    s.box(x + 0.013, x + bw - 0.013, yf, yf + 0.0015, front - 0.01, front + 0.0006, BRASS, group=gb)
+                for i in range(4):                       # a few tooled letters, barely legible
+                    lx = x + 0.019 + i * 0.0085
+                    s.box(lx, lx + 0.0045, (label[0] + label[1]) / 2 - 0.004, (label[0] + label[1]) / 2 + 0.004,
+                          front - 0.01, front + 0.0005, BRASS, group=gb)
+                s.lever = (x, x + bw, top, top + bh, front, ribs, label)
+                LEVER_BOOK = (x, x + bw, top, top + bh, front + 0.004)
+                x += bw + 0.004
+                continue
             s.box(x, x + bw, top, top + bh, front - bd, front, BOOK, col=col, group=gb)
             x += bw + rng.uniform(0.0, 0.004)
 

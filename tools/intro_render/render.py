@@ -11,7 +11,7 @@ import sys
 import numpy as np
 
 F = np.float32
-rng = np.random.default_rng(1)
+rng = np.random.default_rng(int(__import__("os").environ.get("SEED", "1")))
 
 # ------------------------------------------------------------------ noise
 def _hash(ix, iy, iz):
@@ -42,8 +42,8 @@ def fbm(p, oct=4):
 
 # ------------------------------------------------------------------ scene
 # materials
-WALL, WAINS, TRIM, FLOOR, CEIL, DOOR, BRASS, STAIR, SWALL, EMIT, CORD, DARK, PANEL, RUG, BOOK, SHELF = range(16)
-GLOSS = {FLOOR: (0.18, 40.0), WAINS: (0.08, 30.0), DOOR: (0.06, 25.0), TRIM: (0.08, 30.0), BRASS: (0.9, 120.0), STAIR: (0.08, 20.0)}
+WALL, WAINS, TRIM, FLOOR, CEIL, DOOR, BRASS, STAIR, SWALL, EMIT, CORD, DARK, PANEL, RUG, BOOK, SHELF, LEATHER = range(17)
+GLOSS = {FLOOR: (0.18, 40.0), WAINS: (0.08, 30.0), DOOR: (0.06, 25.0), TRIM: (0.08, 30.0), BRASS: (0.9, 120.0), STAIR: (0.08, 20.0), LEATHER: (0.05, 14.0)}
 
 class Scene:
     def __init__(self):
@@ -338,6 +338,25 @@ def albedo(mat, p, n, bi=None, s=None):
         worn = 1.0 + 0.35 * np.exp(-(q[:, 0] / 0.22) ** 2) * (nn[:, 1] > 0.5)  # lighter where people walk
         return w * worn[:, None]
     put(STAIR, stair)
+    lv = getattr(s, "lever", None) if s is not None else None
+    if lv is not None:
+        x0, x1, y0, y1, front, ribs, label = lv
+        def leather(q, nn):
+            # old oxblood calf: fine pebbled grain, mottled with age, rubbed brown at the edges
+            # and at the head of the spine, where a finger pulls it
+            grain = fbm(q * 220.0, 2)
+            mott = fbm(q * 14.0 + 5.0, 3)
+            c = np.array((0.17, 0.03, 0.024), F) * (0.72 + 0.35 * mott + 0.18 * grain)[:, None]
+            cx = (x0 + x1) / 2
+            edge = np.clip((np.abs(q[:, 0] - cx) / ((x1 - x0) / 2) - 0.6) / 0.4, 0, 1)
+            head = np.clip((q[:, 1] - (y1 - 0.03)) / 0.03, 0, 1)
+            rub = np.clip(0.55 * edge ** 2 + 0.8 * head + 0.25 * (fbm(q * 40.0, 2) - 0.5), 0, 1)
+            c = c * (1 - rub[:, None]) + np.array((0.17, 0.085, 0.045), F) * rub[:, None]
+            spine = nn[:, 2] > 0.5
+            lab = spine & (q[:, 1] > label[0]) & (q[:, 1] < label[1]) & (np.abs(q[:, 0] - cx) < (x1 - x0) / 2 - 0.009)
+            c = np.where(lab[:, None], np.array((0.045, 0.03, 0.022), F) * (0.8 + 0.4 * grain[:, None]), c)
+            return c
+        put(LEATHER, leather)
     return a
 
 # ------------------------------------------------------------------ shading
