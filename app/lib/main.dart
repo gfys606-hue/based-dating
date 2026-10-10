@@ -8,6 +8,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/paused_screen.dart';
 import 'screens/platform_shell.dart';
 import 'services/activity_api.dart';
+import 'services/diagnostics.dart';
 import 'services/api.dart';
 import 'services/invites_api.dart';
 import 'services/push.dart';
@@ -28,6 +29,7 @@ Future<void> main() async {
     // even if the email opens in a different browser (e.g. inside the Gmail app).
     authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
   );
+  Diagnostics.install(); // errors get logged with the screen they happened on
   await B.loadMode();
   await Push.init();
   runApp(const BasedApp());
@@ -76,6 +78,7 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
       title: 'Based',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: Push.messenger,
+      navigatorObservers: [Diagnostics.observer],
       theme: B.theme(),
       home: const DoorIntro(child: AuthGate()),
     );
