@@ -273,7 +273,7 @@ class _IntroPainter extends CustomPainter {
       canvas.translate(lb.center.dx, lb.bottom);
       final tilt = Matrix4.identity()
         ..setEntry(3, 2, 1 / DoorPlate.focal)
-        ..rotateX(0.6 * lever);
+        ..rotateX(0.7 * lever);
       canvas.transform(tilt.storage);
       canvas.drawImageRect(imgs.closed, lb, Rect.fromLTWH(-lb.width / 2, -lb.height, lb.width, lb.height), q);
       canvas.restore();
