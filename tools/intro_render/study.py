@@ -27,6 +27,11 @@ PALETTE = [(0.20, 0.03, 0.03), (0.05, 0.11, 0.06), (0.04, 0.06, 0.14), (0.16, 0.
 LEVER_BOOK = None   # (x0, x1, y0, y1) of the book that tilts out
 
 
+def lever_only_here(lever, k, x, x0, x1):
+    # keep the lever's shelf free of stacks near where it goes
+    return lever and k == 3
+
+
 def bookcase(s, x0, x1, tag, rng, lever=False):
     global LEVER_BOOK
     t = 0.025
@@ -83,7 +88,24 @@ def bookcase(s, x0, x1, tag, rng, lever=False):
                 LEVER_BOOK = (x, x + bw, top, top + bh, front + 0.004)
                 x += bw + 0.004
                 continue
-            s.box(x, x + bw, top, top + bh, front - bd, front, BOOK, col=col, group=gb)
+            if not lever_only_here(lever, k, x, x0, x1) and rng.random() < 0.06 and x + 0.2 < end:
+                # a short stack of books lying flat, spines out
+                sw_ = rng.uniform(0.15, 0.21)
+                y = top
+                for j in range(int(rng.integers(2, 5))):
+                    th = rng.uniform(0.025, 0.045)
+                    inset = rng.uniform(0.0, 0.02)
+                    c2 = PALETTE[rng.integers(len(PALETTE))]
+                    c2 = tuple((0.55 * c + 0.45 * 0.07) * rng.uniform(0.6, 1.1) for c in c2)
+                    f2 = FRONT - rng.uniform(0.01, 0.04)
+                    s.box(x + inset, x + sw_ - inset * 0.5, y, y + th, f2 - rng.uniform(0.15, 0.22), f2, BOOK, col=c2, group=gb)
+                    y += th
+                x += sw_ + rng.uniform(0.005, 0.02)
+                continue
+            # boards + text block, with the rounded spine standing slightly proud of the boards
+            s.box(x, x + bw, top, top + bh, front - bd, front - 0.003, BOOK, col=col, group=gb)
+            if bw > 0.026:
+                s.box(x + 0.004, x + bw - 0.004, top + 0.002, top + bh - 0.002, front - bd, front, BOOK, col=col, group=gb)
             x += bw + rng.uniform(0.0, 0.004)
 
 

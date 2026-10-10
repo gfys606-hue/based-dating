@@ -260,14 +260,53 @@ def albedo(mat, p, n, bi=None, s=None):
             b = bi[sel]
             col = s.bcol[b]
             q = p[sel]
-            rel = (q[:, 1] - s.bmin[b, 1]) / np.maximum(s.bmax[b, 1] - s.bmin[b, 1], 1e-3)
-            spine = n[sel, 2] > 0.5
-            band = spine & (((rel > 0.82) & (rel < 0.86)) | ((rel > 0.12) & (rel < 0.15)))
-            label = spine & (rel > 0.55) & (rel < 0.68) & (_hash(b, b, b * 3) > 0.5)
-            wear = 0.8 + 0.25 * fbm(q * 30.0, 2)
-            c = col * wear[:, None]
-            c = np.where(band[:, None], np.array((0.45, 0.33, 0.12), F), c)
-            c = np.where(label[:, None], c * 0.4 + np.array((0.25, 0.2, 0.12), F), c)
+            nn = n[sel]
+            lo, hi = s.bmin[b], s.bmax[b]
+            flat = (hi[:, 0] - lo[:, 0]) > (hi[:, 1] - lo[:, 1]) * 1.5         # lying flat: spine runs along x
+            along = np.where(flat, (q[:, 0] - lo[:, 0]) / np.maximum(hi[:, 0] - lo[:, 0], 1e-3),
+                             (q[:, 1] - lo[:, 1]) / np.maximum(hi[:, 1] - lo[:, 1], 1e-3))
+            across = np.where(flat, (q[:, 1] - lo[:, 1]) / np.maximum(hi[:, 1] - lo[:, 1], 1e-3),
+                              (q[:, 0] - lo[:, 0]) / np.maximum(hi[:, 0] - lo[:, 0], 1e-3))
+            spine = nn[:, 2] > 0.5
+            top = nn[:, 1] > 0.5
+            # one of three bindings per book: leather with raised bands, gilt-stamped cloth, or paper/vellum
+            kind = _hash(b, b * 7 + 1, b * 13 + 5)
+            h2 = _hash(b * 3 + 2, b, b * 5)
+            leather = kind < 0.45
+            cloth = (kind >= 0.45) & (kind < 0.88)
+            vellum = kind >= 0.88
+            base = np.where(vellum[:, None], np.array((0.30, 0.26, 0.19), F) * (0.7 + 0.4 * h2[:, None]), col)
+            grain = np.where(leather, fbm(q * 220.0, 2), vnoise(q * 900.0))
+            mott = fbm(q * 14.0 + b[:, None].astype(F) * 0.37, 3)
+            c = base * (0.72 + 0.32 * mott + 0.14 * grain)[:, None]
+            # rubbed and faded toward the spine's edges and ends (where hands and light have worn it)
+            ends = np.clip(np.maximum(along - 0.93, 0.07 - along) / 0.07, 0, 1)
+            sides = np.clip((np.abs(across - 0.5) - 0.38) / 0.12, 0, 1)
+            rub = np.clip(0.5 * sides ** 2 + 0.6 * ends + 0.2 * (fbm(q * 45.0, 2) - 0.5), 0, 1) * spine
+            c = c * (1 - 0.6 * rub[:, None]) + np.array((0.16, 0.10, 0.06), F) * 0.6 * rub[:, None]
+            # leather: raised bands (dark ridge with a thin gilt line each side); cloth: gilt rules head and foot
+            nb = 3 + (h2 * 3).astype(np.int64)
+            ph = (along - 0.12) / 0.76 * nb
+            fr = ph - np.floor(ph)
+            inband = (along > 0.12) & (along < 0.88)
+            ridge = leather & spine & inband & (np.abs(fr) < 0.035)
+            fillet = leather & spine & inband & (np.abs(np.abs(fr - 0.0) - 0.06) < 0.012)
+            rule = cloth & spine & ((np.abs(along - 0.07) < 0.012) | (np.abs(along - 0.93) < 0.012) | (np.abs(along - 0.10) < 0.006))
+            gilt_col = np.array((0.36, 0.27, 0.11), F) * (0.75 + 0.35 * fbm(q * 300.0, 1))[:, None]
+            c = np.where(ridge[:, None], c * 0.55, c)
+            c = np.where((fillet | rule)[:, None] & (sides < 0.6)[:, None], gilt_col, c)
+            # title: a dark label on leather, gilt lettering straight on cloth, a paper label on vellum
+            lab_lo = 0.62 + 0.08 * h2
+            lab = spine & (along > lab_lo) & (along < lab_lo + 0.11) & (np.abs(across - 0.5) < 0.36)
+            letters = lab & (np.abs(across - 0.5) < 0.26) & (np.abs(along - lab_lo - 0.055) < 0.02) & (vnoise(q * 600.0) > 0.45)
+            c = np.where((lab & leather & (h2 > 0.3))[:, None], np.array((0.05, 0.035, 0.025), F) * (0.8 + 0.4 * grain[:, None]), c)
+            c = np.where((lab & vellum)[:, None], np.array((0.33, 0.29, 0.21), F), c)
+            c = np.where((letters & ~vellum)[:, None], gilt_col * 0.9, c)
+            c = np.where((letters & vellum)[:, None], np.array((0.06, 0.04, 0.03), F), c)
+            # page edges on the visible ends, and dust settled on top
+            pages = (~spine) & (~top) & (nn[:, 2] < -0.5)
+            c = np.where(top[:, None], c * 0.55 + np.array((0.11, 0.10, 0.09), F) * 0.45 * (0.7 + 0.6 * fbm(q * 60.0, 2))[:, None], c)
+            c = np.where(pages[:, None], np.array((0.30, 0.26, 0.19), F), c)
             a[sel] = c
     def put(m, col):
         sel = mat == m
