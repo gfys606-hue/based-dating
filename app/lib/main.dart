@@ -7,6 +7,7 @@ import 'screens/invite_screens.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/paused_screen.dart';
 import 'screens/platform_shell.dart';
+import 'services/activity_api.dart';
 import 'services/api.dart';
 import 'services/invites_api.dart';
 import 'services/push.dart';
@@ -58,6 +59,12 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
   @override
   void didChangePlatformBrightness() => _changed();
 
+  // counts as "active today" each time the app comes back to the foreground
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    if (s == AppLifecycleState.resumed) ActivityApi.touch();
+  }
+
   void _changed() => setState(() {});
 
   @override
@@ -86,6 +93,7 @@ class AuthGate extends StatelessWidget {
       builder: (context, _) {
         if (Api.db.auth.currentSession == null) return const AuthScreen();
         Push.register(); // once per sign-in; asks for notification permission the first time
+        ActivityApi.touch();
         return const _StatusRouter();
       },
     );
