@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 import '../services/activity_api.dart';
+import '../services/diagnostics.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'admin_review_screen.dart';
+import 'problems_screen.dart';
 
 /// Admin → Activity: are people using it, are they connecting, and where do they get stuck.
 /// Everything comes from one server call that only admins can make.
@@ -18,6 +20,7 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   Map<String, dynamic>? _d;
+  Map<String, dynamic>? _health;
   String? _error;
 
   @override
@@ -28,6 +31,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   Future<void> _load() async {
     try {
+      Diagnostics.health().then((h) {
+        if (mounted) setState(() => _health = h);
+      }).catchError((_) {});
       final d = await ActivityApi.dashboard();
       if (mounted) setState(() {
         _d = d;
@@ -80,6 +86,31 @@ class _ActivityScreenState extends State<ActivityScreen> {
           child: Text('Daily activity is tracked from ${DateFormat('MMM d').format(since)}, so early days look light.',
               style: TextStyle(color: B.muted, fontSize: 12.5)),
         ),
+      // ---------- problems: errors and reports ----------
+      if (_health != null) ...[
+        const SectionLabel('Problems'),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: _ProblemTile(
+              label: 'Errors · 24h',
+              value: _n(_health!, 'errors_24h'),
+              sub: '${_n(_health!, 'people_hit_24h')} people hit · ${_n(_health!, 'error_kinds_open')} open',
+              onTap: () => _openProblems(false),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _ProblemTile(
+              label: 'Reports',
+              value: _n(_health!, 'feedback_open'),
+              sub: '${_n(_health!, 'bugs_open')} broken · ${_n(_health!, 'confusing_open')} confusing',
+              onTap: () => _openProblems(true),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 22),
+      ],
       // ---------- pulse ----------
       const SectionLabel('Pulse'),
       const SizedBox(height: 8),
@@ -165,6 +196,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
     ];
   }
 
+  Future<void> _openProblems(bool reports) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProblemsScreen(startOnFeedback: reports)));
+    _load();
+  }
+
   String _delta(int now, int before, String suffix) {
     if (before == 0) return now == 0 ? 'none last week either' : 'none last week';
     final pct = ((now - before) * 100 / before).round();
@@ -208,6 +244,31 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ),
     ];
   }
+}
+
+class _ProblemTile extends StatelessWidget {
+  const _ProblemTile({required this.label, required this.value, required this.sub, required this.onTap});
+  final String label, sub;
+  final int value;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: B.cardBox(border: value > 0 ? const Color(0xFFE0A526) : null),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(label.toUpperCase(), style: B.label)),
+              Icon(Icons.chevron_right, size: 16, color: B.muted),
+            ]),
+            const SizedBox(height: 4),
+            Text('$value', style: B.display(30)),
+            const SizedBox(height: 2),
+            Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.muted, fontSize: 12)),
+          ]),
+        ),
+      );
 }
 
 class _Tile extends StatelessWidget {

@@ -5,6 +5,7 @@ import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'activity_screen.dart';
+import '../widgets/feedback_sheet.dart';
 import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
 import 'invite_screens.dart';
@@ -99,6 +100,8 @@ class YouScreen extends StatelessWidget {
               row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
               Divider(height: 1, color: B.fill),
               row(Icons.vpn_key_outlined, 'Invite friends', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyInvitesScreen()))),
+              Divider(height: 1, color: B.fill),
+              row(Icons.bug_report_outlined, 'Report a problem', () => showFeedbackSheet(context)),
               Divider(height: 1, color: B.fill),
               row(Icons.workspace_premium_outlined, 'Membership', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()))),
               FutureBuilder(

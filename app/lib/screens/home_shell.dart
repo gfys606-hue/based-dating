@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../services/diagnostics.dart';
+import '../widgets/feedback_sheet.dart';
+
 import '../services/api.dart';
 import '../services/friends_api.dart';
 import '../services/places_api.dart';
+import '../theme.dart';
 import '../widgets/module_rail.dart';
 import 'discover_screen.dart';
 import 'friends_screen.dart';
@@ -86,7 +90,19 @@ class _HomeShellState extends State<HomeShell> {
       const RailItem('Spots', Icons.place_outlined, Icons.place),
       for (final e in widget.extras) e.item,
     ];
+    Diagnostics.tab = items[_tab.clamp(0, items.length - 1)].label;
     return Scaffold(
+      // testers get a "Report a problem" button everywhere
+      floatingActionButton: widget.extras.isEmpty
+          ? null
+          : FloatingActionButton.small(
+              heroTag: 'feedback',
+              tooltip: 'Report a problem',
+              backgroundColor: B.panel,
+              foregroundColor: B.gold,
+              onPressed: () => showFeedbackSheet(context),
+              child: const Icon(Icons.bug_report_outlined, size: 20),
+            ),
       body: Row(children: [
         ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 5),
         Expanded(
