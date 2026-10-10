@@ -81,6 +81,7 @@ jobs:
           --base-href "/"
           --dart-define=SUPABASE_URL=$SUPABASE_URL
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          --dart-define=BUILD=$GITHUB_RUN_NUMBER
 
       - name: Build Android test app (published at based-social.com/test)
         env:
@@ -97,6 +98,7 @@ jobs:
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=BUILD=$GITHUB_RUN_NUMBER \
             --dart-define=FIREBASE_API_KEY=$FIREBASE_API_KEY \
             --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
             --dart-define=FIREBASE_SENDER_ID=$FIREBASE_SENDER_ID \
@@ -129,6 +131,7 @@ jobs:
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=BUILD=$GITHUB_RUN_NUMBER \
             --dart-define=FIREBASE_API_KEY=$FIREBASE_API_KEY \
             --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
             --dart-define=FIREBASE_SENDER_ID=$FIREBASE_SENDER_ID \
