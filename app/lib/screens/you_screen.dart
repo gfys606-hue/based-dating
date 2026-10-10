@@ -4,6 +4,7 @@ import '../services/api.dart';
 import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'activity_screen.dart';
 import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
 import 'invite_screens.dart';
@@ -130,6 +131,9 @@ class YouScreen extends StatelessWidget {
                 future: Api.myProfile(),
                 builder: (context, snap) => snap.data?['is_admin'] == true
                     ? Column(children: [
+                        Divider(height: 1, color: B.fill),
+                        row(Icons.insights_outlined, 'Activity (admin)',
+                            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityScreen()))),
                         Divider(height: 1, color: B.fill),
                         row(Icons.door_front_door_outlined, 'The door (admin)',
                             () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminDoorScreen()))),
