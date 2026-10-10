@@ -11,7 +11,7 @@ class DoorPlate {
   // a point down in the stairwell (where the words rise from)
   static const stX = 600.0, stY = 838.5;
   // the old leather-bound book that works the lever
-  static const lbL = 615.0, lbT = 549.8, lbR = 633.2, lbB = 635.8;
+  static const lbL = 614.1, lbT = 549.8, lbR = 632.2, lbB = 635.8;
   // depths from the camera (metres), for parallax
   static const frontDepth = 4.16; // the hidden bookcase's front
   static const stairsDepth = 7.9; // the point down the stairwell
