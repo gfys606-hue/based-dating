@@ -28,7 +28,7 @@ class BasedNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: B.panel,
           borderRadius: BorderRadius.circular(6),
-          boxShadow: [BoxShadow(color: const Color(0xFF15181D).withOpacity(.45), blurRadius: 30, spreadRadius: -10, offset: const Offset(0, 12))],
+          boxShadow: [BoxShadow(color: const Color(0xFF0A0604).withOpacity(.45), blurRadius: 30, spreadRadius: -10, offset: const Offset(0, 12))],
         ),
         child: Row(children: [
           for (var i = 0; i < _items.length; i++)
@@ -60,7 +60,7 @@ class BasedNavBar extends StatelessWidget {
                         const Positioned(
                           top: 10,
                           right: 22,
-                          child: CircleAvatar(radius: 4, backgroundColor: Color(0xFF5B7FEA)),
+                          child: CircleAvatar(radius: 4, backgroundColor: Color(0xFFD9A84E)),
                         ),
                     ]),
                   ),
