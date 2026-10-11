@@ -61,7 +61,7 @@ class _View {
 
 const _views = <int, _View>{
   0: _View('hall', 0.50, 0.48, 1.00), // Home: the great hall
-  1: _View('chamber', 0.45, 0.50, 1.00), // Discover / Ouch: the bed chamber
+  1: _View('gate', 0.40, 0.55, 1.20), // Discover / Ouch: out by the courtyard gate at night
   2: _View('alcove', 0.50, 0.50, 1.00), // Talk: a candlelit alcove
   3: _View('study', 0.50, 0.42, 1.15), // You: the study, by the bookcase
   4: _View('dining', 0.42, 0.55, 1.00), // Friends: the dining room
