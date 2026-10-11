@@ -233,9 +233,9 @@ class _KindChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (kind) {
-      'bug' => ('Something broke', const Color(0xFFD0453A)),
-      'confusing' => ('Confusing', const Color(0xFFE0A526)),
-      _ => ('Idea', const Color(0xFF2E9E5B)),
+      'bug' => ('Something broke', B.bad),
+      'confusing' => ('Confusing', B.caution),
+      _ => ('Idea', B.good),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

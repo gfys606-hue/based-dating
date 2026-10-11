@@ -178,7 +178,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         borderRadius: BorderRadius.circular(B.radius),
         child: Container(
           padding: const EdgeInsets.all(12),
-          decoration: B.cardBox(border: f['is_inner'] == true ? const Color(0x99F5C542) : null),
+          decoration: B.cardBox(border: f['is_inner'] == true ? const Color(0x99D9A84E) : null),
           child: Row(children: [
             Avatar(path: f['photo'] as String?, size: 50),
             const SizedBox(width: 12),

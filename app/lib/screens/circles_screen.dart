@@ -141,7 +141,7 @@ class _CirclesScreenState extends State<CirclesScreen> {
         padding: const EdgeInsets.only(bottom: 10),
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: B.cardBox(border: const Color(0x99F5C542)),
+          decoration: B.cardBox(border: const Color(0x99D9A84E)),
           child: Row(children: [
             const Icon(Icons.vpn_key, color: B.gold),
             const SizedBox(width: 12),

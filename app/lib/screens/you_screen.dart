@@ -26,9 +26,9 @@ class _ActivityLight extends StatelessWidget {
           final a = snap.data;
           if (a == null || a['show'] != true) return const SizedBox.shrink();
           final color = switch (a['light']) {
-            'green' => const Color(0xFF2E9E5B),
-            'yellow' => const Color(0xFFE0A526),
-            _ => const Color(0xFFD0453A),
+            'green' => B.good,
+            'yellow' => B.caution,
+            _ => B.bad,
           };
           final label = switch (a['light']) { 'green' => 'You\'re seen', 'yellow' => 'Slipping a little', _ => 'Mostly hidden' };
           return Padding(

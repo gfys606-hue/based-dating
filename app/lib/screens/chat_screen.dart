@@ -238,8 +238,8 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 10),
           DeadlineBar(
             fraction: h / 72,
-            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFF8FA8F3) : B.panelAccent),
-            track: const Color(0xFF3B4048),
+            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFFE6B866) : B.panelAccent),
+            track: const Color(0xFF4A3A2C),
           ),
         ],
         const SizedBox(height: 10),

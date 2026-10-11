@@ -190,7 +190,7 @@ class _TablesTabState extends State<_TablesTab> {
           Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(12),
-            decoration: B.cardBox(border: r['status'] == 'pending' ? const Color(0x99F5C542) : null),
+            decoration: B.cardBox(border: r['status'] == 'pending' ? const Color(0x99D9A84E) : null),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${r['party_size']} people · ${_when(r['starts_at'] as String)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               Text('${r['requested_by']} · "${r['event_title'] ?? 'Plan'}" · ${r['going']} going so far', style: TextStyle(color: B.muted, fontSize: 13)),

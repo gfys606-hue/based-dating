@@ -256,7 +256,7 @@ class _ProblemTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          decoration: B.cardBox(border: value > 0 ? const Color(0xFFE0A526) : null),
+          decoration: B.cardBox(border: value > 0 ? B.caution : null),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Expanded(child: Text(label.toUpperCase(), style: B.label)),
@@ -307,7 +307,7 @@ class _ConnRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final diff = now - before;
-    final color = diff > 0 ? const Color(0xFF2E9E5B) : diff < 0 ? const Color(0xFFD0453A) : B.muted;
+    final color = diff > 0 ? B.good : diff < 0 ? B.bad : B.muted;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       child: Row(children: [
@@ -336,10 +336,10 @@ class _StuckRow extends StatelessWidget {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: count > 0 ? const Color(0xFFE0A526).withOpacity(0.18) : B.fill,
+            color: count > 0 ? B.caution.withOpacity(0.18) : B.fill,
             borderRadius: BorderRadius.circular(999),
           ),
-          child: Text('$count', style: TextStyle(fontWeight: FontWeight.w700, color: count > 0 ? const Color(0xFFB07A10) : B.muted)),
+          child: Text('$count', style: TextStyle(fontWeight: FontWeight.w700, color: count > 0 ? B.accentStrong : B.muted)),
         ),
       );
 }

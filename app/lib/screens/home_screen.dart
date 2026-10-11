@@ -289,7 +289,7 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(title, style: B.heading(19).copyWith(color: Colors.white)),
                 const SizedBox(height: 2),
-                Text(sub, style: const TextStyle(color: Color(0xFFE3E9FB), fontSize: 13)),
+                Text(sub, style: const TextStyle(color: Color(0xFFE9D9BE), fontSize: 13)),
               ]),
             ),
             const SizedBox(width: 8),
