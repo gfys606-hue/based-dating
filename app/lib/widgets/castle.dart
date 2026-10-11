@@ -105,17 +105,17 @@ class _CastleBackdropState extends State<CastleBackdrop> with SingleTickerProvid
           animation: _walk,
           builder: (context, _) => CustomPaint(
             size: Size.infinite,
-            painter: _WallsPainter(_from, _to, _walk.value, B.isDark),
+            painter: _WallsPainter(_from, _to, _walk.value, B.isDark, Castle.ready.value),
           ),
         ),
       );
 }
 
 class _WallsPainter extends CustomPainter {
-  _WallsPainter(this.from, this.to, this.p, this.dark);
+  _WallsPainter(this.from, this.to, this.p, this.dark, this.loaded);
   final _View from, to;
   final double p;
-  final bool dark;
+  final bool dark, loaded; // [loaded]: repaint once the photos arrive
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -148,7 +148,7 @@ class _WallsPainter extends CustomPainter {
     }
     // shade: mostly shadow, deeper as you pass between rooms
     final dip = math.sin(p * math.pi) * (changing ? 0.55 : 0.28);
-    final shade = dark ? (0.62 + dip * 0.38) : (0.84 + dip * 0.16);
+    final shade = dark ? (0.50 + dip * 0.45) : (0.80 + dip * 0.18);
     canvas.drawRect(Offset.zero & size, Paint()..color = (dark ? Colors.black : B.bg).withOpacity(shade.clamp(0.0, 1.0).toDouble()));
     // lamplight from above
     final lamp = Offset(w * 0.55, -h * 0.08);
@@ -169,7 +169,7 @@ class _WallsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WallsPainter o) => o.p != p || o.from != from || o.to != to || o.dark != dark;
+  bool shouldRepaint(_WallsPainter o) => o.p != p || o.from != from || o.to != to || o.dark != dark || o.loaded != loaded;
 }
 
 /// Opening a page takes you down a stone staircase; going back climbs it.
