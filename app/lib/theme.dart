@@ -36,6 +36,8 @@ class B {
   // Brass: the signature color (the intro's words). Main buttons, the logo dot, highlights.
   static const gold = Color(0xFFD9A84E);
   static const onGold = Color(0xFF1C1009); // text on brass
+  // brass for text and icons on the page: deeper on parchment so it stays readable
+  static Color get goldInk => _c(0xFF94621C, 0xFFD9A84E);
   // The feature card on Home (tonight's call): oxblood leather in both modes.
   static Color get hero => _c(0xFF5C1F14, 0xFF4E1A11);
   static Color get slogan => _c(0xFF6E3B1C, 0xFFD9A84E);
