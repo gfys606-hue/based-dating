@@ -126,7 +126,12 @@ class SocialApi {
   static Future<void> sendThreadMessage(String threadId, String body) =>
       _db.from('listing_messages').insert({'thread_id': threadId, 'sender_id': Api.me, 'body': body});
 
-  // ---------- search ----------
+  // ---------- search (inside Based: people you know, places to go) ----------
+  static Future<Map<String, dynamic>> find(String q) async {
+    final res = await _db.rpc('find', params: {'p_query': q});
+    return res == null ? <String, dynamic>{} : Map<String, dynamic>.from(res as Map);
+  }
+
   static Future<Map<String, dynamic>> search(String q) async {
     final res = await _db.rpc('search_all', params: {'p_query': q});
     return res == null ? <String, dynamic>{} : Map<String, dynamic>.from(res as Map);
