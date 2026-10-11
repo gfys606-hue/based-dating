@@ -55,7 +55,7 @@ class PlaceMap extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
                       ),
-                    const Icon(Icons.location_on, color: B.gold, size: 30),
+                    Icon(Icons.location_on, color: B.goldInk, size: 30),
                   ]),
                 ),
             ]),
@@ -199,7 +199,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                   const Padding(padding: EdgeInsets.fromLTRB(8, 6, 8, 4), child: SectionLabel('Your spots')),
                   for (final s in _saved)
                     ListTile(
-                      leading: const Icon(Icons.local_bar_outlined, color: B.gold),
+                      leading: Icon(Icons.local_bar_outlined, color: B.goldInk),
                       title: Text(s['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text([s['address'], if (s['distance_km'] != null) '${s['distance_km']} km'].whereType<String>().join(' · ')),
                       onTap: () => Navigator.pop(context, s),

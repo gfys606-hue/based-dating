@@ -51,7 +51,7 @@ class _FriendButtonState extends State<FriendButton> {
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
-            leading: Icon(inner ? Icons.star : Icons.star_outline, color: B.gold),
+            leading: Icon(inner ? Icons.star : Icons.star_outline, color: B.goldInk),
             title: Text(inner ? 'Remove from your Tight' : 'Add to your Tight'),
             subtitle: Text(inner
                 ? '${widget.name} will only see what all your friends see.'
