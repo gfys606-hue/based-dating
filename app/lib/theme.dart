@@ -12,45 +12,53 @@ class B {
   static bool isDark = false;
   static Color _c(int light, int dark) => Color(isDark ? dark : light);
 
+  // The look follows the opening: a lamplit study. Dark mode is the study at night (walnut,
+  // old leather, brass, warm lamplight); light mode is the pages of an old book (parchment and ink).
+
   // Text
-  static Color get ink => _c(0xFF0E1A45, 0xFFF7F3E8); // main text (navy / ivory)
-  static Color get ink2 => _c(0xFF3A4468, 0xFFD6DCEF); // secondary text
-  static Color get muted => _c(0xFF5B6384, 0xFFA3AED3); // captions
+  static Color get ink => _c(0xFF2A1A0F, 0xFFF1E6D0); // main text (sepia ink / warm ivory)
+  static Color get ink2 => _c(0xFF4E3826, 0xFFD6C5A6); // secondary text
+  static Color get muted => _c(0xFF7A6248, 0xFF9E8B70); // captions
 
   // Surfaces
-  static Color get bg => _c(0xFFF7F3E8, 0xFF0E1A45); // page background (ivory / deep royal navy)
-  static Color get card => _c(0xFFFFFFFF, 0xFF132257);
-  static Color get line => _c(0xFFE4DCC8, 0xFF243572);
-  static Color get fill => _c(0xFFEDE5D2, 0xFF1A2A63); // soft fills: toggles, placeholders, dividers
-  static Color get avatarFill => _c(0xFFE1D6BD, 0xFF22347A);
+  static Color get bg => _c(0xFFF3EADA, 0xFF110B07); // page background (parchment / near-black walnut)
+  static Color get card => _c(0xFFFBF6EC, 0xFF1B130D);
+  static Color get line => _c(0xFFDCCBAE, 0xFF33251A);
+  static Color get fill => _c(0xFFEADCC2, 0xFF261A11); // soft fills: toggles, placeholders, dividers
+  static Color get avatarFill => _c(0xFFE0CDAA, 0xFF33241A);
 
-  // Panels (side rail, call panel, your chat bubbles): royal blue / midnight navy. Text on them is white.
-  static Color get panel => _c(0xFF1B3A9E, 0xFF09122F);
-  static Color get panelRaised => _c(0xFF2B4BB5, 0xFF16255A);
-  static const onPanelMuted = Color(0xFFB4C1EA);
-  static const panelAccent = Color(0xFFF5C542); // gold for small text on panels
+  // Panels (side rail, call panel, your chat bubbles): dark walnut in both modes. Text on them is ivory.
+  static Color get panel => _c(0xFF2B1B10, 0xFF0A0604);
+  static Color get panelRaised => _c(0xFF3E2817, 0xFF22170F);
+  static const onPanelMuted = Color(0xFFBCA889);
+  static const panelAccent = Color(0xFFD9A84E); // brass for small text on panels
 
-  // Gold: the second signature color. Main buttons, the logo dot, highlights.
-  static const gold = Color(0xFFF5C542);
-  static const onGold = Color(0xFF0E1A45); // text on gold
-  // The feature card on Home (tonight's call): royal blue in both modes.
-  static Color get hero => _c(0xFF1B3A9E, 0xFF4169E1);
-  static Color get slogan => _c(0xFF1B3A9E, 0xFFF5C542);
+  // Brass: the signature color (the intro's words). Main buttons, the logo dot, highlights.
+  static const gold = Color(0xFFD9A84E);
+  static const onGold = Color(0xFF1C1009); // text on brass
+  // The feature card on Home (tonight's call): oxblood leather in both modes.
+  static Color get hero => _c(0xFF5C1F14, 0xFF4E1A11);
+  static Color get slogan => _c(0xFF6E3B1C, 0xFFD9A84E);
 
-  // Royal blue: the ONE action color
-  static Color get accent => _c(0xFF2F55D4, 0xFF6A8DF2);
-  static Color get accentSoft => _c(0xFFE3E9FB, 0xFF1D2F73);
-  static Color get accentMid => _c(0xFFAFC0F2, 0xFF34498F); // radar rings
-  static Color get accentStrong => _c(0xFF1B3A9E, 0xFFF5C542); // accent-colored text on soft fills
+  // Cognac / amber: the ONE action color (links, selected things, switches)
+  static Color get accent => _c(0xFF8C4A1C, 0xFFE0A955);
+  static Color get accentSoft => _c(0xFFEFDDBE, 0xFF2E2014);
+  static Color get accentMid => _c(0xFFD6B585, 0xFF5C4126); // radar rings
+  static Color get accentStrong => _c(0xFF6E3B1C, 0xFFE6B866); // accent-colored text on soft fills
 
   // Status
-  static Color get urgent => _c(0xFF1B3A9E, 0xFFF5C542); // under 24h (deep blue / gold)
-  static Color get urgentSoft => _c(0xFFDCE4FA, 0xFF3A3A4A);
-  static Color get soon => _c(0xFF2F55D4, 0xFFA9BDF5); // under 2 days (royal blue)
-  static Color get soonSoft => _c(0xFFE8EDFC, 0xFF1D2F73);
-  static Color get ok => _c(0xFF2F6B47, 0xFF6FC08E);
-  static Color get okSoft => _c(0xFFEAF3EC, 0xFF1C3A3A);
-  static Color get okInk => _c(0xFF1F4D32, 0xFF9FD8B2); // text on okSoft
+  static Color get urgent => _c(0xFF9A2E1E, 0xFFE58A62); // under 24h, and anything destructive (oxblood / ember)
+  static Color get urgentSoft => _c(0xFFF2DCD0, 0xFF3A1C12);
+  static Color get soon => _c(0xFF8C4A1C, 0xFFE0B57A); // under 2 days (cognac / amber)
+  static Color get soonSoft => _c(0xFFEFDDBE, 0xFF2E2014);
+  static Color get ok => _c(0xFF4B6B38, 0xFF9DBB7E); // bottle green
+  static Color get okSoft => _c(0xFFE6EBD7, 0xFF1E2616);
+  static Color get okInk => _c(0xFF34502A, 0xFFBFD6A6); // text on okSoft
+
+  // Traffic-light colors used for small status dots and counts, toned to sit in the room
+  static const good = Color(0xFF6E9A4E);
+  static const caution = Color(0xFFD99A3A);
+  static const bad = Color(0xFFC0533A);
 
   static const radius = 4.0; // near-square corners: gallery-sharp
   static const navHeight = 70.0;
@@ -58,8 +66,8 @@ class B {
 
   // Barely-there shadows; edges come from fine hairlines instead.
   static List<BoxShadow> get shadow => isDark
-      ? const [BoxShadow(color: Color(0x55000000), blurRadius: 14, spreadRadius: -8, offset: Offset(0, 6))]
-      : const [BoxShadow(color: Color(0x0F15181D), blurRadius: 12, spreadRadius: -6, offset: Offset(0, 4))];
+      ? const [BoxShadow(color: Color(0x66000000), blurRadius: 16, spreadRadius: -8, offset: Offset(0, 6))]
+      : const [BoxShadow(color: Color(0x142A1A0F), blurRadius: 12, spreadRadius: -6, offset: Offset(0, 4))];
 
   static BoxDecoration cardBox({Color? border}) => BoxDecoration(
         color: card,
@@ -113,7 +121,9 @@ class B {
       seedColor: accent,
       brightness: isDark ? Brightness.dark : Brightness.light,
       primary: accent,
-      onPrimary: Colors.white,
+      onPrimary: isDark ? onGold : const Color(0xFFFBF6EC),
+      secondary: gold,
+      onSecondary: onGold,
       surface: bg,
       onSurface: ink,
     );
@@ -129,7 +139,7 @@ class B {
       iconTheme: IconThemeData(color: ink2),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: gold, // main buttons are gold with navy text
+          backgroundColor: gold, // main buttons are brass with dark walnut text
           foregroundColor: onGold,
           minimumSize: const Size(0, 52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
@@ -159,12 +169,12 @@ class B {
       dialogTheme: DialogThemeData(backgroundColor: card),
       bottomSheetTheme: BottomSheetThemeData(backgroundColor: card, modalBackgroundColor: card),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : muted),
+        thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? (isDark ? onGold : Colors.white) : muted),
         trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? accent : fill),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: panel,
-        contentTextStyle: const TextStyle(color: Colors.white),
+        contentTextStyle: const TextStyle(color: Color(0xFFF1E6D0)),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
