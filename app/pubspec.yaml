@@ -45,10 +45,10 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#0E1A45"
+  adaptive_icon_background: "#110B07"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   web:
     generate: true
     image_path: "assets/icon/icon.png"
-    background_color: "#0E1A45"
-    theme_color: "#0E1A45"
+    background_color: "#110B07"
+    theme_color: "#110B07"
