@@ -180,7 +180,7 @@ class _IntroPainter extends CustomPainter {
       final cr = Rect.fromLTWH(cc.dx - _P.vp.dx / _P.cellarW * cw, cc.dy - _P.vp.dy / _P.cellarH * ch, cw, ch);
       canvas.drawImageRect(imgs.cellar, Rect.fromLTWH(0, 0, _P.cellarW, _P.cellarH), cr, q);
       // it comes up out of black as the door opens
-      final hide = (1 - math.min(1.0, open * 2.2)).clamp(0.0, 1.0);
+      final hide = (1 - math.min(1.0, open * 2.2)).clamp(0.0, 1.0).toDouble();
       if (hide > 0) canvas.drawRect(cr, Paint()..color = Colors.black.withOpacity(hide));
       canvas.restore();
     }
