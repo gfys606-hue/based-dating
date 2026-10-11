@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'widgets/castle.dart';
+
 /// Based design tokens. Every screen (and every future module: search, shop,
 /// groups) uses these, so the whole platform looks and feels like one app.
 ///
@@ -72,7 +74,7 @@ class B {
       : const [BoxShadow(color: Color(0x142A1A0F), blurRadius: 12, spreadRadius: -6, offset: Offset(0, 4))];
 
   static BoxDecoration cardBox({Color? border}) => BoxDecoration(
-        color: card,
+        color: card.withOpacity(isDark ? 0.90 : 0.93), // the castle walls show faintly around the edges
         borderRadius: BorderRadius.circular(radius),
         boxShadow: shadow,
         border: Border.all(color: border ?? line, width: border == null ? 0.8 : 1.5),
@@ -133,7 +135,16 @@ class B {
       useMaterial3: true,
       brightness: isDark ? Brightness.dark : Brightness.light,
       colorScheme: scheme,
-      scaffoldBackgroundColor: bg,
+      scaffoldBackgroundColor: Colors.transparent, // pages sit in the castle (widgets/castle.dart)
+      canvasColor: bg,
+      pageTransitionsTheme: const PageTransitionsTheme(builders: {
+        TargetPlatform.android: StairsTransitions(),
+        TargetPlatform.iOS: StairsTransitions(),
+        TargetPlatform.macOS: StairsTransitions(),
+        TargetPlatform.windows: StairsTransitions(),
+        TargetPlatform.linux: StairsTransitions(),
+        TargetPlatform.fuchsia: StairsTransitions(),
+      }),
       dividerColor: line,
     );
     return base.copyWith(
@@ -166,7 +177,7 @@ class B {
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(2), borderSide: BorderSide(color: line, width: 1)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(2), borderSide: BorderSide(color: accent, width: 1.5)),
       ),
-      appBarTheme: AppBarTheme(backgroundColor: bg, foregroundColor: ink, elevation: 0, scrolledUnderElevation: 0),
+      appBarTheme: AppBarTheme(backgroundColor: Colors.transparent, foregroundColor: ink, elevation: 0, scrolledUnderElevation: 0),
       cardColor: card,
       dialogTheme: DialogThemeData(backgroundColor: card),
       bottomSheetTheme: BottomSheetThemeData(backgroundColor: card, modalBackgroundColor: card),

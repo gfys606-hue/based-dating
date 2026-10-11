@@ -13,6 +13,7 @@ import 'services/api.dart';
 import 'services/invites_api.dart';
 import 'services/push.dart';
 import 'theme.dart';
+import 'widgets/castle.dart';
 import 'widgets/door_intro.dart';
 
 // Run with:
@@ -31,6 +32,7 @@ Future<void> main() async {
   );
   Diagnostics.install(); // errors get logged with the screen they happened on
   await B.loadMode();
+  Castle.load(); // the castle's walls (shown behind every screen); doesn't hold up the launch
   await Push.init();
   runApp(const BasedApp());
 }
@@ -80,6 +82,8 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
       scaffoldMessengerKey: Push.messenger,
       navigatorObservers: [Diagnostics.observer],
       theme: B.theme(),
+      // every screen sits inside the castle: its walls are painted once, behind the whole app
+      builder: (context, child) => Stack(fit: StackFit.expand, children: [const CastleBackdrop(), if (child != null) child]),
       home: const DoorIntro(child: AuthGate()),
     );
   }
