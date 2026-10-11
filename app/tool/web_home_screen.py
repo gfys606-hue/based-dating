@@ -10,7 +10,7 @@ import re
 
 INDEX = "web/index.html"
 MANIFEST = "web/manifest.json"
-NAVY = "#0E1A45"
+NAVY = "#110B07"  # dark walnut (name kept for history)
 
 html = open(INDEX).read()
 
