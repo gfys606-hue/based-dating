@@ -115,9 +115,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       : Padding(
                           padding: const EdgeInsets.only(top: 3),
                           child: Row(children: [
-                            const Icon(Icons.place_outlined, size: 13, color: B.gold),
+                            Icon(Icons.place_outlined, size: 13, color: B.goldInk),
                             const SizedBox(width: 4),
-                            Text((city['name'] as String).toUpperCase(), style: B.label.copyWith(color: B.gold)),
+                            Text((city['name'] as String).toUpperCase(), style: B.label.copyWith(color: B.goldInk)),
                           ]),
                         ),
                 ),

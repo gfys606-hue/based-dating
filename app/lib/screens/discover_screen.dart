@@ -157,7 +157,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(18, 0, 18, 4),
                           child: Row(children: [
-                            const Icon(Icons.favorite, size: 14, color: B.gold),
+                            Icon(Icons.favorite, size: 14, color: B.goldInk),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text('Ouch is on · only others with Ouch on see you here',
@@ -408,7 +408,7 @@ class _DatingOff extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Icon(Icons.favorite_border, color: B.gold, size: 28),
+            Icon(Icons.favorite_border, color: B.goldInk, size: 28),
             const SizedBox(height: 12),
             Text('Ouch is off', style: B.heading(24).copyWith(color: Colors.white)),
             const SizedBox(height: 6),

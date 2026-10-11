@@ -188,7 +188,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   Flexible(child: Text(f['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
                   if (f['is_inner'] == true) ...[
                     const SizedBox(width: 6),
-                    const Icon(Icons.star, size: 15, color: B.gold),
+                    Icon(Icons.star, size: 15, color: B.goldInk),
                   ],
                 ]),
                 for (final l in lines)
@@ -227,7 +227,7 @@ class FriendChatScreen extends StatelessWidget {
             Text(friend['name'] as String, style: B.heading(20)),
             if (friend['is_inner'] == true) ...[
               const SizedBox(width: 6),
-              const Icon(Icons.star, size: 16, color: B.gold),
+              Icon(Icons.star, size: 16, color: B.goldInk),
             ],
           ]),
         ),

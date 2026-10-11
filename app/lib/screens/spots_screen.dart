@@ -151,7 +151,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
             for (final p in _partners)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.verified_outlined, color: B.gold),
+                leading: Icon(Icons.verified_outlined, color: B.goldInk),
                 title: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text([
                   if (p['featured'] == true) 'Featured',
@@ -179,7 +179,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
       child: Row(children: [
-        const Icon(Icons.my_location, color: B.gold),
+        Icon(Icons.my_location, color: B.goldInk),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -196,7 +196,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
             await PlacesApi.checkOut().catchError((_) {});
             _load();
           },
-          child: Text('I LEFT', style: B.label.copyWith(color: B.gold)),
+          child: Text('I LEFT', style: B.label.copyWith(color: B.goldInk)),
         ),
       ]),
     );

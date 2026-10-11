@@ -93,7 +93,7 @@ class ProfileBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Row(children: [
-              const Icon(Icons.favorite, size: 14, color: B.gold),
+              Icon(Icons.favorite, size: 14, color: B.goldInk),
               const SizedBox(width: 6),
               Text('OUCH', style: B.label.copyWith(color: B.accentStrong)),
             ]),
@@ -106,9 +106,9 @@ class ProfileBody extends StatelessWidget {
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Row(children: [
-                      const Icon(Icons.workspace_premium, size: 14, color: B.gold),
+                      Icon(Icons.workspace_premium, size: 14, color: B.goldInk),
                       const SizedBox(width: 6),
-                      Text('INNER', style: B.label.copyWith(color: B.gold)),
+                      Text('INNER', style: B.label.copyWith(color: B.goldInk)),
                     ]),
                   )
                 : const SizedBox.shrink(),
@@ -126,7 +126,7 @@ class ProfileBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Row(children: [
-              const Icon(Icons.vpn_key, size: 14, color: B.gold),
+              Icon(Icons.vpn_key, size: 14, color: B.goldInk),
               const SizedBox(width: 6),
               Text('JOINED THROUGH ${(profile['joined_via'] as String).toUpperCase()}', style: B.label.copyWith(color: B.accentStrong)),
             ]),

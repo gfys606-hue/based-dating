@@ -677,7 +677,7 @@ class _AdminVenuesTabState extends State<AdminVenuesTab> {
             isThreeLine: a['note'] != null,
             trailing: Wrap(spacing: 4, children: [
               IconButton(icon: const Icon(Icons.close), onPressed: () async { await VenueApi.decideApplication(a['id'] as int, false).catchError((_) {}); _load(); }),
-              IconButton(icon: const Icon(Icons.check, color: B.gold), onPressed: () async { await VenueApi.decideApplication(a['id'] as int, true).catchError((_) {}); _load(); }),
+              IconButton(icon: Icon(Icons.check, color: B.goldInk), onPressed: () async { await VenueApi.decideApplication(a['id'] as int, true).catchError((_) {}); _load(); }),
             ]),
           ),
         const SizedBox(height: 18),
@@ -815,7 +815,7 @@ class _TableRequestChipState extends State<TableRequestChip> {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(children: [
-        const Icon(Icons.table_restaurant_outlined, size: 15, color: B.gold),
+        Icon(Icons.table_restaurant_outlined, size: 15, color: B.goldInk),
         const SizedBox(width: 6),
         Flexible(child: Text(text, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: B.accentStrong))),
       ]),

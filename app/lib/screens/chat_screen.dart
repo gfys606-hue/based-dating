@@ -159,7 +159,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           for (final v in list.take(6))
             ListTile(
-              leading: const Icon(Icons.verified_outlined, color: B.gold),
+              leading: Icon(Icons.verified_outlined, color: B.goldInk),
               title: Text(v['name'] as String),
               subtitle: Text('${(v['distance_km'] as num).toStringAsFixed(1)} km${v['address'] == null ? '' : ' · ${v['address']}'}'),
               onTap: () => Navigator.pop(ctx, v),

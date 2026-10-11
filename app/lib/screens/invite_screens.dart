@@ -632,7 +632,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                       onPressed: () => _admit(w),
                       child: const Text('LET IN'),
                     )
-                  : const Icon(Icons.check, color: B.gold),
+                  : Icon(Icons.check, color: B.goldInk),
             ),
         ]),
       ),

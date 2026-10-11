@@ -125,7 +125,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                         const SizedBox(height: 10),
                         OutlinedButton(
                           onPressed: _busy ? null : () => _run(MembershipApi.manage),
-                          child: Text('CHANGE OR CANCEL', style: TextStyle(color: B.gold)),
+                          child: Text('CHANGE OR CANCEL', style: TextStyle(color: B.goldInk)),
                         ),
                       ],
                     ]),
@@ -138,7 +138,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                   if (travel != null)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.flight_takeoff, color: B.gold),
+                      leading: Icon(Icons.flight_takeoff, color: B.goldInk),
                       title: Text('You\'re showing up in ${travel['name']}'),
                       subtitle: Text('Until ${fmt.format(DateTime.parse(travel['until'] as String).toLocal())}. Ouch, the feed and Spots use it.'),
                       trailing: TextButton(
@@ -235,7 +235,7 @@ class _PlanCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Padding(padding: EdgeInsets.only(top: 2), child: Icon(Icons.check, size: 16, color: B.gold)),
+                Padding(padding: EdgeInsets.only(top: 2), child: Icon(Icons.check, size: 16, color: B.goldInk)),
                 const SizedBox(width: 8),
                 Expanded(child: Text(p, style: const TextStyle(height: 1.35))),
               ]),
@@ -324,7 +324,7 @@ class _TravelSheetState extends State<_TravelSheet> {
           ] else ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.place, color: B.gold),
+              leading: Icon(Icons.place, color: B.goldInk),
               title: Text(_pick!['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(_pick!['address'] as String),
               trailing: TextButton(onPressed: () => setState(() => _pick = null), child: const Text('Change')),
