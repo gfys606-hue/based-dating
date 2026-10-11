@@ -6,9 +6,9 @@ import 'package:flutter/services.dart';
 
 import '../theme.dart';
 
-/// The castle: every screen sits somewhere in the same lamplit vaults as the opening.
-/// Each tab is its own spot along the brick corridors (You is the study with the bookcase);
-/// switching tabs walks you there, and opening a page takes you down a stone staircase.
+/// The castle: every section of the app is its own room (photos in assets/rooms), and you walk
+/// between them through the brick corridors from the opening. Pages you open take you down a
+/// stone staircase to a landing in the vaults.
 class Castle {
   Castle._();
 
@@ -19,40 +19,60 @@ class Castle {
   static const landing = 100;
 
   static ui.Image? cellar, books;
-  static final ready = ValueNotifier<bool>(false);
+  static final ready = ValueNotifier<int>(0); // bumped whenever another photo arrives
+  static final _rooms = <String, ui.Image>{};
+  static final _loading = <String>{};
+
+  static Future<ui.Image> _img(String path) async =>
+      decodeImageFromList((await rootBundle.load(path)).buffer.asUint8List());
 
   static Future<void> load() async {
     try {
-      Future<ui.Image> img(String n) async =>
-          decodeImageFromList((await rootBundle.load('assets/intro/$n')).buffer.asUint8List());
-      final r = await Future.wait([img('photo_cellar.jpg'), img('photo_books.jpg')]);
+      final r = await Future.wait([_img('assets/intro/photo_cellar.jpg'), _img('assets/intro/photo_books.jpg')]);
       cellar = r[0];
       books = r[1];
-      ready.value = true;
+      ready.value++;
+      _room(_v(view.value).room); // the room you start in
     } catch (_) {} // no photos: plain colors, everything still works
+  }
+
+  /// A room's photo, loaded the first time you walk in (null until it arrives).
+  static ui.Image? _room(String? name) {
+    if (name == null) return null;
+    if (name == 'study') return books;
+    if (name == 'vaults') return cellar;
+    final img = _rooms[name];
+    if (img == null && _loading.add(name)) {
+      _img('assets/rooms/$name.jpg').then((i) {
+        _rooms[name] = i;
+        ready.value++;
+      }).catchError((_) {});
+    }
+    return img;
   }
 }
 
-/// A spot in the castle: which photo, where the camera looks (fractions of the photo) and how close.
+/// A spot in the castle: which room's photo, where the camera looks (fractions of the photo) and how close.
 class _View {
-  const _View(this.study, this.x, this.y, this.zoom);
-  final bool study;
+  const _View(this.room, this.x, this.y, this.zoom);
+  final String room;
   final double x, y, zoom;
 }
 
 const _views = <int, _View>{
-  0: _View(false, 0.54, 0.56, 1.00), // Home: the great vault, all the arches ahead
-  1: _View(false, 0.50, 0.60, 1.35), // Discover
-  2: _View(false, 0.28, 0.52, 1.55), // Talk: an alcove off to the left
-  3: _View(true, 0.50, 0.42, 1.15), // You: the study, by the bookcase
-  4: _View(false, 0.56, 0.60, 1.75), // Friends: further down
-  5: _View(false, 0.22, 0.72, 1.45), // Spots: by the steps out
-  6: _View(false, 0.62, 0.50, 2.05), // Herd
-  7: _View(false, 0.54, 0.59, 2.50), // Search: the far end
-  8: _View(false, 0.80, 0.62, 1.55), // Events
-  9: _View(false, 0.38, 0.44, 1.85), // Market
-  Castle.landing: _View(false, 0.50, 0.82, 1.65), // a landing on the stairs
+  0: _View('hall', 0.50, 0.48, 1.00), // Home: the great hall
+  1: _View('chamber', 0.45, 0.50, 1.00), // Discover / Ouch: the bed chamber
+  2: _View('alcove', 0.50, 0.50, 1.00), // Talk: a candlelit alcove
+  3: _View('study', 0.50, 0.42, 1.15), // You: the study, by the bookcase
+  4: _View('dining', 0.42, 0.55, 1.00), // Friends: the dining room
+  5: _View('gate', 0.62, 0.50, 1.00), // Spots: the courtyard gate at night
+  6: _View('armory', 0.45, 0.55, 1.00), // Herd: the armory
+  7: _View('library', 0.50, 0.50, 1.00), // Search: the long library
+  8: _View('dungeon', 0.50, 0.55, 1.00), // Events: the dungeon
+  9: _View('forge', 0.55, 0.55, 1.00), // Market: the blacksmith's forge
+  Castle.landing: _View('vaults', 0.50, 0.82, 1.65), // a landing on the stairs down to the vaults
 };
+const _corridor = _View('vaults', 0.54, 0.58, 1.10); // the brick corridor you walk through between rooms
 
 _View _v(int i) => _views[i] ?? _views[i % 10] ?? _views[0]!;
 
@@ -65,7 +85,7 @@ class CastleBackdrop extends StatefulWidget {
 }
 
 class _CastleBackdropState extends State<CastleBackdrop> with SingleTickerProviderStateMixin {
-  late final AnimationController _walk = AnimationController(vsync: this, duration: const Duration(milliseconds: 950));
+  late final AnimationController _walk = AnimationController(vsync: this, duration: const Duration(milliseconds: 1150));
   late _View _from = _v(widget.fixed ?? Castle.view.value);
   late _View _to = _from;
 
@@ -82,14 +102,11 @@ class _CastleBackdropState extends State<CastleBackdrop> with SingleTickerProvid
   void _go() {
     final next = _v(Castle.view.value);
     if (identical(next, _to)) return;
-    // start from wherever the camera is right now
-    _from = _lerp(_from, _to, Curves.easeInOutCubic.transform(_walk.value));
+    _from = _walk.value < 0.5 ? _from : _to; // the room you're actually standing in
     _to = next;
+    Castle._room(next.room); // start loading it now
     _walk.forward(from: 0);
   }
-
-  static _View _lerp(_View a, _View b, double t) => _View(t < 0.5 ? a.study : b.study,
-      a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.zoom + (b.zoom - a.zoom) * t);
 
   @override
   void dispose() {
@@ -115,40 +132,59 @@ class _WallsPainter extends CustomPainter {
   _WallsPainter(this.from, this.to, this.p, this.dark, this.loaded);
   final _View from, to;
   final double p;
-  final bool dark, loaded; // [loaded]: repaint once the photos arrive
+  final bool dark;
+  final int loaded; // repaint as photos arrive
+
+  // parchment: the rooms as a faint old print
+  static const _sepia = ColorFilter.matrix([
+    0.30, 0.50, 0.12, 0, 30,
+    0.26, 0.44, 0.10, 0, 24,
+    0.20, 0.34, 0.08, 0, 16,
+    0, 0, 0, 1, 0,
+  ]);
+
+  /// Draws one room's photo filling the screen, looking at (v.x, v.y), [push] = extra zoom.
+  void _room(Canvas canvas, Size size, _View v, double push, double bob) {
+    final img = Castle._room(v.room) ?? Castle.cellar;
+    if (img == null) return;
+    final w = size.width, h = size.height;
+    final iw = img.width.toDouble(), ih = img.height.toDouble();
+    final s = math.max(w / iw, h / ih) * v.zoom * push;
+    var dx = w / 2 - v.x * iw * s, dy = h / 2 - v.y * ih * s + bob;
+    dx = dx.clamp(math.min(w - iw * s, 0.0), 0.0).toDouble();
+    dy = dy.clamp(math.min(h - ih * s, 0.0), 0.0).toDouble();
+    final paint = Paint()..filterQuality = FilterQuality.low;
+    if (!dark) paint.colorFilter = _sepia;
+    canvas.drawImageRect(img, Rect.fromLTWH(0, 0, iw, ih), Rect.fromLTWH(dx, dy, iw * s, ih * s), paint);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     canvas.drawRect(Offset.zero & size, Paint()..color = B.bg);
-    final t = Curves.easeInOutCubic.transform(p);
-    // the room you're leaving until halfway, then the one you're walking into (the swap hides in the shadow)
-    final changing = from.study != to.study;
-    final cur = _CastleBackdropState._lerp(from, to, t);
-    final img = (changing ? (p < 0.5 ? from.study : to.study) : to.study) ? Castle.books : Castle.cellar;
-    if (img != null) {
-      final iw = img.width.toDouble(), ih = img.height.toDouble();
-      final s = math.max(w / iw, h / ih) * cur.zoom;
-      // footsteps: a slight bob while walking
-      final bob = math.sin(p * math.pi * 6) * 3.0 * math.sin(p * math.pi);
-      var dx = w / 2 - cur.x * iw * s, dy = h / 2 - cur.y * ih * s + bob;
-      dx = dx.clamp(math.min(w - iw * s, 0.0), 0.0).toDouble();
-      dy = dy.clamp(math.min(h - ih * s, 0.0), 0.0).toDouble();
-      final paint = Paint()..filterQuality = FilterQuality.low;
-      if (!dark) {
-        // parchment: the vaults as a faint old print
-        paint.colorFilter = const ColorFilter.matrix([
-          0.30, 0.50, 0.12, 0, 30,
-          0.26, 0.44, 0.10, 0, 24,
-          0.20, 0.34, 0.08, 0, 16,
-          0, 0, 0, 1, 0,
-        ]);
-      }
-      canvas.drawImageRect(img, Rect.fromLTWH(0, 0, iw, ih), Rect.fromLTWH(dx, dy, iw * s, ih * s), paint);
+    // footsteps: a slight bob while walking
+    final bob = math.sin(p * math.pi * 7) * 3.0 * math.sin(p * math.pi);
+    double dip; // extra shadow while moving between places
+    if (p >= 1 || identical(from, to)) {
+      _room(canvas, size, to, 1, 0);
+      dip = 0;
+    } else if (p < 0.35) {
+      // leaving: walk toward the far side of the room as it falls into shadow
+      final q = Curves.easeIn.transform(p / 0.35);
+      _room(canvas, size, from, 1 + 0.30 * q, bob);
+      dip = 0.55 * q;
+    } else if (p < 0.65) {
+      // the corridor between rooms: down the brick vaults
+      final q = (p - 0.35) / 0.30;
+      _room(canvas, size, _corridor, 1 + 0.55 * q, bob);
+      dip = 0.55 - 0.15 * math.sin(q * math.pi);
+    } else {
+      // arriving: the new room opens up in front of you
+      final q = Curves.easeOut.transform((p - 0.65) / 0.35);
+      _room(canvas, size, to, 1 + 0.18 * (1 - q), bob);
+      dip = 0.55 * (1 - q);
     }
-    // shade: mostly shadow, deeper as you pass between rooms
-    final dip = math.sin(p * math.pi) * (changing ? 0.55 : 0.28);
-    final shade = dark ? (0.50 + dip * 0.45) : (0.80 + dip * 0.18);
+    final shade = dark ? (0.52 + dip * 0.45) : (0.80 + dip * 0.18);
     canvas.drawRect(Offset.zero & size, Paint()..color = (dark ? Colors.black : B.bg).withOpacity(shade.clamp(0.0, 1.0).toDouble()));
     // lamplight from above
     final lamp = Offset(w * 0.55, -h * 0.08);
