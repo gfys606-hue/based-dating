@@ -47,7 +47,7 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
   final _refresh = [ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0)];
 
   // walking into a room: the new tab comes forward out of the shadows
-  late final AnimationController _enter = AnimationController(vsync: this, duration: const Duration(milliseconds: 750), value: 1);
+  late final AnimationController _enter = AnimationController(vsync: this, duration: const Duration(milliseconds: 1150), value: 1);
 
   @override
   void dispose() {
@@ -126,7 +126,7 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
             child: AnimatedBuilder(
               animation: _enter,
               builder: (context, stack) {
-                final e = Curves.easeOutCubic.transform(((_enter.value - 0.35) / 0.65).clamp(0.0, 1.0).toDouble());
+                final e = Curves.easeOutCubic.transform(((_enter.value - 0.62) / 0.38).clamp(0.0, 1.0).toDouble());
                 return Opacity(
                   opacity: e,
                   child: Transform.scale(scale: 0.96 + 0.04 * e, child: stack),
