@@ -7,6 +7,7 @@ import '../services/api.dart';
 import '../services/friends_api.dart';
 import '../services/places_api.dart';
 import '../theme.dart';
+import '../widgets/castle.dart';
 import '../widgets/module_rail.dart';
 import 'discover_screen.dart';
 import 'friends_screen.dart';
@@ -33,7 +34,7 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMixin {
   int _tab = 0;
   bool _talkBadge = false;
   bool _friendsBadge = false;
@@ -45,9 +46,19 @@ class _HomeShellState extends State<HomeShell> {
   // Bumped to make a tab reload its data when you switch to it.
   final _refresh = [ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0), ValueNotifier<int>(0)];
 
+  // walking into a room: the new tab comes forward out of the shadows
+  late final AnimationController _enter = AnimationController(vsync: this, duration: const Duration(milliseconds: 750), value: 1);
+
+  @override
+  void dispose() {
+    _enter.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    Castle.view.value = 0;
     _checkBadge();
     PlacesApi.refreshMyLocation(); // distances use where you are now, not where you signed up
   }
@@ -68,6 +79,10 @@ class _HomeShellState extends State<HomeShell> {
 
   void goTab(int i, {int? discover}) {
     if (discover != null) discoverMode.value = discover;
+    if (i != _tab) {
+      Castle.view.value = i; // the walls walk you to that room
+      _enter.forward(from: 0);
+    }
     setState(() {
       _tab = i;
       _opened.add(i);
@@ -108,7 +123,16 @@ class _HomeShellState extends State<HomeShell> {
         Expanded(
           child: SafeArea(
             left: false,
-            child: IndexedStack(index: _tab, children: [
+            child: AnimatedBuilder(
+              animation: _enter,
+              builder: (context, stack) {
+                final e = Curves.easeOutCubic.transform(((_enter.value - 0.35) / 0.65).clamp(0.0, 1.0).toDouble());
+                return Opacity(
+                  opacity: e,
+                  child: Transform.scale(scale: 0.96 + 0.04 * e, child: stack),
+                );
+              },
+              child: IndexedStack(index: _tab, children: [
               HomeScreen(refresh: _refresh[0], goTab: goTab),
               DiscoverScreen(refresh: _refresh[1], mode: discoverMode),
               TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
@@ -118,6 +142,7 @@ class _HomeShellState extends State<HomeShell> {
               for (var i = 0; i < widget.extras.length; i++)
                 _opened.contains(6 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
             ]),
+            ),
           ),
         ),
       ]),
