@@ -222,6 +222,17 @@ class _PostCard extends StatefulWidget {
 class _PostCardState extends State<_PostCard> {
   late bool _liked = widget.post['my_reaction'] == true;
   late bool _saved = widget.post['my_save'] == true;
+  late bool _helped = widget.post['my_help'] == true;
+
+  Future<void> _toggleHelp(String postId) async {
+    setState(() => _helped = !_helped);
+    try {
+      final on = await Api.toggleHelp(postId);
+      if (mounted && on != _helped) setState(() => _helped = on);
+    } catch (_) {
+      if (mounted) setState(() => _helped = !_helped);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -265,8 +276,19 @@ class _PostCardState extends State<_PostCard> {
             onTap: () { setState(() => _liked = !_liked); Api.react(p['post_id'] as String, _liked); },
           ),
           const SizedBox(width: 8),
+          if (p['like_count'] == null && p.containsKey('my_help'))
+            PillChip(
+              label: _helped ? 'Helped me' : 'This helped',
+              selected: _helped,
+              onTap: () => _toggleHelp(p['post_id'] as String),
+            ),
           if (p['like_count'] != null)
-            Text('${p['like_count']} likes · only you see this', style: TextStyle(fontSize: 13, color: B.muted)),
+            Flexible(
+              child: Text(
+                '${p['like_count']} likes${(p['help_count'] ?? 0) > 0 ? ' · ${p['help_count']} helped' : ''} · only you see this',
+                style: TextStyle(fontSize: 13, color: B.muted),
+              ),
+            ),
           const Spacer(),
           IconButton(
             tooltip: 'Comments',
