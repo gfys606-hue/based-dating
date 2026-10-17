@@ -229,6 +229,10 @@ class Api {
       ? db.from('reactions').upsert({'post_id': postId, 'user_id': me})
       : db.from('reactions').delete().eq('post_id', postId).eq('user_id', me);
 
+  /// "This helped me" — the signal that keeps valuable posts reaching people. Returns the new state.
+  static Future<bool> toggleHelp(String postId) async =>
+      (await db.rpc('toggle_post_help', params: {'p_post': postId})) == true;
+
   static Future<void> save(String postId, bool on) => on
       ? db.from('saves').upsert({'post_id': postId, 'user_id': me})
       : db.from('saves').delete().eq('post_id', postId).eq('user_id', me);
