@@ -9,6 +9,7 @@ import '../services/invites_api.dart';
 import '../services/membership_api.dart';
 import '../services/push.dart';
 import '../theme.dart';
+import '../widgets/city_door.dart';
 import '../widgets/ui.dart';
 
 String _clean(Object e) {
@@ -35,11 +36,24 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
   bool _busy = false;
   String? _error;
   String? _welcome;
+  Map<String, dynamic>? _door;
 
   @override
   void initState() {
     super.initState();
     _tryCommunity();
+    _loadDoor();
+  }
+
+  /// How full the city is, the next spot drop, and where you are in line.
+  /// If a drop already let you in, go straight through.
+  Future<void> _loadDoor() async {
+    try {
+      final d = await InvitesApi.cityDoor();
+      if (!mounted) return;
+      setState(() => _door = d);
+      if (d?['my_status'] == 'admitted') widget.onDone();
+    } catch (_) {}
   }
 
   /// A confirmed school or work email from a community Based has opened up gets straight in.
@@ -62,6 +76,15 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
     try {
       final r = await InvitesApi.redeem(_code.text);
       final from = r['inviter'] as String? ?? r['label'] as String?;
+      if (r['waitlisted'] == true) {
+        // the city is full: the code moved them to the front of the line instead
+        setState(() => _welcome = '${r['city'] ?? 'The city'} is full right now. '
+            '${from == null ? 'Your code' : '$from'} vouched for you, so you\'re #${r['position']} in line for the next spot drop.');
+        _code.clear();
+        await _loadDoor();
+        if (mounted) setState(() => _busy = false);
+        return;
+      }
       setState(() => _welcome = from == null ? 'You\'re in.' : 'You\'re in. Welcome from $from.');
       await Future<void>.delayed(const Duration(milliseconds: 1200));
       widget.onDone();
@@ -75,7 +98,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
     final email = TextEditingController(text: Api.db.auth.currentUser?.email ?? '');
     final name = TextEditingController();
     final note = TextEditingController();
-    final ok = await showModalBottomSheet<bool>(
+    final ok = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => Padding(
@@ -83,7 +106,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('Join the waitlist', style: B.heading(24)),
           const SizedBox(height: 4),
-          Text('We let people in a few at a time. If a member vouches for you, you\'ll get in sooner.',
+          Text('New spots open in timed drops. If a member gives you their code, you move to the front of the line.',
               style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
           const SizedBox(height: 12),
           TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Email')),
@@ -95,8 +118,8 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
           FilledButton(
             onPressed: () async {
               try {
-                await InvitesApi.joinWaitlist(email.text, name: name.text, note: note.text);
-                if (ctx.mounted) Navigator.pop(ctx, true);
+                final r = await InvitesApi.joinWaitlist(email.text, name: name.text, note: note.text);
+                if (ctx.mounted) Navigator.pop(ctx, r);
               } catch (e) {
                 if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(_clean(e))));
               }
@@ -106,8 +129,11 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
         ]),
       ),
     );
-    if (ok == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You\'re on the list. We\'ll email you a code.')));
+    if (ok != null && mounted) {
+      final pos = ok['position'];
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(pos == null ? 'You\'re on the list.' : 'You\'re #$pos in line. Open Based when the next spots drop.')));
+      _loadDoor();
     }
   }
 
@@ -127,6 +153,27 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
               const SizedBox(height: 14),
               Text('Based is invite only. Enter the code you were given by a member or at a venue.',
                   textAlign: TextAlign.center, style: TextStyle(color: B.onPanelMuted, height: 1.45)),
+              if (_door != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: B.gold.withAlpha(90)),
+                    borderRadius: BorderRadius.circular(B.radius),
+                  ),
+                  child: Column(children: [
+                    Text(doorLine(_door!), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, height: 1.45)),
+                    if (_door!['my_position'] != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'You\'re #${_door!['my_position']} in line${_door!['my_vouched'] == true ? ', vouched' : ''}.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: B.gold, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ]),
+                ),
+              ],
               const SizedBox(height: 26),
               TextField(
                 controller: _code,
@@ -435,6 +482,113 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
     _load();
   }
 
+  /// A city's cap, drinking age, and spot drops.
+  Future<void> _citySheet(Map<String, dynamic> c) async {
+    final slug = c['slug'] as String;
+    final cap = TextEditingController(text: c['cap']?.toString() ?? '');
+    final age = TextEditingController(text: '${c['drinking_age'] ?? 18}');
+    final spots = TextEditingController(text: '500');
+    final drop = c['next_drop'] as Map?;
+    var at = DateTime.now().add(const Duration(days: 3));
+    at = DateTime(at.year, at.month, at.day, 20); // 8 PM
+    Future<void> run(BuildContext ctx, Future<void> Function() f, String done) async {
+      try {
+        await f();
+        if (ctx.mounted) Navigator.pop(ctx);
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(done)));
+      } catch (e) {
+        if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(_clean(e))));
+      }
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+          child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(c['name'] as String, style: B.heading(24)),
+              const SizedBox(height: 4),
+              Text('${c['members']} members · ${c['spots_left'] ?? 'unlimited'} spots left · ${c['waiting']} waiting',
+                  style: TextStyle(color: B.muted, fontSize: 13)),
+              const SizedBox(height: 14),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: cap,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Member cap', hintText: 'blank = no cap'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: age,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Drinking age', helperText: 'Bars and venue promos'),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: () => run(
+                    ctx,
+                    () => CityApi.setRules(slug, int.tryParse(cap.text.trim()), int.tryParse(age.text.trim()) ?? 18),
+                    'Saved'),
+                child: const Text('SAVE CAP AND AGE'),
+              ),
+              const SizedBox(height: 22),
+              const SectionLabel('Spot drop'),
+              const SizedBox(height: 4),
+              Text('At drop time the cap goes up and the front of the line gets in: vouched people first, then by when they joined.',
+                  style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
+              if (drop != null) ...[
+                const SizedBox(height: 10),
+                Row(children: [
+                  Expanded(
+                    child: Text('Next: ${drop['spots']} spots ${dropWhen(drop['at'] as String)}',
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                  TextButton(
+                    onPressed: () => run(ctx, () => CityApi.cancelDrop(drop['id'] as int), 'Drop cancelled'),
+                    child: const Text('CANCEL IT'),
+                  ),
+                ]),
+              ],
+              const SizedBox(height: 10),
+              TextField(controller: spots, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'New spots')),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.schedule, size: 18),
+                label: Text(DateFormat('EEE MMM d, h:mm a').format(at)),
+                onPressed: () async {
+                  final d = await showDatePicker(
+                      context: ctx, initialDate: at, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
+                  if (d == null || !ctx.mounted) return;
+                  final t = await showTimePicker(context: ctx, initialTime: TimeOfDay.fromDateTime(at));
+                  if (t == null) return;
+                  set(() => at = DateTime(d.year, d.month, d.day, t.hour, t.minute));
+                },
+              ),
+              const SizedBox(height: 10),
+              FilledButton(
+                onPressed: () {
+                  final n = int.tryParse(spots.text.trim());
+                  if (n == null || n <= 0) return;
+                  run(ctx, () => CityApi.scheduleDrop(slug, n, at), '$n spots drop ${dropWhen(at.toUtc().toIso8601String())}');
+                },
+                child: const Text('SCHEDULE DROP'),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+    _load();
+  }
+
   Future<void> _addCommunity() async {
     final name = TextEditingController();
     final domains = TextEditingController();
@@ -584,22 +738,31 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
             const Expanded(child: SectionLabel('Cities')),
             TextButton.icon(onPressed: _addCity, icon: const Icon(Icons.add, size: 18), label: const Text('ADD')),
           ]),
-          Text('Open cities show in everyone\'s city pull-down. Ouch only matches people in the same city.',
+          Text('Open cities show in everyone\'s city pull-down. Ouch only matches people in the same city. '
+              'Tap a city to set its member cap and schedule spot drops.',
               style: TextStyle(color: B.muted, fontSize: 12.5)),
           for (final c in _cities)
-            SwitchListTile(
+            ListTile(
               contentPadding: EdgeInsets.zero,
+              onTap: () => _citySheet(c),
               title: Text([c['name'], c['region']].whereType<String>().join(', '), style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text('${c['members']} members · ${c['active'] == true ? 'open' : 'not open yet'}'),
-              value: c['active'] == true,
-              onChanged: (v) async {
-                try {
-                  await CityApi.setOpen(c['slug'] as String, v);
-                } catch (e) {
-                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
-                }
-                _load();
-              },
+              subtitle: Text([
+                c['cap'] == null ? '${c['members']} members · no cap' : '${c['members']} of ${c['cap']} members',
+                if ((c['waiting'] as int? ?? 0) > 0) '${c['waiting']} waiting',
+                if (c['next_drop'] != null) '${(c['next_drop'] as Map)['spots']} spots drop ${dropWhen((c['next_drop'] as Map)['at'] as String)}',
+                c['active'] == true ? 'open' : 'not open yet',
+              ].join(' · ')),
+              trailing: Switch(
+                value: c['active'] == true,
+                onChanged: (v) async {
+                  try {
+                    await CityApi.setOpen(c['slug'] as String, v);
+                  } catch (e) {
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+                  }
+                  _load();
+                },
+              ),
             ),
           const SizedBox(height: 22),
           const SectionLabel('Sign-ups by source'),
@@ -622,6 +785,9 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
               contentPadding: EdgeInsets.zero,
               title: Text([w['name'], w['email']].whereType<String>().where((x) => x.isNotEmpty).join(' · ')),
               subtitle: Text([
+                if (w['city'] != null) w['city'] as String,
+                if ((w['vouches'] as int? ?? 0) > 0) 'vouched',
+                if (w['status'] == 'admitted') 'let in by a spot drop',
                 if ((w['note'] as String?)?.isNotEmpty == true) w['note'] as String,
                 'since ${DateFormat('MMM d').format(DateTime.parse(w['created_at'] as String).toLocal())}',
                 if (w['invite_code'] != null) 'code ${w['invite_code']}',

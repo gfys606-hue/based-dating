@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/api.dart';
 import '../theme.dart';
+import '../widgets/city_door.dart';
 
 /// Email sign-in (free, built into Supabase).
 /// Supabase's default email contains a sign-in LINK. Once a custom email sender
@@ -117,6 +118,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 ])),
                 const SizedBox(height: 10),
                 Text('The door is not for everyone.', style: B.sloganStyle.copyWith(fontSize: 26, height: 1.15)),
+                const SizedBox(height: 10),
+                CityDoorLine(style: TextStyle(color: B.muted, fontSize: 13.5, height: 1.4)),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.all(18),
