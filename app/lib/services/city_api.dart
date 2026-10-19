@@ -35,4 +35,11 @@ class CityApi {
       _db.rpc('admin_add_city', params: {'p_name': name, 'p_region': region});
   static Future<void> setOpen(String slug, bool open) =>
       _db.rpc('admin_set_city_active', params: {'p_city': slug, 'p_active': open});
+
+  /// Member cap (null = no cap) and the local drinking age for bars and venue promos.
+  static Future<void> setRules(String slug, int? cap, int drinkingAge) =>
+      _db.rpc('admin_set_city_rules', params: {'p_city': slug, 'p_cap': cap, 'p_drinking_age': drinkingAge});
+  static Future<void> scheduleDrop(String slug, int spots, DateTime at) => _db.rpc('admin_schedule_drop',
+      params: {'p_city': slug, 'p_spots': spots, 'p_at': at.toUtc().toIso8601String()});
+  static Future<void> cancelDrop(int id) => _db.rpc('admin_cancel_drop', params: {'p_id': id});
 }

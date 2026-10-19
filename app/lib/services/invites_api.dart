@@ -17,8 +17,16 @@ class InvitesApi {
   static Future<Map<String, dynamic>> redeem(String code) async =>
       _map(await _db.rpc('redeem_invite', params: {'p_code': code}));
 
-  static Future<void> joinWaitlist(String email, {String? name, String? note}) =>
-      _db.rpc('join_waitlist', params: {'p_email': email, 'p_name': name, 'p_note': note});
+  /// {ok, position}
+  static Future<Map<String, dynamic>> joinWaitlist(String email, {String? name, String? note, String? city}) async =>
+      _map(await _db.rpc('join_waitlist', params: {'p_email': email, 'p_name': name, 'p_note': note, 'p_city': city}));
+
+  /// The city's door (supabase/migrations/20261019000034_city_caps.sql). Works before signing in.
+  /// {slug, name, cap, members, spots_left, waiting, next_drop: {spots, at}, my_status, my_position, my_vouched}
+  static Future<Map<String, dynamic>?> cityDoor([String? city]) async {
+    final r = await _db.rpc('city_door', params: {'p_city': city});
+    return r == null ? null : Map<String, dynamic>.from(r as Map);
+  }
 
   /// {left, frozen, months_left, next_refill, codes: [{code, used, active, expires_at, joined}]}
   static Future<Map<String, dynamic>> myInvites() async => _map(await _db.rpc('get_my_invites'));
