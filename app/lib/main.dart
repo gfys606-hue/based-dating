@@ -32,6 +32,7 @@ Future<void> main() async {
   );
   Diagnostics.install(); // errors get logged with the screen they happened on
   await B.loadMode();
+  await B.loadPalette();
   Castle.load(); // the castle's walls (shown behind every screen); doesn't hold up the launch
   await Push.init();
   runApp(const BasedApp());
@@ -51,12 +52,14 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     B.mode.addListener(_changed);
+    B.palette.addListener(_changed);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     B.mode.removeListener(_changed);
+    B.palette.removeListener(_changed);
     super.dispose();
   }
 
@@ -76,7 +79,7 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
     final system = WidgetsBinding.instance.platformDispatcher.platformBrightness;
     B.isDark = B.mode.value == ThemeMode.dark || (B.mode.value == ThemeMode.system && system == Brightness.dark);
     return MaterialApp(
-      key: ValueKey(B.isDark), // light/dark switch rebuilds every screen with the new colors
+      key: ValueKey('${B.isDark}-${B.palette.value}'), // light/dark or a theme change rebuilds every screen with the new colors
       title: 'Based',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: Push.messenger,

@@ -44,11 +44,52 @@ class B {
   static Color get hero => _c(0xFF5C1F14, 0xFF4E1A11);
   static Color get slogan => _c(0xFF6E3B1C, 0xFFD9A84E);
 
-  // Cognac / amber: the ONE action color (links, selected things, switches)
-  static Color get accent => _c(0xFF8C4A1C, 0xFFE0A955);
-  static Color get accentSoft => _c(0xFFEFDDBE, 0xFF2E2014);
-  static Color get accentMid => _c(0xFFD6B585, 0xFF5C4126); // radar rings
-  static Color get accentStrong => _c(0xFF6E3B1C, 0xFFE6B866); // accent-colored text on soft fills
+  // Cognac / amber: the ONE action color (links, selected things, switches).
+  // Premium members can pick another finish for it in You → Appearance ([palette]).
+  static Color get accent => switch (palette.value) {
+        'emerald' => _c(0xFF2F6B4F, 0xFF7CC4A0),
+        'oxblood' => _c(0xFF8A2A22, 0xFFE38A7C),
+        'midnight' => _c(0xFF2F4A7A, 0xFF8FB0E6),
+        _ => _c(0xFF8C4A1C, 0xFFE0A955),
+      };
+  static Color get accentSoft => switch (palette.value) {
+        'emerald' => _c(0xFFDCEBDF, 0xFF15261C),
+        'oxblood' => _c(0xFFF1DAD5, 0xFF2E1512),
+        'midnight' => _c(0xFFDCE3F0, 0xFF141C2B),
+        _ => _c(0xFFEFDDBE, 0xFF2E2014),
+      };
+  static Color get accentMid => switch (palette.value) {
+        'emerald' => _c(0xFF9CC7AE, 0xFF2E5A42),
+        'oxblood' => _c(0xFFD9A49B, 0xFF5E2A23),
+        'midnight' => _c(0xFFA7B8D8, 0xFF2D3F60),
+        _ => _c(0xFFD6B585, 0xFF5C4126),
+      }; // radar rings
+  static Color get accentStrong => switch (palette.value) {
+        'emerald' => _c(0xFF245A41, 0xFF9AD8B8),
+        'oxblood' => _c(0xFF6E201A, 0xFFEEA195),
+        'midnight' => _c(0xFF243B63, 0xFFA9C2EE),
+        _ => _c(0xFF6E3B1C, 0xFFE6B866),
+      }; // accent-colored text on soft fills
+
+  /// Premium themes: the accent finish. 'brass' is the house look.
+  static const palettes = {'brass': 'Brass', 'emerald': 'Emerald', 'oxblood': 'Oxblood', 'midnight': 'Midnight'};
+  static final palette = ValueNotifier<String>('brass');
+
+  static Future<void> loadPalette() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final v = p.getString('palette');
+      if (v != null && palettes.containsKey(v)) palette.value = v;
+    } catch (_) {}
+  }
+
+  static Future<void> setPalette(String v) async {
+    palette.value = palettes.containsKey(v) ? v : 'brass';
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setString('palette', palette.value);
+    } catch (_) {}
+  }
 
   // Status
   static Color get urgent => _c(0xFF9A2E1E, 0xFFE58A62); // under 24h, and anything destructive (oxblood / ember)
