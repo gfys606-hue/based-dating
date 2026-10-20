@@ -268,9 +268,19 @@ class _HeroCard extends StatelessWidget {
     final when = booked ? DateTime.parse(match['next_call_at'] as String).toLocal() : null;
     final kicker = booked
         ? '${match['next_call_kind'] == 'video' ? 'VIDEO' : 'VOICE'} CALL · ${DateFormat('EEE h:mm a').format(when!).toUpperCase()}'
-        : '${timeLeftLabel(hoursLeft(match)).toUpperCase()} LEFT';
-    final title = booked ? 'Call with ${match['other_name']}' : 'Book a call with ${match['other_name']}';
-    final sub = booked ? 'Be there. No-shows count against you.' : '5 minutes is enough to know.';
+        : match['text_locked'] == true
+            ? 'TEXTING PAUSED'
+            : '${timeLeftLabel(hoursLeft(match)).toUpperCase()} LEFT';
+    final title = booked
+        ? 'Call with ${match['other_name']}'
+        : match['voice_theirs'] == true
+            ? '${match['other_name']} sent you a voice note'
+            : 'Send ${match['other_name']} a voice note';
+    final sub = booked
+        ? 'Be there. No-shows count against you.'
+        : match['voice_theirs'] == true
+            ? 'Send one back to unlock numbers.'
+            : 'A minute of your voice says more than a photo.';
 
     return Material(
       color: B.hero,

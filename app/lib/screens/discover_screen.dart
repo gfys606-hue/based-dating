@@ -79,7 +79,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
               title: Text("It's a match.", style: B.display(28), textAlign: TextAlign.center),
-              content: Text('You and ${p['display_name']} have 3 days to get a 5-minute call in. Say hi in Talk.',
+              content: Text('Say hi to ${p['display_name']} in Talk. Swap voice notes to unlock numbers.',
                   textAlign: TextAlign.center),
               actions: [
                 SizedBox(

@@ -277,9 +277,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _rules() => ListView(children: [
         _h('How Based works'),
         _rule('Talk to your matches', 'People who actually engage get seen. People who collect matches and ghost slowly stop being shown.'),
-        _rule('3 days to get a call in', 'Every match needs a 5-minute voice or video call within 3 days. You get 2 reschedules per match.'),
+        _rule('Swap voice notes', 'Text freely for 3 days. After a reminder you get one more day, then texting pauses until you\'ve both sent a voice note.'),
         _rule('Not feeling it? Just say so', 'One tap ends a match politely. It never counts against you.'),
-        _rule('Contact info comes later', 'Phone numbers unlock after a video call and one message from each of you.'),
+        _rule('Contact info comes later', 'Phone numbers unlock once you\'ve both sent a voice note.'),
         _rule('Be real', 'Photos must be you. No bios, no filters, no pretending.'),
         _nextButton(
           label: 'I\'m in',

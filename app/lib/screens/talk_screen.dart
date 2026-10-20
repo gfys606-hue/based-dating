@@ -56,7 +56,7 @@ class _TalkScreenState extends State<TalkScreen> {
               if (snap.connectionState != ConnectionState.done)
                 const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
               if (needCall.isNotEmpty) ...[
-                SectionLabel('Needs a call', color: B.urgent),
+                SectionLabel('Swap voice notes', color: B.urgent),
                 const SizedBox(height: 10),
                 GridView.count(
                   crossAxisCount: 2,

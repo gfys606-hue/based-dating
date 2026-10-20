@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../services/api.dart';
 import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
-import 'call_screen.dart';
+import '../widgets/voice_note.dart';
 import 'profile_view_screen.dart';
 
-/// Chat for one match: icebreaker, call scheduling (3-day window, 2 reschedules),
-/// "Not feeling it", report/block, and number sharing once unlocked.
+/// Chat for one match: icebreaker, the voice-note swap (texting pauses on day 4 until you've both
+/// sent one), "Not feeling it", report/block, and number sharing once the swap is done.
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key, required this.match});
   final Map<String, dynamic> match;
@@ -20,7 +19,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _text = TextEditingController();
   late Map<String, dynamic> _m = widget.match;
-  List<Map<String, dynamic>> _calls = [];
+  bool _reloading = false;
 
   String get _matchId => _m['match_id'] as String;
   String get _otherId => _m['other_id'] as String;
@@ -33,12 +32,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _reload() async {
     final all = await Api.myMatches();
-    final calls = await Api.calls(_matchId);
     if (!mounted) return;
-    setState(() {
-      _m = all.firstWhere((x) => x['match_id'] == _matchId, orElse: () => _m);
-      _calls = calls;
-    });
+    setState(() => _m = all.firstWhere((x) => x['match_id'] == _matchId, orElse: () => _m));
   }
 
   Future<void> _guard(Future<void> Function() f) async {
@@ -57,42 +52,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (t.isEmpty) return;
     _text.clear();
     await _guard(() => Api.send(_matchId, t));
-  }
-
-  Future<DateTime?> _pickTime() async {
-    final now = DateTime.now();
-    // Before the first call: by the deadline. After it: any time in the next month.
-    final latest = _m['call_done'] == true
-        ? now.add(const Duration(days: 30))
-        : DateTime.parse(_m['call_deadline'] as String).toLocal();
-    final d = await showDatePicker(context: context, firstDate: now, lastDate: latest.isAfter(now) ? latest : now, initialDate: now);
-    if (d == null || !mounted) return null;
-    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))));
-    if (t == null) return null;
-    return DateTime(d.year, d.month, d.day, t.hour, t.minute);
-  }
-
-  Future<String?> _pickKind() => showModalBottomSheet<String>(
-        context: context,
-        builder: (ctx) => SafeArea(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            ListTile(leading: const Icon(Icons.call), title: const Text('Voice call'), onTap: () => Navigator.pop(ctx, 'voice')),
-            ListTile(
-              leading: const Icon(Icons.videocam),
-              title: const Text('Video call'),
-              subtitle: const Text('Unlocks sharing phone numbers afterwards'),
-              onTap: () => Navigator.pop(ctx, 'video'),
-            ),
-          ]),
-        ),
-      );
-
-  Future<void> _propose({bool reschedule = false}) async {
-    final kind = await _pickKind();
-    if (kind == null) return;
-    final when = await _pickTime();
-    if (when == null) return;
-    await _guard(() => reschedule ? Api.reschedule(_matchId, when, kind) : Api.proposeCall(_matchId, when, kind));
   }
 
   Future<void> _menu(String action) async {
@@ -172,6 +131,11 @@ class _ChatScreenState extends State<ChatScreen> {
     await _guard(() => Api.send(_matchId, 'How about meeting at $where?'));
   }
 
+  Future<void> _voice() async {
+    final sent = await recordVoiceNote(context, _matchId);
+    if (sent) await _reload();
+  }
+
   Future<bool> _confirm(String title, String body) async =>
       await showDialog<bool>(
         context: context,
@@ -186,41 +150,37 @@ class _ChatScreenState extends State<ChatScreen> {
       ) ??
       false;
 
-  Widget _callPanel() {
-    final fmt = DateFormat('EEE h:mm a');
-    final open = _calls.isEmpty ? null : _calls.first;
-    final left = _m['reschedules_left'] as int? ?? 0;
-    final done = _m['call_done'] == true;
-    final h = hoursLeft(_m);
-    final u = urgencyColors(h);
+  bool get _locked => _m['text_locked'] == true;
 
-    if (done && open == null) {
-      final video = _m['video_call_done'] == true;
+  /// Where the swap stands, and the countdown to texting pausing.
+  Widget _voicePanel() {
+    final swapped = _m['voice_swapped'] == true || _m['call_done'] == true;
+    if (swapped) {
       return Container(
         width: double.infinity,
         margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: B.okSoft, borderRadius: BorderRadius.circular(4)),
-        child: Row(children: [
-          Expanded(
-            child: Text(
-              _m['contact_unlocked'] == true
-                  ? 'Call done ✓ · Phone numbers unlocked'
-                  : video
-                      ? 'Call done ✓ · One message each unlocks phone numbers'
-                      : 'Call done ✓ · A video call unlocks phone numbers',
-              style: TextStyle(fontWeight: FontWeight.w700, color: B.okInk),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: _propose,
-            icon: Icon(video ? Icons.call : Icons.videocam, size: 18),
-            label: Text(video ? 'Call again' : 'Video call'),
-          ),
-        ]),
+        child: Text(
+          _m['contact_unlocked'] == true ? 'Voice notes swapped ✓ · Phone numbers unlocked' : 'Voice notes swapped ✓',
+          style: TextStyle(fontWeight: FontWeight.w700, color: B.okInk),
+        ),
       );
     }
-
+    final mine = _m['voice_mine'] == true;
+    final theirs = _m['voice_theirs'] == true;
+    final h = hoursLeft(_m);
+    final name = _m['other_name'] as String;
+    final status = mine
+        ? 'Your voice note is sent. Waiting on $name\'s.'
+        : theirs
+            ? '$name sent a voice note. Send one back to unlock numbers.'
+            : 'Swap voice notes to unlock numbers.';
+    final when = _locked
+        ? 'Texting is paused until you\'ve both sent one.'
+        : h > 24
+            ? 'Optional for now. Texting pauses in ${timeLeftLabel(h)} if you haven\'t both sent one.'
+            : 'Texting pauses in ${timeLeftLabel(h)} until you\'ve both sent one.';
     const onDark = TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14);
     return Container(
       width: double.infinity,
@@ -228,54 +188,21 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(4)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (open == null)
-          Text('${timeLeftLabel(h)} to get a call in · $left reschedule${left == 1 ? '' : 's'} left', style: onDark)
-        else
-          Text('${open['kind'] == 'video' ? 'Video' : 'Voice'} call · '
-              '${fmt.format(DateTime.parse(open['scheduled_for'] as String).toLocal())} · '
-              '${open['status'] == 'accepted' ? 'confirmed' : 'waiting for a yes'}', style: onDark),
-        if (!done) ...[
+        Text(status, style: onDark),
+        const SizedBox(height: 4),
+        Text(when, style: const TextStyle(color: B.onPanelMuted, fontSize: 13, height: 1.35)),
+        if (!_locked) ...[
           const SizedBox(height: 10),
           DeadlineBar(
-            fraction: h / 72,
-            color: u.color == B.ink ? Colors.white : (u.color == B.urgent ? const Color(0xFFE6B866) : B.panelAccent),
+            fraction: (h / 96).clamp(0.0, 1.0),
+            color: h < 24 ? const Color(0xFFE6B866) : B.panelAccent,
             track: const Color(0xFF4A3A2C),
           ),
         ],
-        const SizedBox(height: 10),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          if (open == null)
-            FilledButton.icon(onPressed: _propose, icon: const Icon(Icons.videocam, size: 18), label: const Text('Propose a call')),
-          if (open != null && open['status'] == 'proposed' && open['proposed_by'] != Api.me)
-            FilledButton(onPressed: () => _guard(() => Api.acceptCall(open['id'] as String)), child: const Text('Accept')),
-          if (open != null && open['status'] == 'accepted')
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => CallScreen(
-                  callId: open['id'] as String,
-                  kind: open['kind'] as String,
-                  matchId: _matchId,
-                  otherId: _otherId,
-                ),
-              )).then((_) => _reload()),
-              icon: const Icon(Icons.call, size: 18),
-              label: const Text('Join'),
-            ),
-          // Not confirmed yet: either person can suggest another time for free.
-          if (open != null && open['status'] == 'proposed')
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.onPanelMuted, width: 1.5)),
-              onPressed: _propose,
-              child: Text(open['proposed_by'] == Api.me ? 'Change time' : 'Suggest another time'),
-            ),
-          // Confirmed: moving it uses one of the 2 shared reschedules.
-          if (open != null && open['status'] == 'accepted' && left > 0)
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: B.onPanelMuted, width: 1.5)),
-              onPressed: () => _propose(reschedule: true),
-              child: Text('Reschedule ($left left)'),
-            ),
-        ]),
+        if (!mine) ...[
+          const SizedBox(height: 10),
+          FilledButton.icon(onPressed: _voice, icon: const Icon(Icons.mic, size: 18), label: const Text('Record a voice note')),
+        ],
       ]),
     );
   }
@@ -317,12 +244,18 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       body: Column(children: [
-        _callPanel(),
+        _voicePanel(),
         Expanded(
           child: StreamBuilder<List<Map<String, dynamic>>>(
             stream: Api.messages(_matchId),
             builder: (context, snap) {
               final msgs = snap.data ?? [];
+              // their voice note just arrived: refresh the swap panel
+              final theirVoice = msgs.any((x) => x['kind'] == 'voice' && x['sender_id'] != Api.me);
+              if (theirVoice && _m['voice_theirs'] != true && !_reloading) {
+                _reloading = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) => _reload().whenComplete(() => _reloading = false));
+              }
               return ListView(
                 reverse: true,
                 padding: const EdgeInsets.all(12),
@@ -357,23 +290,30 @@ class _ChatScreenState extends State<ChatScreen> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 8, 8),
-            child: Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _text,
-                  minLines: 1,
-                  maxLines: 4,
-                  decoration: const InputDecoration(hintText: 'Message'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filled(
-                tooltip: 'Send',
-                style: IconButton.styleFrom(backgroundColor: B.accent, minimumSize: const Size(48, 48)),
-                onPressed: _send,
-                icon: const Icon(Icons.arrow_forward, color: Colors.white),
-              ),
-            ]),
+            child: _locked
+                ? FilledButton.icon(
+                    onPressed: _voice,
+                    icon: const Icon(Icons.mic),
+                    label: const Text('TEXTING PAUSED · SEND A VOICE NOTE'),
+                  )
+                : Row(children: [
+                    IconButton(tooltip: 'Voice note', onPressed: _voice, icon: Icon(Icons.mic_none, color: B.goldInk)),
+                    Expanded(
+                      child: TextField(
+                        controller: _text,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: const InputDecoration(hintText: 'Message'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      tooltip: 'Send',
+                      style: IconButton.styleFrom(backgroundColor: B.accent, minimumSize: const Size(48, 48)),
+                      onPressed: _send,
+                      icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                    ),
+                  ]),
           ),
         ),
       ]),
@@ -400,10 +340,12 @@ class _ChatScreenState extends State<ChatScreen> {
           border: blocked ? Border.all(color: B.urgent) : null,
           boxShadow: mine || blocked ? null : B.shadow,
         ),
-        child: Text(
-          blocked ? 'Not sent: contact info unlocks after a video call and one message from each of you.' : msg['body'] as String,
-          style: TextStyle(fontSize: 15, height: 1.35, color: blocked ? B.urgent : (mine ? Colors.white : B.ink)),
-        ),
+        child: msg['kind'] == 'voice' && msg['audio_path'] != null
+            ? VoiceBubble(path: msg['audio_path'] as String, durationMs: (msg['duration_ms'] as num?)?.toInt() ?? 0, mine: mine)
+            : Text(
+                blocked ? 'Not sent: numbers unlock once you\'ve both sent a voice note.' : msg['body'] as String,
+                style: TextStyle(fontSize: 15, height: 1.35, color: blocked ? B.urgent : (mine ? Colors.white : B.ink)),
+              ),
       ),
     );
   }

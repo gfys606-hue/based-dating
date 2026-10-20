@@ -79,7 +79,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
       if (r['waitlisted'] == true) {
         // the city is full: the code moved them to the front of the line instead
         setState(() => _welcome = '${r['city'] ?? 'The city'} is full right now. '
-            '${from == null ? 'Your code' : '$from'} vouched for you, so you\'re #${r['position']} in line for the next spot drop.');
+            '${from == null ? 'Your code' : '$from'} vouched for you, so you\'re near the front of the line for the next spot drop.');
         _code.clear();
         await _loadDoor();
         if (mounted) setState(() => _busy = false);
@@ -130,9 +130,8 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
       ),
     );
     if (ok != null && mounted) {
-      final pos = ok['position'];
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(pos == null ? 'You\'re on the list.' : 'You\'re #$pos in line. Open Based when the next spots drop.')));
+          content: Text('You\'re on the list. Open Based when the next spots drop.')));
       _loadDoor();
     }
   }
@@ -163,10 +162,10 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                   ),
                   child: Column(children: [
                     Text(doorLine(_door!), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, height: 1.45)),
-                    if (_door!['my_position'] != null) ...[
+                    if (_door!['my_status'] == 'waiting') ...[
                       const SizedBox(height: 6),
                       Text(
-                        'You\'re #${_door!['my_position']} in line${_door!['my_vouched'] == true ? ', vouched' : ''}.',
+                        _door!['my_vouched'] == true ? 'You\'re on the list, vouched by a member.' : 'You\'re on the list.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: B.gold, fontWeight: FontWeight.w700),
                       ),
