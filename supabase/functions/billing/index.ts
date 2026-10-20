@@ -1,12 +1,14 @@
 // Membership checkout and "manage membership" links (Stripe).
 //
-// The app calls this signed in. Body: { "action": "checkout", "tier": "plus"|"inner", "period": "month"|"year" }
+// The app calls this signed in. Body: { "action": "checkout", "tier": "premium", "period": "month"|"year" }
+//                                  or { "action": "gift", "match": "<match id>", "gift": "round", "note": "..." }
 //                                  or { "action": "portal" }
 // Returns { url } to open in the browser.
 //
 // Secrets (set by the owner in Supabase → Edge Functions → Secrets):
 //   STRIPE_SECRET_KEY
-//   STRIPE_PRICE_PLUS_MONTH, STRIPE_PRICE_PLUS_YEAR, STRIPE_PRICE_INNER_MONTH, STRIPE_PRICE_INNER_YEAR
+//   STRIPE_PRICE_PREMIUM_MONTH, STRIPE_PRICE_PREMIUM_YEAR   (one plan for the whole platform)
+//   Gifts need no price setup: each is charged at its catalog price (gift_catalog), in CAD.
 //   BILLING_RETURN_URL   (optional, default https://based-social.com)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17";
@@ -53,14 +55,37 @@ Deno.serve(async (req) => {
     return json({ url: s.url });
   }
 
-  const tier = body.tier === "inner" ? "inner" : "plus";
-  const p = price(tier, body.period);
-  if (!p) return json({ error: "That plan isn't set up yet." }, 503);
-
   if (!customer) {
     const c = await stripe.customers.create({ email: user.email ?? undefined, metadata: { user_id: user.id } });
     customer = c.id;
   }
+
+  // A gift: one-time payment. The gift is delivered by stripe-webhook once it's paid.
+  if (body.action === "gift") {
+    const { data: g, error } = await admin.rpc("prepare_gift", {
+      p_user: user.id, p_match: body.match, p_gift: body.gift, p_note: body.note ?? null,
+    });
+    if (error || !g) return json({ error: error?.message ?? "Couldn't start that gift." }, 400);
+    const gift = g as { send_id: string; name: string; price_cents: number };
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer,
+      line_items: [{
+        quantity: 1,
+        price_data: { currency: "cad", unit_amount: gift.price_cents, product_data: { name: `Gift: ${gift.name}` } },
+      }],
+      client_reference_id: user.id,
+      metadata: { user_id: user.id, kind: "gift", send_id: gift.send_id },
+      payment_intent_data: { metadata: { kind: "gift", send_id: gift.send_id } },
+      success_url: `${back}/?gift=sent`,
+      cancel_url: `${back}/?gift=cancelled`,
+    });
+    return json({ url: session.url });
+  }
+
+  const tier = "premium";
+  const p = price(tier, body.period);
+  if (!p) return json({ error: "That plan isn't set up yet." }, 503);
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
