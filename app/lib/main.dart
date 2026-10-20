@@ -23,19 +23,107 @@ const _anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: _url,
-    anonKey: _anonKey,
-    // Implicit flow: the sign-in link carries the session itself, so it works
-    // even if the email opens in a different browser (e.g. inside the Gmail app).
-    authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
-  );
-  Diagnostics.install(); // errors get logged with the screen they happened on
-  await B.loadMode();
-  await B.loadPalette();
-  Castle.load(); // the castle's walls (shown behind every screen); doesn't hold up the launch
-  await Push.init();
-  runApp(const BasedApp());
+  // Draw something right away, then start up behind it. If a step hangs or fails, the screen says
+  // which one (instead of sitting on the launch logo forever).
+  runApp(const _Boot());
+}
+
+/// Startup: connect, load settings, set up notifications, then hand over to the app.
+class _Boot extends StatefulWidget {
+  const _Boot();
+  @override
+  State<_Boot> createState() => _BootState();
+}
+
+class _BootState extends State<_Boot> {
+  static bool _supabaseReady = false;
+  String _step = 'Starting';
+  String? _error;
+  bool _ready = false;
+  bool _slow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  Future<void> _run(String step, Future<void> Function() f, {int seconds = 10, bool required = true}) async {
+    if (mounted) setState(() => _step = step);
+    try {
+      await f().timeout(Duration(seconds: seconds));
+    } catch (e) {
+      if (required) throw '$step: $e';
+      debugPrint('Startup step "$step" skipped: $e');
+    }
+  }
+
+  Future<void> _start() async {
+    setState(() {
+      _error = null;
+      _slow = false;
+    });
+    Future<void>.delayed(const Duration(seconds: 6), () {
+      if (mounted && !_ready) setState(() => _slow = true);
+    });
+    try {
+      if (!_supabaseReady) {
+        await _run('Connecting', () => Supabase.initialize(
+              url: _url,
+              anonKey: _anonKey,
+              // Implicit flow: the sign-in link carries the session itself, so it works
+              // even if the email opens in a different browser (e.g. inside the Gmail app).
+              authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.implicit),
+            ), seconds: 20);
+        _supabaseReady = true;
+        Diagnostics.install(); // errors get logged with the screen they happened on
+      }
+      await _run('Loading your settings', () async {
+        await B.loadMode();
+        await B.loadPalette();
+      }, seconds: 5, required: false);
+      Castle.load(); // the castle's walls (shown behind every screen); doesn't hold up the launch
+      await _run('Setting up notifications', Push.init, seconds: 8, required: false);
+      if (mounted) setState(() => _ready = true);
+    } catch (e) {
+      if (mounted) setState(() => _error = '$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_ready) return const BasedApp();
+    const bg = Color(0xFF110B07);
+    const ivory = Color(0xFFF1E6D0);
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: bg,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('B.', style: TextStyle(color: B.gold, fontSize: 44, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 24),
+              if (_error == null) ...[
+                const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: B.gold)),
+                if (_slow) ...[
+                  const SizedBox(height: 14),
+                  Text('$_step…', style: const TextStyle(color: ivory, fontSize: 13)),
+                ],
+              ] else ...[
+                const Text('Based couldn\'t start', style: TextStyle(color: ivory, fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                SelectableText(_error!, textAlign: TextAlign.center, style: const TextStyle(color: B.onPanelMuted, fontSize: 13)),
+                const SizedBox(height: 16),
+                FilledButton(onPressed: _start, child: const Text('TRY AGAIN')),
+              ],
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// App root. Picks light or dark (phone setting, or the user's choice in You → Appearance)
