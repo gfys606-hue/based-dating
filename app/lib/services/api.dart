@@ -183,6 +183,10 @@ class Api {
   static Future<Map<String, dynamic>> drawVoiceQuestion() async =>
       Map<String, dynamic>.from(await db.rpc('draw_voice_question') as Map);
 
+  /// Premium: swap the question once per draw.
+  static Future<Map<String, dynamic>> swapVoiceQuestion() async =>
+      Map<String, dynamic>.from(await db.rpc('swap_voice_question') as Map);
+
   /// Upload the one take and attach it to the question you were given.
   static Future<void> saveVoiceAnswer(Uint8List bytes, int durationMs, {required bool webm}) async {
     final path = '$me/v_${DateTime.now().millisecondsSinceEpoch}.${webm ? 'webm' : 'm4a'}';
@@ -212,6 +216,9 @@ class Api {
       'duration_ms': durationMs,
     });
   }
+
+  /// Marks their messages in this chat as read (premium senders see "Seen").
+  static Future<void> markRead(String matchId) => db.rpc('mark_match_read', params: {'p_match': matchId});
 
   static Future<String> voiceNoteUrl(String path) => db.storage.from('voice-notes').createSignedUrl(path, 3600);
 

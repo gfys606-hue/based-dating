@@ -2,7 +2,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
 
-/// Plus / Inner memberships (supabase/migrations/20261005000028_membership.sql, functions/billing).
+/// Premium (one plan for the whole platform) and gifts
+/// (supabase/migrations/20261020000036_premium_gifts.sql, functions/billing).
 class MembershipApi {
   MembershipApi._();
   static final _db = Api.db;
@@ -14,8 +15,21 @@ class MembershipApi {
   static Future<Map<String, dynamic>> mine() async => _map(await _db.rpc('my_membership'));
 
   /// Opens Stripe checkout in the browser. Throws with a readable message if billing isn't set up yet.
-  static Future<void> checkout(String tier, {bool yearly = false}) =>
-      _open({'action': 'checkout', 'tier': tier, 'period': yearly ? 'year' : 'month'});
+  static Future<void> checkout({bool yearly = false}) =>
+      _open({'action': 'checkout', 'tier': 'premium', 'period': yearly ? 'year' : 'month'});
+
+  /// The gift shelf: [{code, name, icon, price_cents}]
+  static Future<List<Map<String, dynamic>>> gifts() async =>
+      _rows(await _db.from('gift_catalog').select('code, name, icon, price_cents').eq('active', true).order('sort'));
+
+  /// Sends a gift into a match chat. Free during early access; otherwise opens checkout and the
+  /// gift arrives once it's paid. Returns true if it was sent right away.
+  static Future<bool> sendGift(String matchId, String gift, {String? note}) async {
+    final r = _map(await _db.rpc('send_gift', params: {'p_match': matchId, 'p_gift': gift, 'p_note': note}));
+    if (r['sent'] == true) return true;
+    await _open({'action': 'gift', 'match': matchId, 'gift': gift, 'note': note});
+    return false;
+  }
 
   /// Opens Stripe's page to change plan, update the card, or cancel.
   static Future<void> manage() => _open({'action': 'portal'});
@@ -33,6 +47,24 @@ class MembershipApi {
   static Future<void> startTravel(double lat, double lng, String name, int days) =>
       _db.rpc('start_travel', params: {'p_lat': lat, 'p_lng': lng, 'p_name': name, 'p_days': days});
   static Future<void> endTravel() => _db.rpc('end_travel');
+
+  // ---------- travel mode (supabase/migrations/20261020000037_travel.sql) ----------
+  /// Members in a city who take traveller messages: [{user_id, name, age, photo, distance_km, shared, pending}]
+  static Future<List<Map<String, dynamic>>> travelPeople(double lat, double lng) async =>
+      _rows(await _db.rpc('travel_browse', params: {'p_lat': lat, 'p_lng': lng}));
+  static Future<List<Map<String, dynamic>>> travelSpots(double lat, double lng) async =>
+      _rows(await _db.rpc('travel_venues', params: {'p_lat': lat, 'p_lng': lng}));
+  static Future<void> sendIntro(String to, double lat, double lng, String city, DateTime? date, String body) =>
+      _db.rpc('send_travel_intro', params: {
+        'p_to': to,
+        'p_lat': lat,
+        'p_lng': lng,
+        'p_city': city,
+        'p_date': date == null ? null : '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+        'p_body': body,
+      });
+  static Future<List<Map<String, dynamic>>> intros() async => _rows(await _db.rpc('my_travel_intros'));
+  static Future<void> answerIntro(String id, bool yes) => _db.rpc('respond_travel_intro', params: {'p_id': id, 'p_accept': yes});
 
   static Future<bool> innerMark(String userId) async =>
       await _db.rpc('inner_mark', params: {'p_user': userId}) == true;
