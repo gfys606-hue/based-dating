@@ -27,6 +27,11 @@ dependencies:
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.2
 
+# shared_preferences_android 2.5.x (Oct 2026) crashes our Android release build on launch
+# (NoSuchMethodError SharedPreferencesApiRegistrar.getAll). Stay on the last 2.4 until that's fixed.
+dependency_overrides:
+  shared_preferences_android: 2.4.28
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
