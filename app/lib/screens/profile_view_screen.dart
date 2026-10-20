@@ -100,7 +100,7 @@ class ProfileBody extends StatelessWidget {
           ),
         if (profile['is_me'] != true)
           FutureBuilder(
-            // Only shows when you're both Inner
+            // Only shows when you're both Premium
             future: MembershipApi.innerMark(profile['id'] as String).catchError((_) => false),
             builder: (context, snap) => snap.data == true
                 ? Padding(
@@ -108,7 +108,7 @@ class ProfileBody extends StatelessWidget {
                     child: Row(children: [
                       Icon(Icons.workspace_premium, size: 14, color: B.goldInk),
                       const SizedBox(width: 6),
-                      Text('INNER', style: B.label.copyWith(color: B.goldInk)),
+                      Text('PREMIUM', style: B.label.copyWith(color: B.goldInk)),
                     ]),
                   )
                 : const SizedBox.shrink(),

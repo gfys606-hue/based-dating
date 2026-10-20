@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/membership_api.dart';
 import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
@@ -20,6 +21,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final _text = TextEditingController();
   late Map<String, dynamic> _m = widget.match;
   bool _reloading = false;
+  bool _premium = false;
+  int _readUpTo = 0; // how many of their messages we've marked read
 
   String get _matchId => _m['match_id'] as String;
   String get _otherId => _m['other_id'] as String;
@@ -28,6 +31,47 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _reload();
+    MembershipApi.mine().then((m) {
+      if (mounted) setState(() => _premium = m['premium'] == true);
+    }).catchError((_) {});
+  }
+
+  /// A gift from the shelf, with an optional line.
+  Future<void> _gift() async {
+    final shelf = await MembershipApi.gifts().catchError((_) => <Map<String, dynamic>>[]);
+    if (!mounted || shelf.isEmpty) return;
+    final note = TextEditingController();
+    final pick = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('Send a gift', style: B.heading(24)),
+          const SizedBox(height: 4),
+          Text('It shows up in this chat.', style: TextStyle(color: B.muted, fontSize: 13)),
+          const SizedBox(height: 10),
+          TextField(controller: note, maxLength: 140, decoration: const InputDecoration(hintText: 'Add a line (optional)')),
+          for (final g in shelf)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(giftIcon(g['icon'] as String?), color: B.goldInk),
+              title: Text(g['name'] as String),
+              trailing: Text('\$${((g['price_cents'] as num) / 100).toStringAsFixed(2)}', style: TextStyle(color: B.muted)),
+              onTap: () => Navigator.pop(ctx, g),
+            ),
+        ]),
+      ),
+    );
+    if (pick == null) return;
+    try {
+      final sent = await MembershipApi.sendGift(_matchId, pick['code'] as String, note: note.text.trim().isEmpty ? null : note.text.trim());
+      if (mounted && !sent) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Finish checkout and the gift lands in the chat.')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
   }
 
   Future<void> _reload() async {
@@ -60,6 +104,8 @@ class _ChatScreenState extends State<ChatScreen> {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: _otherId)));
       case 'venue':
         await _suggestVenue();
+      case 'gift':
+        await _gift();
       case 'not_feeling_it':
         final ok = await _confirm('Not feeling it?', 'This ends the match politely. It never counts against you.');
         if (ok) {
@@ -236,6 +282,7 @@ class _ChatScreenState extends State<ChatScreen> {
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'profile', child: Text('View profile')),
               PopupMenuItem(value: 'venue', child: Text('Suggest a place to meet')),
+              PopupMenuItem(value: 'gift', child: Text('Send a gift')),
               PopupMenuItem(value: 'not_feeling_it', child: Text('Not feeling it')),
               PopupMenuItem(value: 'report', child: Text('Report')),
               PopupMenuItem(value: 'block', child: Text('Block')),
@@ -250,6 +297,13 @@ class _ChatScreenState extends State<ChatScreen> {
             stream: Api.messages(_matchId),
             builder: (context, snap) {
               final msgs = snap.data ?? [];
+              // read receipts: mark their messages read as they arrive
+              final theirs = msgs.where((x) => x['sender_id'] != Api.me).length;
+              if (theirs > _readUpTo) {
+                _readUpTo = theirs;
+                Api.markRead(_matchId).catchError((_) {});
+              }
+              final lastMine = msgs.lastWhere((x) => x['sender_id'] == Api.me, orElse: () => const {});
               // their voice note just arrived: refresh the swap panel
               final theirVoice = msgs.any((x) => x['kind'] == 'voice' && x['sender_id'] != Api.me);
               if (theirVoice && _m['voice_theirs'] != true && !_reloading) {
@@ -260,6 +314,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 reverse: true,
                 padding: const EdgeInsets.all(12),
                 children: [
+                  if (_premium && lastMine['read_at'] != null)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('Seen', style: TextStyle(color: B.muted, fontSize: 11.5)),
+                    ),
                   for (final msg in msgs.reversed) _bubble(msg),
                   if (_m['icebreaker'] != null)
                     Container(
@@ -298,6 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : Row(children: [
                     IconButton(tooltip: 'Voice note', onPressed: _voice, icon: Icon(Icons.mic_none, color: B.goldInk)),
+                    IconButton(tooltip: 'Send a gift', onPressed: _gift, icon: Icon(Icons.card_giftcard, color: B.goldInk)),
                     Expanded(
                       child: TextField(
                         controller: _text,
@@ -340,7 +400,16 @@ class _ChatScreenState extends State<ChatScreen> {
           border: blocked ? Border.all(color: B.urgent) : null,
           boxShadow: mine || blocked ? null : B.shadow,
         ),
-        child: msg['kind'] == 'voice' && msg['audio_path'] != null
+        child: msg['kind'] == 'gift'
+            ? Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.card_giftcard, size: 18, color: mine ? B.gold : B.goldInk),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(msg['body'] as String,
+                      style: TextStyle(fontSize: 15, height: 1.35, fontWeight: FontWeight.w700, color: mine ? Colors.white : B.ink)),
+                ),
+              ])
+            : msg['kind'] == 'voice' && msg['audio_path'] != null
             ? VoiceBubble(path: msg['audio_path'] as String, durationMs: (msg['duration_ms'] as num?)?.toInt() ?? 0, mine: mine)
             : Text(
                 blocked ? 'Not sent: numbers unlock once you\'ve both sent a voice note.' : msg['body'] as String,

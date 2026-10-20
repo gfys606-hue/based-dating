@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/friends_api.dart';
+import '../services/membership_api.dart';
 import '../theme.dart';
 import '../widgets/friend_button.dart';
 import '../widgets/live_chat.dart';
@@ -20,6 +21,7 @@ class FriendsScreen extends StatefulWidget {
 class _FriendsScreenState extends State<FriendsScreen> {
   List<Map<String, dynamic>> _friends = [];
   List<Map<String, dynamic>> _requests = [];
+  List<Map<String, dynamic>> _intros = [];
   bool _loading = true;
   String _query = '';
   DateTime? _quiet;
@@ -41,6 +43,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     try {
       final r = await Future.wait([FriendsApi.friends(), FriendsApi.requests()]);
       _quiet = await FriendsApi.quietUntil().catchError((_) => null);
+      _intros = await MembershipApi.intros().catchError((_) => <Map<String, dynamic>>[]);
       if (mounted) {
         setState(() {
           _friends = r[0];
@@ -59,6 +62,51 @@ class _FriendsScreenState extends State<FriendsScreen> {
       await FriendsApi.respond(r['user_id'] as String, accept);
     } catch (_) {}
     _load();
+  }
+
+  Future<void> _answerIntro(Map<String, dynamic> i, bool yes) async {
+    try {
+      await MembershipApi.answerIntro(i['id'] as String, yes);
+    } catch (_) {}
+    _load();
+  }
+
+  Widget _introTile(Map<String, dynamic> i) {
+    final shared = (i['shared'] as List? ?? const []).cast<String>();
+    final date = i['trip_date'] == null ? null : DateTime.parse(i['trip_date'] as String);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: B.cardBox(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Avatar(path: i['photo'] as String?, size: 42),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('${(i['name'] as String).split(' ').first}, ${i['age']}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  [
+                    if (date != null) 'In ${i['city'] ?? 'town'} ${DateFormat('MMM d').format(date)}' else 'Coming to ${i['city'] ?? 'town'}',
+                    if (shared.isNotEmpty) 'both into ${shared.take(2).join(', ')}',
+                  ].join(' · '),
+                  style: TextStyle(color: B.muted, fontSize: 12.5),
+                ),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Text(i['body'] as String, style: const TextStyle(height: 1.4)),
+          const SizedBox(height: 8),
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+            TextButton(onPressed: () => _answerIntro(i, false), child: const Text('No thanks')),
+            const SizedBox(width: 6),
+            FilledButton(onPressed: () => _answerIntro(i, true), child: const Text('SAY YES')),
+          ]),
+        ]),
+      ),
+    );
   }
 
   Future<void> _open(Map<String, dynamic> f) async {
@@ -100,6 +148,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
               ),
             ),
           if (_loading) const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
+          if (_intros.isNotEmpty) ...[
+            SectionLabel('Travellers saying hi', color: B.accentStrong),
+            const SizedBox(height: 10),
+            for (final i in _intros) _introTile(i),
+            const SizedBox(height: 14),
+          ],
           if (_requests.isNotEmpty) ...[
             SectionLabel('Requests', color: B.accentStrong),
             const SizedBox(height: 10),

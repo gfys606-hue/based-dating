@@ -7,6 +7,7 @@ import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
+import 'music_screen.dart';
 
 /// Spots: who's out right now ("Here now"), and your watering holes.
 /// Posting a night out from a saved spot is three taps: spot → time → send.
@@ -190,6 +191,13 @@ class _SpotsScreenState extends State<SpotsScreen> {
               style: TextStyle(color: B.onPanelMuted, fontSize: 12.5),
             ),
           ]),
+        ),
+        IconButton(
+          tooltip: 'Music here tonight',
+          icon: Icon(Icons.queue_music, color: B.goldInk),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => VenueMusicScreen(placeName: m['place_name'] as String),
+          )),
         ),
         TextButton(
           onPressed: () async {

@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
+import 'music_screen.dart';
 
 String _err(Object e) {
   final s = e.toString();
@@ -89,6 +90,15 @@ class MyVenueScreen extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(
             title: Text(venue['name'] as String, style: B.heading(22)),
+            actions: [
+              IconButton(
+                tooltip: 'Tonight\'s music requests',
+                icon: const Icon(Icons.queue_music),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => VenueMusicScreen(placeName: venue['name'] as String, placeId: venue['place_id'] as String, staff: true),
+                )),
+              ),
+            ],
             bottom: const TabBar(tabs: [Tab(text: 'Tables'), Tab(text: 'Passes'), Tab(text: 'People'), Tab(text: 'Bars')]),
           ),
           body: TabBarView(children: [

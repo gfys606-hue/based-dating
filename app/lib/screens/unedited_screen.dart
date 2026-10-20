@@ -25,6 +25,7 @@ class _UneditedScreenState extends State<UneditedScreen> {
   final _rec = AudioRecorder();
   _Stage _stage = _Stage.loading;
   String _question = '';
+  bool _canSwap = false;
   String _error = '';
   Timer? _tick;
   final _clock = Stopwatch();
@@ -47,10 +48,23 @@ class _UneditedScreenState extends State<UneditedScreen> {
       final q = await Api.drawVoiceQuestion();
       if (mounted) setState(() {
         _question = q['text'] as String;
+        _canSwap = q['can_swap'] == true;
         _stage = _Stage.ready;
       });
     } catch (e) {
       _fail(e);
+    }
+  }
+
+  Future<void> _swap() async {
+    try {
+      final q = await Api.swapVoiceQuestion();
+      if (mounted) setState(() {
+        _question = q['text'] as String;
+        _canSwap = q['can_swap'] == true;
+      });
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'.replaceFirst(RegExp(r'^.*?message: '), '').split(',').first)));
     }
   }
 
@@ -148,6 +162,8 @@ class _UneditedScreenState extends State<UneditedScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
+              if (_stage == _Stage.ready && _canSwap)
+                TextButton.icon(onPressed: _swap, icon: const Icon(Icons.shuffle, size: 18), label: const Text('Swap this question (Premium)')),
               if (_stage == _Stage.ready)
                 FilledButton.icon(onPressed: _start, icon: const Icon(Icons.mic), label: const Text('RECORD MY ONE TAKE')),
               if (_stage == _Stage.recording)

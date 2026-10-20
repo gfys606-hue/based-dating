@@ -13,6 +13,7 @@ import 'membership_screen.dart';
 import 'venue_screens.dart';
 import '../services/venue_api.dart';
 import '../services/invites_api.dart';
+import '../services/membership_api.dart';
 import 'profile_view_screen.dart';
 
 /// Green / yellow / red: how visible your activity is keeping you, with one tip.
@@ -159,6 +160,17 @@ class YouScreen extends StatelessWidget {
             builder: (context, snap) => _DatingSwitch(initial: snap.data?['dating_on'] == true, key: ValueKey(snap.data?['dating_on'])),
           ),
         ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: B.cardBox(),
+          child: FutureBuilder(
+            future: Api.myProfile(),
+            builder: (context, snap) => _TravellerSwitch(
+              initial: snap.data?['traveler_messages'] != false,
+              key: ValueKey('tm${snap.data?['traveler_messages']}'),
+            ),
+          ),
+        ),
         const SizedBox(height: 20),
         const SectionLabel('Appearance'),
         const SizedBox(height: 10),
@@ -169,6 +181,29 @@ class YouScreen extends StatelessWidget {
             index: const [ThemeMode.system, ThemeMode.light, ThemeMode.dark].indexOf(mode),
             onChanged: (i) => B.setMode(const [ThemeMode.system, ThemeMode.light, ThemeMode.dark][i]),
           ),
+        ),
+        const SizedBox(height: 12),
+        // Premium: the accent finish
+        FutureBuilder(
+          future: MembershipApi.mine(),
+          builder: (context, snap) {
+            final premium = snap.data?['premium'] == true;
+            return Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              for (final e in B.palettes.entries)
+                PillChip(
+                  label: e.value,
+                  selected: B.palette.value == e.key,
+                  onTap: () {
+                    if (premium || e.key == 'brass') {
+                      B.setPalette(e.key);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Themes come with Premium.')));
+                    }
+                  },
+                ),
+              if (!premium) Text('Themes come with Premium', style: TextStyle(color: B.muted, fontSize: 12)),
+            ]);
+          },
         ),
         const SizedBox(height: 20),
         const SectionLabel('Account'),
@@ -189,7 +224,7 @@ class YouScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Your engagement score is never shown, to you or anyone. No premium tier: everything that helps you meet people is free.',
+          'Your engagement score is never shown, to you or anyone. Premium never changes who sees you or how you rank: everything that helps you meet people is free.',
           style: TextStyle(color: B.muted, fontSize: 13, height: 1.5),
         ),
       ],
@@ -225,6 +260,34 @@ class YouScreen extends StatelessWidget {
   }
 }
 
+
+/// Traveller messages: premium members visiting a city inside your range can say hi. Off = nobody can.
+class _TravellerSwitch extends StatefulWidget {
+  const _TravellerSwitch({super.key, required this.initial});
+  final bool initial;
+  @override
+  State<_TravellerSwitch> createState() => _TravellerSwitchState();
+}
+
+class _TravellerSwitchState extends State<_TravellerSwitch> {
+  late bool _on = widget.initial;
+  @override
+  Widget build(BuildContext context) => SwitchListTile(
+        value: _on,
+        title: const Text('Traveller messages'),
+        subtitle: Text(_on
+            ? 'Members visiting somewhere inside your feed distance can say hi before they arrive.'
+            : 'Off: travellers can\'t find or message you.'),
+        onChanged: (v) async {
+          setState(() => _on = v);
+          try {
+            await Api.updateProfile({'traveler_messages': v});
+          } catch (_) {
+            if (mounted) setState(() => _on = !v);
+          }
+        },
+      );
+}
 
 class _DatingSwitch extends StatefulWidget {
   const _DatingSwitch({super.key, required this.initial});

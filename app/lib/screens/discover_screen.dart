@@ -99,7 +99,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
   }
 
-  /// Plus: bring back the last person you passed on.
+  /// Premium: rewind the last person you passed on.
   Future<void> _undo() async {
     try {
       final id = await MembershipApi.undoPass();
@@ -110,9 +110,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      final plus = '$e'.contains('Plus');
+      final plus = '$e'.contains('Premium');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(plus ? 'Undo comes with Plus.' : 'Couldn\'t undo. Try again.'),
+        content: Text(plus ? 'Rewind comes with Premium.' : 'Couldn\'t rewind. Try again.'),
         action: plus
             ? SnackBarAction(
                 label: 'SEE PLANS',

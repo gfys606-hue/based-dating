@@ -7,6 +7,7 @@ import '../services/membership_api.dart';
 import '../services/places_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'travel_screen.dart';
 
 String _clean(Object e) {
   final s = e.toString();
@@ -14,7 +15,7 @@ String _clean(Object e) {
   return (m?.group(1) ?? s.replaceFirst(RegExp(r'^(Exception|FunctionException)[^:]*: ?'), '')).trim();
 }
 
-/// You → Membership: Free, Plus, Inner.
+/// You → Membership: one Premium plan for the whole platform. Gifts are separate (from a chat).
 class MembershipScreen extends StatefulWidget {
   const MembershipScreen({super.key});
   @override
@@ -78,7 +79,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
     final m = _m;
     final tier = m?['tier'] as String? ?? 'free';
     final open = m?['open'] == true;
-    final canTravel = tier == 'inner' || !open; // free for everyone during early access
+    final canTravel = m?['premium'] == true; // premium, or everyone during early access
     final travel = m?['travel'] as Map?;
     final fmt = DateFormat('MMM d');
     String? when(String k) => m?[k] == null ? null : fmt.format(DateTime.parse(m![k] as String).toLocal());
@@ -97,8 +98,8 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('Free during early access', style: B.heading(24).copyWith(color: Colors.white)),
                       const SizedBox(height: 4),
-                      Text('50 Ouch picks a day, undo, and travel mode are on for you now. '
-                          'Plans below are what\'s coming. Nothing is charged.',
+                      Text('Every Premium perk is on for you now, and gifts are free (3 a day). '
+                          'The plan below is what\'s coming. Nothing is charged.',
                           style: TextStyle(color: B.onPanelMuted, height: 1.4)),
                     ]),
                   ),
@@ -109,7 +110,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(tier == 'inner' ? 'You\'re Inner' : 'You\'re on Plus', style: B.heading(24).copyWith(color: Colors.white)),
+                      Text('You\'re Premium', style: B.heading(24).copyWith(color: Colors.white)),
                       const SizedBox(height: 4),
                       Text(
                         when('ends') != null
@@ -140,7 +141,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(Icons.flight_takeoff, color: B.goldInk),
                       title: Text('You\'re showing up in ${travel['name']}'),
-                      subtitle: Text('Until ${fmt.format(DateTime.parse(travel['until'] as String).toLocal())}. Ouch, the feed and Spots use it.'),
+                      subtitle: Text('Until ${fmt.format(DateTime.parse(travel['until'] as String).toLocal())}. Ouch, the feed, Spots and traveller intros use it.'),
                       trailing: TextButton(
                         onPressed: _busy ? null : () => _run(() async { await MembershipApi.endTravel(); await _load(); }),
                         child: const Text('END'),
@@ -152,39 +153,41 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                       icon: const Icon(Icons.flight_takeoff),
                       label: const Text('I\'M HEADING SOMEWHERE'),
                     ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TravelScreen())),
+                    icon: const Icon(Icons.travel_explore),
+                    label: const Text('BROWSE A CITY AND SAY HI'),
+                  ),
                   const SizedBox(height: 22),
                 ],
                 Row(children: [
-                  const Expanded(child: SectionLabel('Plans')),
+                  const Expanded(child: SectionLabel('Premium')),
                   Segmented(options: const ['Monthly', 'Yearly'], index: _yearly ? 1 : 0, onChanged: (i) => setState(() => _yearly = i == 1)),
                 ]),
                 const SizedBox(height: 10),
                 _PlanCard(
-                  name: 'Plus',
-                  price: _yearly ? '\$39.99 / year' : '\$4.99 / month',
-                  perks: const ['50 Ouch picks a day (free is 25)', 'Undo a pass'],
-                  current: tier == 'plus',
-                  included: tier == 'inner',
-                  comingSoon: !open,
-                  busy: _busy,
-                  onTap: () => _run(() => MembershipApi.checkout('plus', yearly: _yearly)),
-                ),
-                const SizedBox(height: 12),
-                _PlanCard(
-                  name: 'Inner',
-                  price: _yearly ? '\$119.99 / year' : '\$14.99 / month',
+                  name: 'Premium',
+                  price: _yearly ? '\$79.99 / year' : '\$9.99 / month',
                   perks: const [
-                    'Everything in Plus',
-                    'Travel mode: show up in a city before you get there',
+                    'One plan for everything: Ouch, Herd, Spots and the feed',
+                    '50 Ouch picks a day (free is 25) and rewind a pass',
+                    'Travel mode: browse a city\'s spots and members, and reach out before you land',
+                    'Read receipts in your chats',
+                    'Extra Unedited voice prompts, and one swap per question',
+                    'Themes for the app',
                     '2 extra personal invites every month',
-                    'The Inner mark, which only other Inner members can see',
+                    'The premium mark, which only other premium members see',
                   ],
-                  current: tier == 'inner',
+                  current: tier == 'premium',
                   comingSoon: !open,
                   busy: _busy,
                   highlight: true,
-                  onTap: () => _run(() => MembershipApi.checkout('inner', yearly: _yearly)),
+                  onTap: () => _run(() => MembershipApi.checkout(yearly: _yearly)),
                 ),
+                const SizedBox(height: 12),
+                Text('Gifts are separate, one at a time: send one from any Ouch chat.',
+                    style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
                 const SizedBox(height: 16),
                 Text(
                   'Based has no ads. Partner venues you see are places that work with us. '
@@ -244,14 +247,14 @@ class _PlanCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: current || included || comingSoon
-                ? OutlinedButton(onPressed: null, child: Text(current ? 'YOUR PLAN' : included ? 'INCLUDED IN INNER' : 'COMING SOON'))
+                ? OutlinedButton(onPressed: null, child: Text(current ? 'YOUR PLAN' : included ? 'INCLUDED' : 'COMING SOON'))
                 : FilledButton(onPressed: busy ? null : onTap, child: Text('GET ${name.toUpperCase()}')),
           ),
         ]),
       );
 }
 
-/// Inner: pick a city and how long.
+/// Premium: pick a city and how long.
 class _TravelSheet extends StatefulWidget {
   const _TravelSheet();
   @override

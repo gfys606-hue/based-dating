@@ -681,8 +681,8 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
             value: _paidOpen ?? false,
             title: const Text('Paid memberships'),
             subtitle: Text(_paidOpen == true
-                ? 'Plus and Inner can be bought. Picks, undo and travel mode need a plan.'
-                : 'Free for everyone: 50 picks, undo and travel mode. Nothing can be charged.'),
+                ? 'Premium can be bought, and gifts are paid. Premium perks need the plan.'
+                : 'Free for everyone: every Premium perk, and 3 free gifts a day. Nothing can be charged.'),
             onChanged: _paidOpen == null
                 ? null
                 : (v) async {
@@ -691,7 +691,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Start charging?'),
-                                content: const Text('Members lose the free perks unless they buy Plus or Inner. '
+                                content: const Text('Members lose the free perks unless they buy Premium, and gifts start costing money. '
                                     'Make sure the Stripe keys and prices are set first.'),
                                 actions: [
                                   TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -877,7 +877,7 @@ class _NewBatchSheetState extends State<_NewBatchSheet> {
   }
 }
 
-/// The door → Memberships and comps: see who's paying, and give someone Plus or Inner for free.
+/// The door → Memberships and comps: see who's paying, and give someone Premium for free.
 class _CompSheet extends StatefulWidget {
   const _CompSheet();
   @override
@@ -913,10 +913,8 @@ class _CompSheetState extends State<_CompSheet> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(title: Text(r['name'] as String? ?? 'Member', style: B.heading(20))),
           for (final o in const [
-            ['plus:30', 'Plus for 30 days'],
-            ['plus:365', 'Plus for a year'],
-            ['inner:30', 'Inner for 30 days'],
-            ['inner:365', 'Inner for a year'],
+            ['premium:30', 'Premium for 30 days'],
+            ['premium:365', 'Premium for a year'],
             ['free:0', 'Remove comp'],
           ])
             ListTile(title: Text(o[1]), onTap: () => Navigator.pop(ctx, o[0])),
@@ -960,7 +958,7 @@ class _CompSheetState extends State<_CompSheet> {
                   title: Text(r['name'] as String? ?? '(no profile)'),
                   subtitle: Text([
                     r['email'] ?? '',
-                    switch (r['tier']) { 'inner' => 'Inner', 'plus' => 'Plus', _ => 'Free' },
+                    r['tier'] == 'free' ? 'Free' : 'Premium',
                     if (r['source'] == 'admin') 'comped',
                     if (r['until'] != null) 'until ${DateFormat('MMM d, y').format(DateTime.parse(r['until'] as String).toLocal())}',
                   ].where((s) => '$s'.isNotEmpty).join(' · ')),
