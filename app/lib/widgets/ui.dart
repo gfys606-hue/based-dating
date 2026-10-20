@@ -5,22 +5,24 @@ import 'signed_photo.dart';
 
 /// Shared building blocks. Future modules reuse these instead of inventing their own.
 
-/// Hours left in a match's 3-day call window.
+/// Hours until texting pauses on a match (day 4) if you haven't both sent a voice note.
 double hoursLeft(Map<String, dynamic> m) =>
     DateTime.parse(m['call_deadline'] as String).difference(DateTime.now()).inMinutes / 60.0;
 
 String timeLeftLabel(double h) {
-  if (h <= 0) return 'Expiring';
+  if (h <= 0) return 'Paused';
   if (h >= 24) return '${h ~/ 24}d ${(h % 24).floor()}h';
   if (h >= 1) return '${h.floor()}h';
   return '${(h * 60).floor()}m';
 }
 
-/// "2d 5h to call" style countdown for a match.
+/// "2d 5h for voice notes" style countdown for a match.
 String callCountdown(Map<String, dynamic> m) {
-  if (m['call_done'] == true) return m['contact_unlocked'] == true ? 'Numbers unlocked' : 'Call done';
+  if (m['call_done'] == true) return m['contact_unlocked'] == true ? 'Numbers unlocked' : 'Voice notes swapped';
+  if (m['text_locked'] == true) return 'Voice note needed';
+  if (m['voice_theirs'] == true && m['voice_mine'] != true) return 'Voice note waiting';
   final h = hoursLeft(m);
-  return h <= 0 ? 'Expiring' : '${timeLeftLabel(h)} to call';
+  return '${timeLeftLabel(h)} for voice notes';
 }
 
 /// Colour for a deadline: red under 24h, amber under 2 days, ink otherwise.
