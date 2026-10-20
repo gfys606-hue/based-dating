@@ -10,6 +10,15 @@ import 'package:record/record.dart';
 import '../services/api.dart';
 import '../theme.dart';
 
+/// The icon for a gift on the shelf (gift_catalog.icon).
+IconData giftIcon(String? name) => switch (name) {
+      'local_bar' => Icons.local_bar,
+      'local_florist' => Icons.local_florist,
+      'album' => Icons.album,
+      'coffee' => Icons.coffee,
+      _ => Icons.card_giftcard,
+    };
+
 String _mmss(int ms) {
   final s = (ms / 1000).round();
   return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
