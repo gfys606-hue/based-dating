@@ -198,6 +198,23 @@ class Api {
 
   static Future<String> voiceUrl(String path) => db.storage.from('voice').createSignedUrl(path, 3600);
 
+  /// A voice note in a match chat. Stored privately: only the two of you can play it.
+  static Future<void> sendVoice(String matchId, Uint8List bytes, int durationMs, {required bool webm}) async {
+    final path = '$matchId/$me/${DateTime.now().millisecondsSinceEpoch}.${webm ? 'webm' : 'm4a'}';
+    await db.storage.from('voice-notes').uploadBinary(path, bytes,
+        fileOptions: FileOptions(contentType: webm ? 'audio/webm' : 'audio/mp4'));
+    await db.from('messages').insert({
+      'match_id': matchId,
+      'sender_id': me,
+      'body': 'Voice note',
+      'kind': 'voice',
+      'audio_path': path,
+      'duration_ms': durationMs,
+    });
+  }
+
+  static Future<String> voiceNoteUrl(String path) => db.storage.from('voice-notes').createSignedUrl(path, 3600);
+
   static Future<void> setStance(String statement) => db.rpc('set_stance', params: {'p_statement': statement});
 
   /// verdict: 'agree', 'disagree', or '' to clear.
