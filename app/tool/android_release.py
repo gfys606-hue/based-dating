@@ -46,6 +46,29 @@ if 'create("release")' not in s:
     )
     if n != 1:
         sys.exit("could not set release signing")
+    # make sure the keep rules below are used by the release build
+    s = s.replace(
+        'signingConfigs.getByName("release") else signingConfigs.getByName("debug")',
+        'signingConfigs.getByName("release") else signingConfigs.getByName("debug")\n'
+        '            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")',
+        1,
+    )
 
 gradle.write_text(s)
+
+# Release builds are shrunk (R8). Keep the plugins' native classes, or a plugin can lose methods the app
+# calls at startup (seen Oct 20 2026: shared_preferences NoSuchMethodError SharedPreferencesApiRegistrar.getAll,
+# which left the app stuck on the launch logo). Flutter applies app/proguard-rules.pro automatically.
+Path("android/app/proguard-rules.pro").write_text("""# Based: keep Flutter plugin classes intact in release builds
+-keep class io.flutter.plugins.** { *; }
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+-keep class dev.flutter.pigeon.** { *; }
+-keep class xyz.luan.audioplayers.** { *; }
+-keep class com.llfbandit.record.** { *; }
+-keep class com.baseflow.geolocator.** { *; }
+-keep class io.flutter.plugins.firebase.** { *; }
+-keep class io.livekit.** { *; }
+-keep class org.webrtc.** { *; }
+-dontwarn io.flutter.embedding.**
+""")
 print(f"Android release config ready: {APP_ID}")
