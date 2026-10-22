@@ -21,6 +21,17 @@ class InvitesApi {
   static Future<Map<String, dynamic>> joinWaitlist(String email, {String? name, String? note, String? city}) async =>
       _map(await _db.rpc('join_waitlist', params: {'p_email': email, 'p_name': name, 'p_note': note, 'p_city': city}));
 
+  // ---------- the public waitlist on the website (supabase/migrations/20261021000040_waitlist_site.sql) ----------
+  /// Open cities for the picker: [{slug, name, region, cap, members}]. Works signed out.
+  static Future<List<Map<String, dynamic>>> waitlistCities() async => _rows(await _db.rpc('waitlist_cities'));
+
+  /// No account needed. Never returns a place in line.
+  static Future<Map<String, dynamic>> joinWaitlistSite({required String email, required String city, String? ref, required bool adult}) async =>
+      _map(await _db.rpc('join_waitlist_site', params: {'p_email': email, 'p_city': city, 'p_ref': ref, 'p_adult': adult}));
+
+  /// Admin: cities people are asking for that aren't open yet
+  static Future<List<Map<String, dynamic>>> cityDemand() async => _rows(await _db.rpc('admin_city_demand'));
+
   /// The city's door (supabase/migrations/20261019000034_city_caps.sql). Works before signing in.
   /// {slug, name, cap, members, spots_left, waiting, next_drop: {spots, at}, my_status, my_position, my_vouched}
   static Future<Map<String, dynamic>?> cityDoor([String? city]) async {
