@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../services/invites_api.dart';
 import '../theme.dart';
+import '../brand.dart';
 
 String _clean(Object e) {
   final s = e.toString();
@@ -83,7 +84,7 @@ class _WaitlistSheetState extends State<_WaitlistSheet> {
                 Text(
                   done['city_open'] == true
                       ? 'We let people into ${done['city']} as spots open. We\'ll email you when yours does.'
-                      : 'Based isn\'t open in ${done['city']} yet. When it opens there, everyone on the list hears first.',
+                      : '${appName} isn\'t open in ${done['city']} yet. When it opens there, everyone on the list hears first.',
                   style: TextStyle(color: B.ink2, height: 1.45),
                 ),
                 if (done['ref_valid'] == true) ...[
