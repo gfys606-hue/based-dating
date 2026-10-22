@@ -355,6 +355,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   bool? _paidOpen;
   List<Map<String, dynamic>> _communities = [];
   List<Map<String, dynamic>> _cities = [];
+  List<Map<String, dynamic>> _demand = [];
 
   @override
   void initState() {
@@ -365,6 +366,9 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   Future<void> _load() async {
     CityApi.all().then((c) {
       if (mounted) setState(() => _cities = c);
+    }).catchError((_) {});
+    InvitesApi.cityDemand().then((d) {
+      if (mounted) setState(() => _demand = d);
     }).catchError((_) {});
     MembershipApi.mine().then((m) {
       if (mounted) setState(() => _paidOpen = m['open'] == true);
@@ -763,6 +767,14 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                 },
               ),
             ),
+          if (_demand.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            const SectionLabel('Cities asking for Based'),
+            const SizedBox(height: 4),
+            for (final d in _demand)
+              Text('${d['city']}: ${d['waiting']} waiting${(d['with_reference'] as int? ?? 0) > 0 ? ', ${d['with_reference']} with a member\'s reference' : ''}',
+                  style: TextStyle(color: B.ink2, fontSize: 13, height: 1.6)),
+          ],
           const SizedBox(height: 22),
           const SectionLabel('Sign-ups by source'),
           const SizedBox(height: 8),
@@ -784,8 +796,9 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
               contentPadding: EdgeInsets.zero,
               title: Text([w['name'], w['email']].whereType<String>().where((x) => x.isNotEmpty).join(' · ')),
               subtitle: Text([
-                if (w['city'] != null) w['city'] as String,
-                if ((w['vouches'] as int? ?? 0) > 0) 'vouched',
+                if (w['city'] != null) '${w['city']}${w['city_open'] == false ? ' (not open yet)' : ''}',
+                if (w['ref_valid'] == true) 'ref ${w['ref_code']}' else if ((w['vouches'] as int? ?? 0) > 0) 'vouched',
+                if (w['ref_code'] != null && w['ref_valid'] != true) 'ref ${w['ref_code']} didn\'t match',
                 if (w['status'] == 'admitted') 'let in by a spot drop',
                 if ((w['note'] as String?)?.isNotEmpty == true) w['note'] as String,
                 'since ${DateFormat('MMM d').format(DateTime.parse(w['created_at'] as String).toLocal())}',

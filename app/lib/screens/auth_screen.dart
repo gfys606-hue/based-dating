@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/api.dart';
 import '../theme.dart';
 import '../widgets/city_door.dart';
+import '../widgets/waitlist_sheet.dart';
 
 /// Email sign-in (free, built into Supabase).
 /// Supabase's default email contains a sign-in LINK. Once a custom email sender
@@ -194,7 +195,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ]),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => showWaitlistSheet(context),
+                  child: Text('No invite? Join the waitlist', style: TextStyle(color: B.goldInk, fontWeight: FontWeight.w700)),
+                ),
+                const SizedBox(height: 10),
               ]),
             ),
           ),
