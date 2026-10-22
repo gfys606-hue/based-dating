@@ -15,6 +15,7 @@ import 'services/push.dart';
 import 'theme.dart';
 import 'widgets/castle.dart';
 import 'widgets/door_intro.dart';
+import 'brand.dart';
 
 // Run with:
 // flutter run --dart-define=SUPABASE_URL=https://xxxx.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJ...
@@ -112,7 +113,7 @@ class _BootState extends State<_Boot> {
                   Text('$_step…', style: const TextStyle(color: ivory, fontSize: 13)),
                 ],
               ] else ...[
-                const Text('Based couldn\'t start', style: TextStyle(color: ivory, fontSize: 18, fontWeight: FontWeight.w700)),
+                const Text('${appName} couldn\'t start', style: TextStyle(color: ivory, fontSize: 18, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
                 SelectableText(_error!, textAlign: TextAlign.center, style: const TextStyle(color: B.onPanelMuted, fontSize: 13)),
                 const SizedBox(height: 16),
@@ -168,7 +169,7 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
     B.isDark = B.mode.value == ThemeMode.dark || (B.mode.value == ThemeMode.system && system == Brightness.dark);
     return MaterialApp(
       key: ValueKey('${B.isDark}-${B.palette.value}'), // light/dark or a theme change rebuilds every screen with the new colors
-      title: 'Based',
+      title: '${appName}',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: Push.messenger,
       navigatorObservers: [Diagnostics.observer],
