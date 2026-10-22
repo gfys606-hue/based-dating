@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/signed_photo.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
+import '../brand.dart';
 
 /// Home: "Your day". Everything that needs you comes first:
 /// your next call, replies waiting on you, deadlines, then new people and posts.
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(children: [
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('The door is not for everyone.', style: B.sloganStyle),
+                Text('${slogan}', style: B.sloganStyle),
                 // the city you're meeting people in (pick it in Edit profile)
                 ValueListenableBuilder(
                   valueListenable: CityApi.current,

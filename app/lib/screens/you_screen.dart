@@ -171,6 +171,21 @@ class YouScreen extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: B.cardBox(),
+          child: FutureBuilder(
+            future: Api.myProfile(),
+            builder: (context, snap) => _ProfileSwitch(
+              key: ValueKey('rm${snap.data?['room_meets']}'),
+              field: 'room_meets',
+              initial: snap.data?['room_meets'] != false,
+              title: 'Same-room heads-ups',
+              on: 'When another member checks in where you are, you both get a heads-up (age and interests only).',
+              off: 'Off: no heads-ups, and nobody gets one about you.',
+            ),
+          ),
+        ),
         const SizedBox(height: 20),
         const SectionLabel('Appearance'),
         const SizedBox(height: 10),
@@ -284,6 +299,36 @@ class _TravellerSwitchState extends State<_TravellerSwitch> {
             await Api.updateProfile({'traveler_messages': v});
           } catch (_) {
             if (mounted) setState(() => _on = !v);
+          }
+        },
+      );
+}
+
+/// A simple on/off profile setting.
+class _ProfileSwitch extends StatefulWidget {
+  const _ProfileSwitch({super.key, required this.field, required this.initial, required this.title, required this.on, required this.off});
+  final String field;
+  final bool initial;
+  final String title;
+  final String on;
+  final String off;
+  @override
+  State<_ProfileSwitch> createState() => _ProfileSwitchState();
+}
+
+class _ProfileSwitchState extends State<_ProfileSwitch> {
+  late bool _v = widget.initial;
+  @override
+  Widget build(BuildContext context) => SwitchListTile(
+        value: _v,
+        title: Text(widget.title),
+        subtitle: Text(_v ? widget.on : widget.off),
+        onChanged: (v) async {
+          setState(() => _v = v);
+          try {
+            await Api.updateProfile({widget.field: v});
+          } catch (_) {
+            if (mounted) setState(() => _v = !v);
           }
         },
       );

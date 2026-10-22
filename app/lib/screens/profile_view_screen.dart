@@ -7,6 +7,7 @@ import '../widgets/friend_button.dart';
 import '../widgets/report_sheet.dart';
 import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
+import '../brand.dart';
 
 /// A profile = photos + interests (shared ones highlighted) + recent activity. No bio.
 class ProfileViewScreen extends StatelessWidget {
@@ -32,7 +33,7 @@ class ProfileViewScreen extends StatelessWidget {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: Text('Block $name?'),
-                    content: const Text('You won\'t see each other anywhere on Based. They aren\'t told.'),
+                    content: const Text('You won\'t see each other anywhere on ${appName}. They aren\'t told.'),
                     actions: [
                       TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
                       FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('BLOCK')),

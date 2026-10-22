@@ -9,6 +9,7 @@ import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
 import '../widgets/ui.dart';
 import 'unedited_screen.dart';
+import '../brand.dart';
 
 /// Edit profile: photos (replace, delete 4–6, reorder), name, interests, feed distance.
 class EditProfileScreen extends StatefulWidget {
@@ -164,7 +165,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       if (lately.isNotEmpty) ...[
         const SizedBox(height: 6),
-        Text('Filled in automatically from what you do on Based.', style: TextStyle(color: B.muted, fontSize: 12)),
+        Text('Filled in automatically from what you do on ${appName}.', style: TextStyle(color: B.muted, fontSize: 12)),
       ],
     ]);
   }
@@ -360,7 +361,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 6),
                   Text(
                     _cities.length <= 1
-                        ? 'Based is only in ${_cities.isEmpty ? 'one city' : _cities.first['name']} for now. More cities open as it grows.'
+                        ? '${appName} is only in ${_cities.isEmpty ? 'one city' : _cities.first['name']} for now. More cities open as it grows.'
                         : 'Ouch shows you people in this city.',
                     style: TextStyle(color: B.muted, fontSize: 12.5),
                   ),

@@ -9,6 +9,7 @@ import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
 import 'music_screen.dart';
+import '../brand.dart';
 
 String _err(Object e) {
   final s = e.toString();
@@ -256,7 +257,7 @@ class _PeopleTabState extends State<_PeopleTab> {
       builder: (ctx) => AlertDialog(
         title: Text('Ask to bar ${p['name']}?'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('Based reviews every request. A first bar lasts 30 days; a second one here is indefinite. '
+          Text('${appName} reviews every request. A first bar lasts 30 days; a second one here is indefinite. '
               'They\'re told the venue asked, not who.',
               style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
           const SizedBox(height: 10),
@@ -393,7 +394,7 @@ class _PassesTabState extends State<_PassesTab> {
   }
 
   String _sheetText(List<String> codes) => [
-        'Based passes from ${widget.name}',
+        '${appName} passes from ${widget.name}',
         'Get the app at based-social.com and enter your code. Each code works once.',
         '',
         ...codes,
@@ -439,7 +440,7 @@ class _PassesTabState extends State<_PassesTab> {
       child: ListView(padding: const EdgeInsets.all(16), children: [
         Text(
             'Hand these out however you like: regulars, staff, a card by the till. '
-            'Based is invite-only, so a pass from you is how people get in. '
+            '${appName} is invite-only, so a pass from you is how people get in. '
             'Anyone who joins with one carries your badge.',
             style: TextStyle(color: B.muted, height: 1.4)),
         const SizedBox(height: 14),
@@ -468,7 +469,7 @@ class _PassesTabState extends State<_PassesTab> {
         ]),
         if (left == 0 && unused.isEmpty) ...[
           const SizedBox(height: 8),
-          Text('That\'s all of them for now. Based may add more later.', style: TextStyle(color: B.muted, fontSize: 12.5)),
+          Text('That\'s all of them for now. ${appName} may add more later.', style: TextStyle(color: B.muted, fontSize: 12.5)),
         ],
         const SizedBox(height: 18),
         if (unused.isNotEmpty) ...[
@@ -581,7 +582,7 @@ class _MyBarsScreenState extends State<MyBarsScreen> {
             final b = snap.data;
             if (b == null) return const Center(child: CircularProgressIndicator());
             return ListView(padding: const EdgeInsets.all(18), children: [
-              Text('Venues can ask Based to keep someone away after trouble. Every request is reviewed by a person. '
+              Text('Venues can ask ${appName} to keep someone away after trouble. Every request is reviewed by a person. '
                   'Bars from 3 unrelated venues in a year show on your profile; they fade after 12 months or if an appeal succeeds.',
                   style: TextStyle(color: B.muted, fontSize: 13, height: 1.45)),
               const SizedBox(height: 14),

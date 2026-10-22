@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/ui.dart';
 import 'admin_review_screen.dart';
 import 'problems_screen.dart';
+import 'insights_screen.dart';
 
 /// Admin → Activity: are people using it, are they connecting, and where do they get stuck.
 /// Everything comes from one server call that only admins can make.
@@ -52,7 +53,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Activity', style: B.heading(22)),
-        actions: [IconButton(tooltip: 'Refresh', icon: const Icon(Icons.refresh), onPressed: _load)],
+        actions: [
+          IconButton(
+            tooltip: 'Insights',
+            icon: const Icon(Icons.insights),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InsightsScreen())),
+          ),
+          IconButton(tooltip: 'Refresh', icon: const Icon(Icons.refresh), onPressed: _load),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,

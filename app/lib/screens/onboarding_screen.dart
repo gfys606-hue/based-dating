@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
 import '../theme.dart';
+import '../brand.dart';
 
 /// Onboarding — target under 3 minutes. No bio, pronouns, job, or height.
 /// Steps: basics → selfie → photos → interests → 3 scenarios → availability → location → rules
@@ -275,7 +276,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ]);
 
   Widget _rules() => ListView(children: [
-        _h('How Based works'),
+        _h('How ${appName} works'),
         _rule('Talk to your matches', 'People who actually engage get seen. People who collect matches and ghost slowly stop being shown.'),
         _rule('Swap voice notes', 'Text freely for 3 days. After a reminder you get one more day, then texting pauses until you\'ve both sent a voice note.'),
         _rule('Not feeling it? Just say so', 'One tap ends a match politely. It never counts against you.'),

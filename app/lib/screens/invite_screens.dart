@@ -11,6 +11,7 @@ import '../services/push.dart';
 import '../theme.dart';
 import '../widgets/city_door.dart';
 import '../widgets/ui.dart';
+import '../brand.dart';
 
 String _clean(Object e) {
   final s = e.toString();
@@ -113,7 +114,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
           const SizedBox(height: 8),
           TextField(controller: name, decoration: const InputDecoration(hintText: 'First name')),
           const SizedBox(height: 8),
-          TextField(controller: note, decoration: const InputDecoration(hintText: 'Who or where did you hear about Based? (optional)')),
+          TextField(controller: note, decoration: const InputDecoration(hintText: 'Who or where did you hear about ${appName}? (optional)')),
           const SizedBox(height: 14),
           FilledButton(
             onPressed: () async {
@@ -131,7 +132,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
     );
     if (ok != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('You\'re on the list. Open Based when the next spots drop.')));
+          content: Text('You\'re on the list. Open ${appName} when the next spots drop.')));
       _loadDoor();
     }
   }
@@ -147,10 +148,10 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
             child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(28), children: [
               Text('BASED', textAlign: TextAlign.center, style: B.label.copyWith(color: B.gold, fontSize: 13, letterSpacing: 6)),
               const SizedBox(height: 18),
-              Text('The door is not for everyone.',
+              Text('${slogan}',
                   textAlign: TextAlign.center, style: B.sloganStyle.copyWith(fontSize: 30, color: Colors.white)),
               const SizedBox(height: 14),
-              Text('Based is invite only. Enter the code you were given by a member or at a venue.',
+              Text('${appName} is invite only. Enter the code you were given by a member or at a venue.',
                   textAlign: TextAlign.center, style: TextStyle(color: B.onPanelMuted, height: 1.45)),
               if (_door != null) ...[
                 const SizedBox(height: 16),
@@ -240,7 +241,7 @@ class _MyInvitesScreenState extends State<MyInvitesScreen> {
     } catch (_) {}
   }
 
-  String _share(String code) => 'You\'re invited to Based. Your code: $code\nGet the app at based-social.com/test';
+  String _share(String code) => 'You\'re invited to ${appName}. Your code: $code\nGet the app at based-social.com/test';
 
   Future<void> _create() async {
     setState(() => _busy = true);
@@ -624,7 +625,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
       final code = await InvitesApi.admit(w['id'] as int);
       await _load();
       final email = w['email'] as String;
-      final body = Uri.encodeComponent('You\'re in. Your Based code: $code\n\nGet the app at based-social.com/test and enter it when you sign up.');
+      final body = Uri.encodeComponent('You\'re in. Your ${appName} code: $code\n\nGet the app at based-social.com/test and enter it when you sign up.');
       await launchUrl(Uri.parse('mailto:$email?subject=${Uri.encodeComponent('Your invite to Based')}&body=$body'));
       if (mounted) _copy(context, code, 'Code $code copied (and an email draft opened)');
     } catch (e) {
@@ -769,7 +770,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
             ),
           if (_demand.isNotEmpty) ...[
             const SizedBox(height: 14),
-            const SectionLabel('Cities asking for Based'),
+            const SectionLabel('Cities asking for ${appName}'),
             const SizedBox(height: 4),
             for (final d in _demand)
               Text('${d['city']}: ${d['waiting']} waiting${(d['with_reference'] as int? ?? 0) > 0 ? ', ${d['with_reference']} with a member\'s reference' : ''}',

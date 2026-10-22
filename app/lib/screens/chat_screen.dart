@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/ui.dart';
 import '../widgets/voice_note.dart';
 import 'profile_view_screen.dart';
+import '../brand.dart';
 
 /// Chat for one match: icebreaker, the voice-note swap (texting pauses on day 4 until you've both
 /// sent one), "Not feeling it", report/block, and number sharing once the swap is done.
@@ -155,7 +156,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text('Partner venues: public, staffed, and they know Based.', style: TextStyle(color: B.muted, fontSize: 13)),
+            child: Text('Partner venues: public, staffed, and they know ${appName}.', style: TextStyle(color: B.muted, fontSize: 13)),
           ),
           if (list.isEmpty)
             Padding(

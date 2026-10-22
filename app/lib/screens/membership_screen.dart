@@ -8,6 +8,7 @@ import '../services/places_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'travel_screen.dart';
+import '../brand.dart';
 
 String _clean(Object e) {
   final s = e.toString();
@@ -190,7 +191,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                     style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
                 const SizedBox(height: 16),
                 Text(
-                  'Based has no ads. Partner venues you see are places that work with us. '
+                  '${appName} has no ads. Partner venues you see are places that work with us. '
                   'Paying never changes who sees you or how you rank.',
                   style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4),
                 ),

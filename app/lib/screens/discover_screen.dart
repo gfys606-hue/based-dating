@@ -10,6 +10,8 @@ import '../widgets/ui.dart';
 import 'feed_screen.dart';
 import 'membership_screen.dart';
 import 'profile_view_screen.dart';
+import '../brand.dart';
+import 'browse_screen.dart';
 
 /// Discover: People (as Cards or on the Radar) or Posts.
 /// Later this becomes the one search for everything (people, posts, products, places).
@@ -134,7 +136,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       Padding(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Discover', style: B.display(32)),
+          Row(children: [
+            Expanded(child: Text('Discover', style: B.display(32))),
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BrowseScreen())),
+              icon: const Icon(Icons.travel_explore, size: 18),
+              label: const Text('Browse'),
+            ),
+          ]),
           const SizedBox(height: 12),
           Row(children: [
             PillChip(label: 'Ouch', selected: !posts, onTap: () => widget.mode.value = 0),
@@ -413,7 +422,7 @@ class _DatingOff extends StatelessWidget {
             Text('Ouch is off', style: B.heading(24).copyWith(color: Colors.white)),
             const SizedBox(height: 6),
             Text(
-              'Ouch is dating on Based. Turn it on to see people who might interest you. Only people who also '
+              'Ouch is dating on ${appName}. Turn it on to see people who might interest you. Only people who also '
               'have Ouch on can see you here, or see that yours is on. Everyone else just sees you as a member.',
               style: TextStyle(color: B.onPanelMuted, height: 1.45),
             ),

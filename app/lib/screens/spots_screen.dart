@@ -8,6 +8,9 @@ import '../theme.dart';
 import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
 import 'music_screen.dart';
+import 'profile_view_screen.dart';
+import '../services/rooms_api.dart';
+import '../brand.dart';
 
 /// Spots: who's out right now ("Here now"), and your watering holes.
 /// Posting a night out from a saved spot is three taps: spot → time → send.
@@ -22,6 +25,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
   List<Map<String, dynamic>> _here = [];
   List<Map<String, dynamic>> _spots = [];
   List<Map<String, dynamic>> _partners = [];
+  List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
 
   @override
@@ -51,6 +55,10 @@ class _SpotsScreenState extends State<SpotsScreen> {
     try {
       final p = await VenueApi.partners();
       if (mounted) setState(() => _partners = p);
+    } catch (_) {}
+    try {
+      final r = await RoomsApi.mine();
+      if (mounted) setState(() => _rooms = r);
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
@@ -112,6 +120,15 @@ class _SpotsScreenState extends State<SpotsScreen> {
           const SizedBox(height: 10),
           if (mine != null) _myCheckin(mine) else _checkinButton(),
           const SizedBox(height: 12),
+          if (_rooms.isNotEmpty) ...[
+            SectionLabel('Same room', color: B.accentStrong),
+            const SizedBox(height: 4),
+            Text('Members checked in where you are. Say yes and if they do too, you both see who it is.',
+                style: TextStyle(color: B.muted, fontSize: 12.5)),
+            const SizedBox(height: 8),
+            for (final r in _rooms) _roomCard(r),
+            const SizedBox(height: 12),
+          ],
           if (friends.isNotEmpty) ...[
             PlaceMap(
               height: 210,
@@ -146,7 +163,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
             const SizedBox(height: 24),
             SectionLabel('Partner venues', color: B.accentStrong),
             const SizedBox(height: 4),
-            Text('They work with Based: ask for a table when your herd heads out.',
+            Text('They work with ${appName}: ask for a table when your herd heads out.',
                 style: TextStyle(color: B.muted, fontSize: 12.5)),
             const SizedBox(height: 6),
             for (final p in _partners)
@@ -164,6 +181,96 @@ class _SpotsScreenState extends State<SpotsScreen> {
               ),
           ],
         ],
+      ),
+    );
+  }
+
+  Future<void> _answerRoom(Map<String, dynamic> r, bool yes) async {
+    try {
+      final both = await RoomsApi.answer(r['id'] as String, yes);
+      if (both) _toast('You both said yes. Go say hi.');
+    } catch (e) {
+      _toast('That one has passed.');
+    }
+    _load();
+  }
+
+  Future<void> _followup(Map<String, dynamic> r, bool met, bool friend) async {
+    try {
+      final res = await RoomsApi.followup(r['id'] as String, met: met, friend: friend);
+      _toast(res == 'friends' ? 'You\'re friends now.' : 'Thanks. Saved.');
+    } catch (_) {}
+    _load();
+  }
+
+  /// A same-room heads-up: partial profile (age + interests) until you both say yes.
+  Widget _roomCard(Map<String, dynamic> r) {
+    final shared = (r['shared'] as List? ?? const []).cast<String>();
+    final interests = (r['interests'] as List? ?? const []).cast<String>();
+    final matched = r['matched'] == true;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: B.cardBox(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            if (matched) ...[Avatar(path: r['other_photo'] as String?, size: 40), const SizedBox(width: 10)]
+            else ...[
+              CircleAvatar(radius: 20, backgroundColor: B.fill, child: Icon(Icons.question_mark, color: B.muted, size: 18)),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Text(
+                matched ? '${r['other_name']}, ${r['other_age']} · at ${r['place']}' : 'Someone, ${r['other_age']} · at ${r['place']}',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for (final t in interests)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: shared.contains(t) ? B.accentSoft : B.fill,
+                  borderRadius: BorderRadius.circular(B.radius),
+                  border: shared.contains(t) ? Border.all(color: B.accent) : null,
+                ),
+                child: Text(t, style: TextStyle(fontSize: 12, fontWeight: shared.contains(t) ? FontWeight.w700 : FontWeight.w500)),
+              ),
+          ]),
+          if (shared.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text('You\'re both into ${shared.join(', ')}', style: TextStyle(color: B.goldInk, fontSize: 12.5)),
+            ),
+          const SizedBox(height: 8),
+          if (!matched && r['my_answer'] == null)
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              TextButton(onPressed: () => _answerRoom(r, false), child: const Text('Not tonight')),
+              const SizedBox(width: 6),
+              FilledButton(onPressed: () => _answerRoom(r, true), child: const Text('I\'D SAY HI')),
+            ])
+          else if (!matched)
+            Text('You said yes. If they do too, you\'ll both see who it is.', style: TextStyle(color: B.muted, fontSize: 12.5))
+          else if (r['ask_followup'] == true)
+            Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              Text('Did you meet?', style: TextStyle(color: B.ink2, fontWeight: FontWeight.w700)),
+              OutlinedButton(onPressed: () => _followup(r, false, false), child: const Text('We didn\'t')),
+              OutlinedButton(onPressed: () => _followup(r, true, false), child: const Text('Yes')),
+              FilledButton(onPressed: () => _followup(r, true, true), child: const Text('YES, LET\'S BE FRIENDS')),
+            ])
+          else
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ProfileViewScreen(userId: r['other_id'] as String),
+                )),
+                child: const Text('SEE PROFILE · ADD FRIEND'),
+              ),
+            ]),
+        ]),
       ),
     );
   }
