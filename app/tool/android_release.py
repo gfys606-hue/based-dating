@@ -56,6 +56,12 @@ if 'create("release")' not in s:
 
 gradle.write_text(s)
 
+# The name under the icon comes from lib/brand.dart
+manifest = Path("android/app/src/main/AndroidManifest.xml")
+if manifest.exists():
+    name = re.search(r"appName = '([^']+)'", Path("lib/brand.dart").read_text()).group(1)
+    manifest.write_text(re.sub(r'android:label="[^"]*"', f'android:label="{name}"', manifest.read_text(), count=1))
+
 # Release builds are shrunk (R8). Keep the plugins' native classes, or a plugin can lose methods the app
 # calls at startup (seen Oct 20 2026: shared_preferences NoSuchMethodError SharedPreferencesApiRegistrar.getAll,
 # which left the app stuck on the launch logo). Flutter applies app/proguard-rules.pro automatically.

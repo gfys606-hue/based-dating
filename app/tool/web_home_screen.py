@@ -8,6 +8,11 @@ Run from app/ after `flutter create` and `dart run flutter_launcher_icons`:
 import json
 import re
 
+# The name and slogan come from lib/brand.dart, the one place the app's name lives
+_brand = open("lib/brand.dart").read()
+NAME = re.search(r"appName = '([^']+)'", _brand).group(1)
+SLOGAN = re.search(r"slogan = '([^']+)'", _brand).group(1)
+
 INDEX = "web/index.html"
 MANIFEST = "web/manifest.json"
 NAVY = "#110B07"  # dark walnut (name kept for history)
@@ -25,15 +30,15 @@ for pat in [
 ]:
     html = re.sub(pat, "", html)
 
-html = re.sub(r"<title>.*?</title>", "<title>Based</title>", html, flags=re.S)
+html = re.sub(r"<title>.*?</title>", f"<title>{NAME}</title>", html, flags=re.S)
 html = re.sub(r'<meta name="description" content="[^"]*">',
-              '<meta name="description" content="Based. The door is not for everyone.">', html)
+              f'<meta name="description" content="{NAME}. {SLOGAN}">', html)
 
 head = f"""
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Based">
+  <meta name="apple-mobile-web-app-title" content="{NAME}">
   <meta name="theme-color" content="{NAVY}">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
@@ -43,9 +48,9 @@ open(INDEX, "w").write(html)
 
 m = json.load(open(MANIFEST))
 m.update({
-    "name": "Based",
-    "short_name": "Based",
-    "description": "Based. The door is not for everyone.",
+    "name": NAME,
+    "short_name": NAME,
+    "description": f"{NAME}. {SLOGAN}",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
