@@ -72,9 +72,6 @@ class MembershipApi {
   // ---------- admin ----------
   static Future<List<Map<String, dynamic>>> members({String? query}) async =>
       _rows(await _db.rpc('admin_members', params: {'p_query': (query ?? '').trim().isEmpty ? null : query!.trim()}));
-  /// Owner: give or take away every module (Herd, Events, plans) for one person.
-  static Future<void> setAllModules(String userId, bool on) =>
-      _db.rpc('admin_set_tester', params: {'p_user': userId, 'p_on': on});
   static Future<void> grant(String userId, String tier, {int days = 30}) =>
       _db.rpc('admin_grant_membership', params: {'p_user': userId, 'p_tier': tier, 'p_days': days});
   static Future<void> setOpen(bool on) => _db.rpc('admin_set_memberships_open', params: {'p_on': on});
