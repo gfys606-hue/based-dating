@@ -22,7 +22,7 @@ class MembershipApi {
   static Future<List<Map<String, dynamic>>> gifts() async =>
       _rows(await _db.from('gift_catalog').select('code, name, icon, price_cents').eq('active', true).order('sort'));
 
-  /// Sends a gift into a match chat. Free during early access; otherwise opens checkout and the
+  /// Sends a gift into a match chat. Free (3 a day) until paid plans open; otherwise opens checkout and the
   /// gift arrives once it's paid. Returns true if it was sent right away.
   static Future<bool> sendGift(String matchId, String gift, {String? note}) async {
     final r = _map(await _db.rpc('send_gift', params: {'p_match': matchId, 'p_gift': gift, 'p_note': note}));
@@ -72,6 +72,9 @@ class MembershipApi {
   // ---------- admin ----------
   static Future<List<Map<String, dynamic>>> members({String? query}) async =>
       _rows(await _db.rpc('admin_members', params: {'p_query': (query ?? '').trim().isEmpty ? null : query!.trim()}));
+  /// Owner: give or take away every module (Herd, Events, plans) for one person.
+  static Future<void> setAllModules(String userId, bool on) =>
+      _db.rpc('admin_set_tester', params: {'p_user': userId, 'p_on': on});
   static Future<void> grant(String userId, String tier, {int days = 30}) =>
       _db.rpc('admin_grant_membership', params: {'p_user': userId, 'p_tier': tier, 'p_days': days});
   static Future<void> setOpen(bool on) => _db.rpc('admin_set_memberships_open', params: {'p_on': on});
