@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/auth_screen.dart';
-import 'screens/home_shell.dart';
 import 'screens/invite_screens.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/paused_screen.dart';
@@ -222,9 +221,8 @@ class _StatusRouterState extends State<_StatusRouter> {
         final status = p?['status'] as String? ?? 'onboarding';
         switch (status) {
           case 'active':
-            // Testers see the full Based Social platform (module tabs on the left).
-            if (p?['is_tester'] == true || p?['is_admin'] == true) return PlatformShell(onStatusChanged: _refresh);
-            return HomeShell(onStatusChanged: _refresh);
+            // One app for everyone: dating and every social part on the left rail.
+            return PlatformShell(onStatusChanged: _refresh);
           case 'paused':
           case 'suspended':
           case 'banned':
