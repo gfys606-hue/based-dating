@@ -381,7 +381,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
           _stats = r[0] as List<Map<String, dynamic>>;
           _wait = r[1] as List<Map<String, dynamic>>;
           _inviteOnly = (r[2] as Map<String, dynamic>)['invite_only'] == true;
-          _fullAccess = (r[2] as Map<String, dynamic>)['full_access_for_new'] != false;
+          _fullAccess = (r[2] as Map<String, dynamic>)['full_access_for_new'] == true;
           _activityLight = (r[2] as Map<String, dynamic>)['show_activity_light'] == true;
           _communities = r[3] as List<Map<String, dynamic>>;
         });
@@ -655,11 +655,11 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            value: _fullAccess ?? true,
+            value: _fullAccess ?? false,
             title: const Text('Full access for new members'),
-            subtitle: Text(_fullAccess == false
-                ? 'New members get Ouch (dating) only. Herd, Events and plans stay for testers.'
-                : 'Anyone who joins with a code gets Herd, Events and plans too.'),
+            subtitle: Text(_fullAccess == true
+                ? 'Anyone who joins with a code gets Herd, Events and plans too.'
+                : 'Off: new members get Ouch (dating) only. Give more per person in Memberships.'),
             onChanged: _fullAccess == null
                 ? null
                 : (v) async {
@@ -921,15 +921,17 @@ class _CompSheetState extends State<_CompSheet> {
   }
 
   Future<void> _grant(Map<String, dynamic> r) async {
+    if (r['is_owner'] == true) return; // the owner always has everything
     final pick = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(title: Text(r['name'] as String? ?? 'Member', style: B.heading(20))),
-          for (final o in const [
+          for (final o in [
             ['premium:30', 'Premium for 30 days'],
             ['premium:365', 'Premium for a year'],
             ['free:0', 'Remove comp'],
+            if (r['all_modules'] == true) ['modules:off', 'Take away all modules'] else ['modules:on', 'All modules (Herd, Events, plans)'],
           ])
             ListTile(title: Text(o[1]), onTap: () => Navigator.pop(ctx, o[0])),
         ]),
@@ -938,6 +940,11 @@ class _CompSheetState extends State<_CompSheet> {
     if (pick == null) return;
     final parts = pick.split(':');
     try {
+      if (parts[0] == 'modules') {
+        await MembershipApi.setAllModules(r['user_id'] as String, parts[1] == 'on');
+        _search();
+        return;
+      }
       await MembershipApi.grant(r['user_id'] as String, parts[0], days: int.parse(parts[1]));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
@@ -954,7 +961,7 @@ class _CompSheetState extends State<_CompSheet> {
             child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(18), children: [
               Text('Memberships', style: B.heading(22)),
               const SizedBox(height: 4),
-              Text('Paying and comped members. Search anyone by name or email to comp them.',
+              Text('Everyone starts as a new member. Search anyone by name or email to give them Premium or all modules.',
                   style: TextStyle(color: B.muted, fontSize: 13)),
               const SizedBox(height: 10),
               TextField(
@@ -972,8 +979,9 @@ class _CompSheetState extends State<_CompSheet> {
                   title: Text(r['name'] as String? ?? '(no profile)'),
                   subtitle: Text([
                     r['email'] ?? '',
-                    r['tier'] == 'free' ? 'Free' : 'Premium',
-                    if (r['source'] == 'admin') 'comped',
+                    if (r['is_owner'] == true) 'Owner · everything' else r['tier'] == 'free' ? 'Free' : 'Premium',
+                    if (r['source'] == 'admin' && r['is_owner'] != true) 'comped',
+                    if (r['all_modules'] == true && r['is_owner'] != true) 'all modules',
                     if (r['until'] != null) 'until ${DateFormat('MMM d, y').format(DateTime.parse(r['until'] as String).toLocal())}',
                   ].where((s) => '$s'.isNotEmpty).join(' · ')),
                   trailing: const Icon(Icons.chevron_right),

@@ -80,7 +80,7 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
     final m = _m;
     final tier = m?['tier'] as String? ?? 'free';
     final open = m?['open'] == true;
-    final canTravel = m?['premium'] == true; // premium, or everyone during early access
+    final canTravel = m?['premium'] == true; // Premium members and the owner
     final travel = m?['travel'] as Map?;
     final fmt = DateFormat('MMM d');
     String? when(String k) => m?[k] == null ? null : fmt.format(DateTime.parse(m![k] as String).toLocal());
@@ -92,14 +92,14 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(padding: const EdgeInsets.all(18), children: [
-                if (!open) ...[
+                if (!open && m['owner'] != true) ...[
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Free during early access', style: B.heading(24).copyWith(color: Colors.white)),
+                      Text('Premium is coming', style: B.heading(24).copyWith(color: Colors.white)),
                       const SizedBox(height: 4),
-                      Text('Every Premium perk is on for you now, and gifts are free (3 a day). '
+                      Text('Paid plans aren\'t open yet. Gifts are free for now (3 a day). '
                           'The plan below is what\'s coming. Nothing is charged.',
                           style: TextStyle(color: B.onPanelMuted, height: 1.4)),
                     ]),
@@ -111,16 +111,18 @@ class _MembershipScreenState extends State<MembershipScreen> with WidgetsBinding
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('You\'re Premium', style: B.heading(24).copyWith(color: Colors.white)),
+                      Text(m['owner'] == true ? 'You have everything' : 'You\'re Premium', style: B.heading(24).copyWith(color: Colors.white)),
                       const SizedBox(height: 4),
                       Text(
                         when('ends') != null
                             ? 'Ends ${when('ends')}. You keep everything until then.'
                             : when('renews') != null
                                 ? 'Renews ${when('renews')}.'
-                                : m['source'] == 'admin'
-                                    ? 'On the house.'
-                                    : '',
+                                : m['source'] == 'owner'
+                                    ? 'Owner access. Everything is on, always.'
+                                    : m['source'] == 'admin'
+                                        ? 'On the house.'
+                                        : '',
                         style: TextStyle(color: B.onPanelMuted),
                       ),
                       if (m['has_billing'] == true) ...[
