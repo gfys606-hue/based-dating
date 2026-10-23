@@ -223,7 +223,7 @@ class _StatusRouterState extends State<_StatusRouter> {
         switch (status) {
           case 'active':
             // Testers see the full Based Social platform (module tabs on the left).
-            if (p?['is_tester'] == true) return PlatformShell(onStatusChanged: _refresh);
+            if (p?['is_tester'] == true || p?['is_admin'] == true) return PlatformShell(onStatusChanged: _refresh);
             return HomeShell(onStatusChanged: _refresh);
           case 'paused':
           case 'suspended':
