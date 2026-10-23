@@ -63,6 +63,14 @@ class InvitesApi {
     return List<String>.from(r as List);
   }
 
+  /// Owner: single-use tester codes (all modules, plus Premium for [premiumDays] if > 0).
+  static Future<List<String>> createTesterCodes({int count = 1, int premiumDays = 90}) async {
+    final r = await _db.rpc('admin_create_tester_codes', params: {'p_count': count, 'p_premium_days': premiumDays});
+    return List<String>.from(r as List);
+  }
+
+  static Future<List<Map<String, dynamic>>> testerCodes() async => _rows(await _db.rpc('admin_tester_codes'));
+
   static Future<List<Map<String, dynamic>>> stats() async => _rows(await _db.rpc('admin_invite_stats'));
   static Future<List<Map<String, dynamic>>> codes(String label) async =>
       _rows(await _db.rpc('admin_list_codes', params: {'p_label': label}));
