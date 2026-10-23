@@ -15,6 +15,7 @@ import '../services/venue_api.dart';
 import '../services/invites_api.dart';
 import '../services/membership_api.dart';
 import 'profile_view_screen.dart';
+import 'tester_invites_screen.dart';
 
 /// Green / yellow / red: how visible your activity is keeping you, with one tip.
 /// Hidden unless Based switches it on in The door.
@@ -135,6 +136,9 @@ class YouScreen extends StatelessWidget {
                 future: Api.myProfile(),
                 builder: (context, snap) => snap.data?['is_admin'] == true
                     ? Column(children: [
+                        Divider(height: 1, color: B.fill),
+                        row(Icons.science_outlined, 'Invite testers (admin)',
+                            () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TesterInvitesScreen()))),
                         Divider(height: 1, color: B.fill),
                         row(Icons.insights_outlined, 'Activity (admin)',
                             () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityScreen()))),
