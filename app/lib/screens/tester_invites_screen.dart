@@ -8,7 +8,7 @@ import '../theme.dart';
 import '../widgets/ui.dart';
 
 /// Owner only (You → Invite testers): single-use codes that give the person who signs up with them
-/// all modules, plus Premium for a set time if chosen.
+/// Premium for a set time, if chosen. (Everyone gets the whole app.)
 /// (supabase/migrations/20261023000045_tester_codes.sql)
 class TesterInvitesScreen extends StatefulWidget {
   const TesterInvitesScreen({super.key});
@@ -100,8 +100,8 @@ class _TesterInvitesScreenState extends State<TesterInvitesScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(padding: const EdgeInsets.all(18), children: [
-          Text('Each code works once, for 30 days. Whoever signs up with it gets every module '
-              '(Herd, Events, plans)${_premiumDays > 0 ? ' and Premium for $_premiumDays days' : ''}.',
+          Text('Each code works once, for 30 days. Whoever signs up with it gets in'
+              '${_premiumDays > 0 ? ' with Premium for $_premiumDays days' : ''}.',
               style: TextStyle(color: B.muted, height: 1.4)),
           const SizedBox(height: 16),
           const SectionLabel('How many codes'),

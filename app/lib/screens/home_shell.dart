@@ -16,7 +16,7 @@ import 'spots_screen.dart';
 import 'talk_screen.dart';
 import 'you_screen.dart';
 
-/// An extra module page on the rail (testers: Circles, Search, Events, Market).
+/// An extra module page on the rail (Circles, Search, Events, Market).
 /// [build] gets `open(module)` so a page can jump to another module (1 Circles, 2 Search, 3 Events, 4 Market).
 class ShellPage {
   const ShellPage(this.item, this.build);

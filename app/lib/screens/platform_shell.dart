@@ -7,8 +7,7 @@ import 'home_shell.dart';
 import 'market_screen.dart';
 import 'search_screen.dart';
 
-/// Based Social (testers only): the dating tabs plus the other modules, all on one left rail.
-/// Everyone else gets the dating app on its own (HomeShell with no extras).
+/// The whole app, for every member: the dating tabs plus Herd, Search, Events and Market on one left rail.
 class PlatformShell extends StatelessWidget {
   const PlatformShell({super.key, required this.onStatusChanged});
   final VoidCallback onStatusChanged;

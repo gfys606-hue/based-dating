@@ -351,7 +351,6 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   List<Map<String, dynamic>> _stats = [];
   List<Map<String, dynamic>> _wait = [];
   bool? _inviteOnly;
-  bool? _fullAccess;
   bool? _activityLight;
   bool? _paidOpen;
   List<Map<String, dynamic>> _communities = [];
@@ -381,7 +380,6 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
           _stats = r[0] as List<Map<String, dynamic>>;
           _wait = r[1] as List<Map<String, dynamic>>;
           _inviteOnly = (r[2] as Map<String, dynamic>)['invite_only'] == true;
-          _fullAccess = (r[2] as Map<String, dynamic>)['full_access_for_new'] == true;
           _activityLight = (r[2] as Map<String, dynamic>)['show_activity_light'] == true;
           _communities = r[3] as List<Map<String, dynamic>>;
         });
@@ -655,20 +653,6 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            value: _fullAccess ?? false,
-            title: const Text('Full access for new members'),
-            subtitle: Text(_fullAccess == true
-                ? 'Anyone who joins with a code gets Herd, Events and plans too.'
-                : 'Off: new members get Ouch (dating) only. Give more per person in Memberships.'),
-            onChanged: _fullAccess == null
-                ? null
-                : (v) async {
-                    await InvitesApi.setFullAccess(v).catchError((_) {});
-                    _load();
-                  },
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
             value: _activityLight ?? false,
             title: const Text('Show members their activity light'),
             subtitle: Text(_activityLight == true
@@ -931,7 +915,6 @@ class _CompSheetState extends State<_CompSheet> {
             ['premium:30', 'Premium for 30 days'],
             ['premium:365', 'Premium for a year'],
             ['free:0', 'Remove comp'],
-            if (r['all_modules'] == true) ['modules:off', 'Take away all modules'] else ['modules:on', 'All modules (Herd, Events, plans)'],
           ])
             ListTile(title: Text(o[1]), onTap: () => Navigator.pop(ctx, o[0])),
         ]),
@@ -940,11 +923,6 @@ class _CompSheetState extends State<_CompSheet> {
     if (pick == null) return;
     final parts = pick.split(':');
     try {
-      if (parts[0] == 'modules') {
-        await MembershipApi.setAllModules(r['user_id'] as String, parts[1] == 'on');
-        _search();
-        return;
-      }
       await MembershipApi.grant(r['user_id'] as String, parts[0], days: int.parse(parts[1]));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
@@ -961,7 +939,7 @@ class _CompSheetState extends State<_CompSheet> {
             child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(18), children: [
               Text('Memberships', style: B.heading(22)),
               const SizedBox(height: 4),
-              Text('Everyone starts as a new member. Search anyone by name or email to give them Premium or all modules.',
+              Text('Everyone gets the whole app. Search anyone by name or email to give them Premium.',
                   style: TextStyle(color: B.muted, fontSize: 13)),
               const SizedBox(height: 10),
               TextField(
@@ -981,7 +959,6 @@ class _CompSheetState extends State<_CompSheet> {
                     r['email'] ?? '',
                     if (r['is_owner'] == true) 'Owner · everything' else r['tier'] == 'free' ? 'Free' : 'Premium',
                     if (r['source'] == 'admin' && r['is_owner'] != true) 'comped',
-                    if (r['all_modules'] == true && r['is_owner'] != true) 'all modules',
                     if (r['until'] != null) 'until ${DateFormat('MMM d, y').format(DateTime.parse(r['until'] as String).toLocal())}',
                   ].where((s) => '$s'.isNotEmpty).join(' · ')),
                   trailing: const Icon(Icons.chevron_right),
