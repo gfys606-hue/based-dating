@@ -100,8 +100,22 @@ class Api {
   static Future<List<Map<String, dynamic>>> myPhotos() =>
       db.from('photos').select().eq('user_id', me).order('position');
 
+  /// Interest topics (official only; members' own topics are for posts).
   static Future<List<Map<String, dynamic>>> topics() =>
-      db.from('topics').select().order('name');
+      db.from('topics').select().eq('custom', false).order('name');
+
+  /// Topics for New post: official, then members' own. [{id, name, custom}]
+  static Future<List<Map<String, dynamic>>> postTopics() async =>
+      List<Map<String, dynamic>>.from((await db.rpc('post_topics') as List).map((e) => Map<String, dynamic>.from(e as Map)));
+
+  /// Make your own post topic (filtered server-side). Returns {id, name, existing}.
+  static Future<Map<String, dynamic>> createTopic(String name) async =>
+      Map<String, dynamic>.from(await db.rpc('create_topic', params: {'p_name': name}) as Map);
+
+  // owner: members' topics
+  static Future<List<Map<String, dynamic>>> customTopics() async =>
+      List<Map<String, dynamic>>.from((await db.rpc('admin_custom_topics') as List).map((e) => Map<String, dynamic>.from(e as Map)));
+  static Future<void> hideTopic(int id, bool hidden) => db.rpc('admin_hide_topic', params: {'p_topic': id, 'p_hidden': hidden});
 
   static Future<void> setTopics(Set<int> ids) async {
     await db.from('user_topics').delete().eq('user_id', me);
