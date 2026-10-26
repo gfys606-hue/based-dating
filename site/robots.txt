@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /test/based-test.apk
+Disallow: /test/based-test-older-phones.apk
+
+Sitemap: https://based-social.com/sitemap.xml
