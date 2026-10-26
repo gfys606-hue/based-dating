@@ -1,4 +1,4 @@
-"""Makes the website install cleanly to an iPhone (or Android) home screen.
+"""Makes the web app (based-social.com/app/) install cleanly to an iPhone (or Android) home screen.
 
 Run from app/ after `flutter create` and `dart run flutter_launcher_icons`:
   - names it "Based" under the icon, not "based_dating"
@@ -30,7 +30,7 @@ for pat in [
 ]:
     html = re.sub(pat, "", html)
 
-html = re.sub(r"<title>.*?</title>", f"<title>{NAME}</title>", html, flags=re.S)
+html = re.sub(r"<title>.*?</title>", f"<title>{NAME} · Open the app</title>", html, flags=re.S)
 html = re.sub(r'<meta name="description" content="[^"]*">',
               f'<meta name="description" content="{NAME}. {SLOGAN}">', html)
 
@@ -42,6 +42,10 @@ head = f"""
   <meta name="theme-color" content="{NAVY}">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
+  <link rel="canonical" href="https://based-social.com/app/">
+  <meta property="og:title" content="{NAME} · {SLOGAN}">
+  <meta property="og:description" content="Dating and a real social life in one members-only app.">
+  <meta property="og:image" content="https://based-social.com/og.png">
 """
 html = html.replace("</head>", head + "</head>", 1)
 open(INDEX, "w").write(html)
@@ -51,8 +55,8 @@ m.update({
     "name": NAME,
     "short_name": NAME,
     "description": f"{NAME}. {SLOGAN}",
-    "start_url": "/",
-    "scope": "/",
+    "start_url": "/app/",
+    "scope": "/app/",
     "display": "standalone",
     "background_color": NAVY,
     "theme_color": NAVY,
