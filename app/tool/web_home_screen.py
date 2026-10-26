@@ -44,7 +44,7 @@ head = f"""
   <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
   <link rel="canonical" href="https://based-social.com/app/">
   <meta property="og:title" content="{NAME} · {SLOGAN}">
-  <meta property="og:description" content="Dating and a real social life in one members-only app.">
+  <meta property="og:description" content="The members-only social network for real people.">
   <meta property="og:image" content="https://based-social.com/og.png">
 """
 html = html.replace("</head>", head + "</head>", 1)
