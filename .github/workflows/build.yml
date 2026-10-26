@@ -1,5 +1,6 @@
 # Builds Based on every push to main:
-#   1. the website version  -> published with GitHub Pages
+#   1. the website -> published with GitHub Pages: the homepage and static pages from site/,
+#      the web app at based-social.com/app/
 #   2. a test Android app   -> downloadable at https://based-social.com/test (and the run's "Artifacts")
 #   3. the Google Play file -> "based-play-store-bundle" artifact (app-release.aab),
 #      built only once the ANDROID_KEYSTORE_BASE64 + ANDROID_KEYSTORE_PASSWORD secrets are set
@@ -78,7 +79,7 @@ jobs:
       - name: Build website
         run: >
           flutter build web --release
-          --base-href "/"
+          --base-href "/app/"
           --dart-define=SUPABASE_URL=$SUPABASE_URL
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
           --dart-define=BUILD=$GITHUB_RUN_NUMBER
@@ -143,9 +144,23 @@ jobs:
           path: app/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: ignore
 
+      - name: Put the website together (homepage at /, app at /app/, test downloads at /test/)
+        working-directory: .
+        run: |
+          rm -rf public && mkdir -p public
+          cp -r site/. public/
+          mkdir -p public/test
+          cp app/build/web/test/*.apk app/build/web/test/build.json public/test/
+          rm -rf app/build/web/test
+          cp -r app/build/web public/app
+          cp app/build/web/icons/Icon-512.png public/icon-512.png
+          cp app/build/web/favicon.png public/favicon.png
+          sed -i "s/__DATE__/$(date -u +%Y-%m-%d)/g" public/sitemap.xml
+          ls -la public public/test
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: app/build/web
+          path: public
 
   deploy-website:
     needs: build
