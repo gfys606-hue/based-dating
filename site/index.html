@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+// Sign-in links and the installed home-screen app go straight to the app
+(function () {
+  var s = location.search, h = location.hash;
+  if (/[?&](code|error|error_description|token_hash|type)=/.test(s) || /(access_token|error_description|type=recovery)/.test(h)) {
+    location.replace('/app/' + s + h); return;
+  }
+  try { if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) location.replace('/app/'); } catch (e) {}
+})();
+</script>
+<title>Based · Dating and a real social life in Calgary</title>
+<meta name="description" content="Based is a members-only app for dating, friends, events and the best spots in Calgary. Real photos, real people, voice notes instead of endless texting. 18+. Join the waitlist.">
+<link rel="canonical" href="https://based-social.com/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#110B07">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Based">
+<meta property="og:url" content="https://based-social.com/">
+<meta property="og:title" content="Based · The door is not for everyone.">
+<meta property="og:description" content="Dating and a real social life in one members-only app. Calgary first. Join the waitlist.">
+<meta property="og:image" content="https://based-social.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_CA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Based · The door is not for everyone.">
+<meta name="twitter:description" content="Dating and a real social life in one members-only app. Calgary first.">
+<meta name="twitter:image" content="https://based-social.com/og.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://based-social.com/#org",
+      "name": "Based",
+      "url": "https://based-social.com/",
+      "logo": "https://based-social.com/icon-512.png",
+      "email": "support@based-social.com",
+      "slogan": "The door is not for everyone.",
+      "areaServed": { "@type": "City", "name": "Calgary" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://based-social.com/#site",
+      "name": "Based",
+      "alternateName": "Based Social",
+      "url": "https://based-social.com/",
+      "publisher": { "@id": "https://based-social.com/#org" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "Based",
+      "applicationCategory": "SocialNetworkingApplication",
+      "operatingSystem": "Android, iOS (web), Web",
+      "url": "https://based-social.com/app/",
+      "description": "Dating, friends, events and venues in one members-only app. 18+.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CAD" },
+      "publisher": { "@id": "https://based-social.com/#org" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "What is Based?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Based is one app for dating and a real social life: people to date, groups to join, events, a feed worth reading, and the bars and spots worth going to. It's members-only and 18+." } },
+        { "@type": "Question", "name": "Where is Based available?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Based is opening in Calgary first. Anyone can join the waitlist for their city, and new cities open when enough people sign up." } },
+        { "@type": "Question", "name": "How do I get in?",
+          "acceptedAnswer": { "@type": "Answer", "text": "With an invite code from a member or a partner venue, or through the waitlist. Each city has a member cap and new spots open in timed drops. A member's code moves you to the front of the line." } },
+        { "@type": "Question", "name": "Is Based free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes, Based is free to join and use. An optional Premium membership with extras is coming." } },
+        { "@type": "Question", "name": "How is Based different from other dating apps?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Photos are checked against a live selfie, contact info stays hidden until you've both sent a voice note, and matches that never talk fade out. Dating sits alongside friends, groups and events, so you meet people the way people actually meet." } }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#110B07;--bg2:#1B130D;--card:#1F160F;--line:#33251A;--ink:#F1E6D0;--ink2:#D6C5A6;--muted:#9E8B70;--gold:#D9A84E;--ongold:#1C1009;--ok:#8DBA6C;--bad:#E07A5F}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--gold)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.serif,h1,h2,h3,.logo{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700;letter-spacing:0}
+header{padding:22px 0;border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-size:32px;text-decoration:none;color:var(--ink);line-height:1}.logo span{color:var(--gold)}
+nav a{color:var(--ink2);text-decoration:none;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-left:18px}
+nav a.open{color:var(--ongold);background:var(--gold);padding:10px 14px;border-radius:2px}
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;padding:64px 0 80px;
+  background:radial-gradient(ellipse 60% 70% at 30% 40%,rgba(217,168,78,.10),transparent 70%)}
+.slogan{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:600;color:var(--gold);font-size:22px;margin:0 0 10px}
+h1{font-size:clamp(42px,6.2vw,74px);line-height:1.02;margin:0 0 20px}
+.lede{font-size:19px;color:var(--ink2);max-width:36ch;margin:0 0 26px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn,.btn2{display:inline-block;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:15px 20px;border-radius:2px}
+.btn{background:var(--gold);color:var(--ongold)}.btn2{border:1.5px solid var(--line);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:28px}
+.card h2{font-size:30px;margin:0 0 4px}.card .sub{margin:0 0 18px;color:var(--ink2);font-size:15px}
+label.f{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;margin:14px 0 6px;color:var(--ink2)}
+input[type=email],input[type=text],select{width:100%;font:inherit;font-size:16px;padding:13px 14px;border-radius:2px;border:1.5px solid var(--line);background:var(--bg2);color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--gold)}
+.check{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;font-size:14px;color:var(--ink2)}
+.check input{margin-top:3px;width:18px;height:18px;accent-color:var(--gold)}
+button{width:100%;margin-top:18px;font:inherit;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:16px;border:0;border-radius:2px;background:var(--gold);color:var(--ongold);cursor:pointer}
+button[disabled]{opacity:.6;cursor:default}
+.msg{margin-top:12px;font-size:15px;min-height:1.4em}.msg.err{color:var(--bad)}
+.fine{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+.done{text-align:center;padding:24px 4px}.done .big{font-size:34px;margin:4px 0}
+.hidden{display:none}
+section{padding:80px 0;border-top:1px solid var(--line)}
+section h2{font-size:clamp(32px,4.4vw,48px);line-height:1.05;margin:0 0 12px}
+.intro{color:var(--ink2);max-width:60ch;margin:0 0 36px;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.item{border:1px solid var(--line);border-radius:4px;padding:22px;background:var(--bg2)}
+.item .k{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.item h3{font-size:25px;margin:6px 0 6px}.item p{margin:0;color:var(--ink2);font-size:15.5px}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:0;margin:0;list-style:none}
+.steps li{border-top:2px solid var(--gold);padding-top:14px;color:var(--ink2);font-size:15.5px}
+.steps li b{display:block;color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;margin-bottom:4px}
+.steps li:before{counter-increment:s;content:"0" counter(s);color:var(--gold);font-weight:700;font-size:12px;letter-spacing:.14em}
+.topics{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.topics span{border:1px solid var(--line);padding:6px 12px;border-radius:2px;font-size:14px;color:var(--ink2)}
+details{border-bottom:1px solid var(--line);padding:16px 0}
+summary{cursor:pointer;font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;font-weight:700;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";float:right;color:var(--gold)}details[open] summary:after{content:"–"}
+details p{color:var(--ink2);margin:8px 0 0;max-width:70ch}
+.cta{text-align:center}
+footer{border-top:1px solid var(--line);padding:28px 0 44px;font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--muted);margin-right:16px}
+@media(max-width:900px){.hero{grid-template-columns:1fr;gap:36px;padding:40px 0 56px}.grid{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.wrap{padding:0 16px}.grid,.steps{grid-template-columns:1fr}section{padding:56px 0}.card{padding:22px 18px}nav a:not(.open){display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo" href="/">Based<span>.</span></a>
+  <nav><a href="#inside">What's inside</a><a href="#faq">FAQ</a><a class="open" href="/app/">Members: open the app</a></nav>
+</div></header>
+
+<main>
+<div class="wrap hero">
+  <div>
+    <p class="slogan">The door is not for everyone.</p>
+    <h1>Dating and a real social life, in one app.</h1>
+    <p class="lede">Meet people to date, make friends, find the events and the spots worth going to. Members only, real people only, and opening in Calgary first.</p>
+    <div class="btns">
+      <a class="btn" href="#join">Join the waitlist</a>
+      <a class="btn2" href="/test/">Get the Android app</a>
+    </div>
+  </div>
+
+  <div class="card" id="join">
+    <div id="formWrap">
+      <h2>Join the waitlist</h2>
+      <p class="sub" id="door">Each city has a set number of members. New spots open in timed drops.</p>
+      <form id="form" novalidate>
+        <label class="f" for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label class="f" for="city">City</label>
+        <select id="city" required><option value="">Choose your city</option></select>
+        <input id="cityOther" class="hidden" type="text" autocomplete="address-level2" placeholder="Your city" style="margin-top:8px">
+        <label class="f" for="ref">Invite or reference code <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input id="ref" type="text" autocomplete="off" placeholder="ABCD-1234" style="text-transform:uppercase">
+        <label class="check"><input type="checkbox" id="adult"> I'm 18 or older.</label>
+        <button type="submit" id="submit">Put me on the list</button>
+        <div class="msg" id="msg" role="status" aria-live="polite"></div>
+        <p class="fine">A member's code moves you to the front of the line. We only email you about getting in. No spam, never sold.</p>
+      </form>
+    </div>
+    <div id="doneWrap" class="done hidden">
+      <p class="slogan" style="margin:0">You're on the list.</p>
+      <p class="big serif" id="doneTitle">We'll email you when a spot opens.</p>
+      <p class="sub" id="doneSub" style="margin:8px 0 0"></p>
+    </div>
+  </div>
+</div>
+
+<section id="inside">
+  <div class="wrap">
+    <h2>What's inside</h2>
+    <p class="intro">Most apps make you pick: dating or friends, online or out. Based puts it all in one place, built around getting people off their phones and into the same room.</p>
+    <div class="grid">
+      <div class="item"><div class="k">Dating</div><h3>A daily batch, not endless swiping</h3><p>People near you, ranked by what you actually share: interests, groups, events and the places you go.</p></div>
+      <div class="item"><div class="k">Voice notes</div><h3>Hear each other early</h3><p>By day four of a match, you've both sent a voice note or the chat pauses. Contact info stays hidden until you have.</p></div>
+      <div class="item"><div class="k">Herd</div><h3>Groups and circles</h3><p>Join or start circles around what you're into, and plan things with them.</p></div>
+      <div class="item"><div class="k">Events</div><h3>Things to do this week</h3><p>See what's on in the city, who's going, and RSVP in a tap.</p></div>
+      <div class="item"><div class="k">Spots</div><h3>The places worth going</h3><p>Check in at partner bars and venues, see who else is there, and vote on what plays next.</p></div>
+      <div class="item"><div class="k">Feed</div><h3>Posts that are worth reading</h3><p>Topics from startups to Stoicism. Useful posts reach more people; noise doesn't.</p></div>
+    </div>
+    <div class="topics" aria-label="Some topics on Based">
+      <span>AI</span><span>Startups</span><span>Entrepreneurship</span><span>Real estate</span><span>Stock market</span><span>Philosophy</span><span>Stoicism</span><span>Volunteering</span><span>Mentorship</span><span>Hiking</span><span>Hockey</span><span>Fitness</span><span>Cooking</span><span>Music</span><span>Travel</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How the door works</h2>
+    <p class="intro">Based stays good by staying small and real. The rules are the same for everyone.</p>
+    <ol class="steps">
+      <li><b>Get a code or join the line</b>From a member, a partner venue, or the waitlist.</li>
+      <li><b>Spots open in drops</b>Each city has a member cap. When spots open, the front of the line gets in first.</li>
+      <li><b>Prove you're you</b>Real photos, checked against a live selfie. 18+ only.</li>
+      <li><b>Show up</b>Talk, meet, go places. People who ghost fade out; people who show up get seen.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>Questions</h2>
+    <details><summary>What is Based?</summary><p>Based is one app for dating and a real social life: people to date, groups to join, events, a feed worth reading, and the bars and spots worth going to. It's members-only and 18+.</p></details>
+    <details><summary>Where is Based available?</summary><p>Based is opening in <a href="/calgary/">Calgary</a> first. Anyone can join the waitlist for their city, and new cities open when enough people sign up.</p></details>
+    <details><summary>How do I get in?</summary><p>With an invite code from a member or a partner venue, or through the waitlist. Each city has a member cap and new spots open in timed drops. A member's code moves you to the front of the line.</p></details>
+    <details><summary>Is Based free?</summary><p>Yes, Based is free to join and use. An optional Premium membership with extras is coming.</p></details>
+    <details><summary>How is Based different from other dating apps?</summary><p>Photos are checked against a live selfie, contact info stays hidden until you've both sent a voice note, and matches that never talk fade out. Dating sits alongside friends, groups and events, so you meet people the way people actually meet.</p></details>
+    <details><summary>Is there an iPhone app?</summary><p>Not in the App Store yet. On iPhone, open <a href="/app/">based-social.com/app</a> in Safari and add it to your home screen; it works like an app. Android members can <a href="/test/">download the app here</a>.</p></details>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Get on the list.</h2>
+    <p class="intro" style="margin:0 auto 26px">Calgary is opening now. Your city could be next.</p>
+    <a class="btn" href="#join">Join the waitlist</a>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <span>© <span id="yr">2026</span> Based · Calgary, Alberta · 18+ only</span>
+  <span><a href="/calgary/">Calgary</a><a href="/privacy.html">Privacy</a><a href="/delete-account.html">Delete account</a><a href="mailto:support@based-social.com">support@based-social.com</a></span>
+</div></footer>
+
+<script>
+(function () {
+  var URL = 'https://dzfnetcoyxjyjtmorfgk.supabase.co/rest/v1/rpc/';
+  var KEY = 'sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ'; // public, browser-safe key
+  var H = { apikey: KEY, 'Content-Type': 'application/json' };
+  var $ = function (id) { return document.getElementById(id); };
+  $('yr').textContent = new Date().getFullYear();
+
+  var params = new URLSearchParams(location.search);
+  if (params.get('ref')) $('ref').value = params.get('ref');
+
+  var sel = $('city');
+  fetch(URL + 'waitlist_cities', { method: 'POST', headers: H, body: '{}' })
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (rows) {
+      rows.forEach(function (c) {
+        var o = document.createElement('option'); o.value = c.slug; o.textContent = c.name + (c.region ? ', ' + c.region : '');
+        sel.appendChild(o);
+      });
+      if (rows.length === 1) sel.value = rows[0].slug;
+    })
+    .catch(function () {})
+    .then(function () {
+      var o = document.createElement('option'); o.value = '__other'; o.textContent = 'Somewhere else'; sel.appendChild(o);
+    });
+  sel.addEventListener('change', function () { $('cityOther').classList.toggle('hidden', sel.value !== '__other'); });
+
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var msg = $('msg'); msg.className = 'msg'; msg.textContent = '';
+    var email = $('email').value.trim();
+    var city = sel.value === '__other' ? $('cityOther').value.trim() : sel.value;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.className = 'msg err'; msg.textContent = 'Enter a real email.'; return; }
+    if (!city) { msg.className = 'msg err'; msg.textContent = 'Which city are you in?'; return; }
+    if (!$('adult').checked) { msg.className = 'msg err'; msg.textContent = 'Based is 18+ only.'; return; }
+    var btn = $('submit'); btn.disabled = true; btn.textContent = 'Saving…';
+    fetch(URL + 'join_waitlist_site', {
+      method: 'POST', headers: H,
+      body: JSON.stringify({ p_email: email, p_city: city, p_ref: $('ref').value.trim() || null, p_adult: true })
+    }).then(function (r) {
+      return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong. Try again.'); return j; });
+    }).then(function (j) {
+      $('formWrap').classList.add('hidden'); $('doneWrap').classList.remove('hidden');
+      $('doneSub').textContent = j.city_open
+        ? (j.ref_valid ? 'Your code checked out, so you\'re near the front of the line.' : 'Know a member? Their code moves you up the line.')
+        : 'We\'re not in your city yet. The more people who sign up there, the sooner it opens.';
+    }).catch(function (err) {
+      msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false; btn.textContent = 'Put me on the list';
+    });
+  });
+})();
+</script>
+</body>
+</html>
