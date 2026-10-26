@@ -105,8 +105,58 @@ class _PostsViewState extends State<PostsView> {
     _refresh();
   }
 
+  /// Make your own topic: name it, the server checks it, and it's picked.
+  Future<Map<String, dynamic>?> _newTopic(BuildContext ctx) async {
+    final name = TextEditingController();
+    String? error;
+    bool busy = false;
+    return showDialog<Map<String, dynamic>>(
+      context: ctx,
+      builder: (dctx) => StatefulBuilder(
+        builder: (dctx, setD) => AlertDialog(
+          title: const Text('Your own topic'),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            TextField(
+              controller: name,
+              autofocus: true,
+              maxLength: 30,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(hintText: 'e.g. Craft beer, AI ethics', errorText: error, errorMaxLines: 3),
+            ),
+            Text('Everyone can post in it. Keep it clean: anything inappropriate is blocked.',
+                style: TextStyle(fontSize: 12, color: B.muted)),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dctx), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      setD(() {
+                        busy = true;
+                        error = null;
+                      });
+                      try {
+                        final t = await Api.createTopic(name.text);
+                        if (dctx.mounted) Navigator.pop(dctx, t);
+                      } catch (e) {
+                        final m = RegExp(r'message: ([^,}]+)').firstMatch(e.toString());
+                        setD(() {
+                          busy = false;
+                          error = (m?.group(1) ?? 'Couldn\'t make that topic.').trim();
+                        });
+                      }
+                    },
+              child: const Text('MAKE IT'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _compose() async {
-    final topics = await Api.topics();
+    final topics = await Api.postTopics();
     if (!mounted) return;
     final body = TextEditingController();
     int? topic;
@@ -129,10 +179,42 @@ class _PostsViewState extends State<PostsView> {
             ]),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
+              key: ValueKey('topic-$topic-${topics.length}'),
               value: topic,
               hint: const Text('Topic'),
-              items: [for (final t in topics) DropdownMenuItem(value: t['id'] as int, child: Text(t['name'] as String))],
-              onChanged: (v) => setSheet(() => topic = v),
+              isExpanded: true,
+              menuMaxHeight: 420,
+              items: [
+                DropdownMenuItem(
+                  value: -1,
+                  child: Row(children: [
+                    Icon(Icons.add, size: 18, color: B.goldInk),
+                    const SizedBox(width: 6),
+                    Text('Make your own topic', style: TextStyle(color: B.goldInk, fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+                for (final t in topics)
+                  DropdownMenuItem(
+                    value: t['id'] as int,
+                    child: Text(t['custom'] == true ? '${t['name']} · member topic' : t['name'] as String,
+                        overflow: TextOverflow.ellipsis),
+                  ),
+              ],
+              onChanged: (v) async {
+                if (v != -1) {
+                  setSheet(() => topic = v);
+                  return;
+                }
+                setSheet(() => topic = null);
+                final t = await _newTopic(ctx);
+                if (t == null) return;
+                setSheet(() {
+                  if (!topics.any((x) => x['id'] == t['id'])) {
+                    topics.add({'id': t['id'], 'name': t['name'], 'custom': t['existing'] != true});
+                  }
+                  topic = t['id'] as int;
+                });
+              },
             ),
             const SizedBox(height: 10),
             TextField(controller: body, maxLength: 500, maxLines: 4, decoration: const InputDecoration(hintText: 'Say what you actually think')),

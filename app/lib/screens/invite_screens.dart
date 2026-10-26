@@ -698,6 +698,12 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
           FilledButton.icon(onPressed: _newBatch, icon: const Icon(Icons.add), label: const Text('NEW VENUE CODES')),
           const SizedBox(height: 8),
           OutlinedButton.icon(
+            onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => const _TopicsSheet()),
+            icon: const Icon(Icons.tag),
+            label: const Text('MEMBERS\' TOPICS'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
             onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => const _CompSheet()),
             icon: const Icon(Icons.workspace_premium_outlined),
             label: const Text('MEMBERSHIPS AND COMPS'),
@@ -968,4 +974,61 @@ class _CompSheetState extends State<_CompSheet> {
           ),
         ),
       );
+}
+
+/// Owner: topics members made. Hide one and its posts come off the feed.
+class _TopicsSheet extends StatefulWidget {
+  const _TopicsSheet();
+  @override
+  State<_TopicsSheet> createState() => _TopicsSheetState();
+}
+
+class _TopicsSheetState extends State<_TopicsSheet> {
+  List<Map<String, dynamic>>? _rows;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final r = await Api.customTopics().catchError((_) => <Map<String, dynamic>>[]);
+    if (mounted) setState(() => _rows = r);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = _rows;
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .8),
+        child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(18), children: [
+          Text('Members\' topics', style: B.heading(22)),
+          const SizedBox(height: 4),
+          Text('Names are filtered when they\'re made. Switch one off to hide it and take its posts off the feed.',
+              style: TextStyle(color: B.muted, fontSize: 13)),
+          const SizedBox(height: 8),
+          if (rows == null) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
+          if (rows != null && rows.isEmpty)
+            Padding(padding: const EdgeInsets.all(16), child: Text('None yet.', style: TextStyle(color: B.muted))),
+          for (final t in rows ?? const <Map<String, dynamic>>[])
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(t['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text([
+                if (t['made_by'] != null) 'by ${t['made_by']}',
+                '${t['posts']} posts',
+                DateFormat('MMM d').format(DateTime.parse(t['created_at'] as String).toLocal()),
+              ].join(' · ')),
+              value: t['hidden'] != true,
+              onChanged: (on) async {
+                await Api.hideTopic(t['id'] as int, !on).catchError((_) {});
+                _load();
+              },
+            ),
+        ]),
+      ),
+    );
+  }
 }
