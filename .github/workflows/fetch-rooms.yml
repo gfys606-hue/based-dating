@@ -1,0 +1,53 @@
+# One-off helper: downloads the free Pixabay photos for the app's rooms (whisky rooms and private
+# libraries; Pixabay Content License, free for commercial use, no attribution required), sizes them
+# for the app and commits them to app/assets/rooms, then rebuilds the app.
+name: Fetch room photos
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fetch-rooms.yml']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+      - name: Download and size
+        run: |
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+          mkdir -p /tmp/rooms
+          # room name = photo
+          while read -r name photo; do
+            [ -z "$name" ] && continue
+            curl -fsSL -A "$UA" -e https://pixabay.com/ "https://cdn.pixabay.com/photo/${photo}_1920.jpg" -o /tmp/rooms/$name.jpg \
+              || curl -fsSL -A "$UA" -e https://pixabay.com/ "https://cdn.pixabay.com/photo/${photo}_1280.jpg" -o /tmp/rooms/$name.jpg
+            convert /tmp/rooms/$name.jpg -resize '1400x1400>' -strip -interlace JPEG -quality 80 app/assets/rooms/$name.jpg
+          done <<'EOF'
+          hall    2017/06/12/10/47/furniture-2395129
+          gate    2021/12/18/06/01/wine-6878013
+          alcove  2017/03/18/12/24/cafe-2153865
+          study   2020/05/25/17/54/library-5219747
+          dining  2017/08/10/04/49/restaurant-2618315
+          armory  2013/11/15/23/18/john-work-garrett-library-211375
+          library 2020/01/20/10/33/room-4779953
+          reading 2017/08/06/22/01/books-2596809
+          dungeon 2020/02/18/16/09/barrels-4859918
+          forge   2014/12/25/03/05/distillery-579370
+          EOF
+          ls -la app/assets/rooms
+      - name: Commit and rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add app/assets/rooms
+          git commit -m "Rooms: whisky rooms and private libraries (Pixabay, free license)" || exit 0
+          git push
+          # pushes made by this workflow don't start other workflows on their own
+          gh workflow run build.yml --ref main

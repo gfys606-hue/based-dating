@@ -61,17 +61,17 @@ class _View {
 }
 
 const _views = <int, _View>{
-  0: _View('hall', 0.50, 0.48, 1.00), // Home: the great hall
-  1: _View('gate', 0.40, 0.55, 1.20), // Discover / Ouch: out by the courtyard gate at night
-  2: _View('alcove', 0.50, 0.50, 1.00), // Talk: a candlelit alcove
-  3: _View('study', 0.50, 0.42, 1.15), // You: the study, by the bookcase
-  4: _View('dining', 0.42, 0.55, 1.00), // Friends: the dining room
-  5: _View('gate', 0.62, 0.50, 1.00), // Spots: the courtyard gate at night
-  6: _View('library', 0.30, 0.45, 1.30, dim: 0.14), // Ideas: a quiet corner of the library
-  7: _View('armory', 0.45, 0.55, 1.00), // Herd: the armory
-  8: _View('library', 0.50, 0.50, 1.00), // Search: the long library
-  9: _View('dungeon', 0.50, 0.55, 1.00), // Events: the dungeon
-  10: _View('forge', 0.55, 0.55, 1.00), // Market: the blacksmith's forge
+  0: _View('hall', 0.50, 0.55, 1.00), // Home: the club room, green walls and leather chesterfields
+  1: _View('gate', 0.50, 0.40, 1.10), // Discover / Ouch: the back bar, bottles lit from behind
+  2: _View('alcove', 0.50, 0.50, 1.00), // Talk: a wood-panelled corner by the window
+  3: _View('study', 0.50, 0.50, 1.10), // You: a private library with armchairs
+  4: _View('dining', 0.45, 0.55, 1.00), // Friends: the long wooden bar under the lamps
+  5: _View('gate', 0.70, 0.55, 1.20), // Spots: the back bar, further along
+  6: _View('reading', 0.40, 0.45, 1.10, dim: 0.14), // Ideas: the reading room aisle
+  7: _View('armory', 0.50, 0.55, 1.00), // Herd: the great library with red chairs
+  8: _View('library', 0.50, 0.50, 1.00), // Search: through the doors into the library
+  9: _View('dungeon', 0.40, 0.55, 1.00), // Events: the cask cellar
+  10: _View('forge', 0.50, 0.55, 1.00), // Market: the copper stills
   Castle.landing: _View('vaults', 0.50, 0.82, 1.65), // a landing on the stairs down to the vaults
 };
 const _corridor = _View('vaults', 0.54, 0.58, 1.10); // the brick corridor you walk through between rooms
