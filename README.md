@@ -36,6 +36,10 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 | Photos 1–3 clear face, 4–6 looser but must be you; otherwise paused | `set_photo_review`, `refresh_photo_status` |
 | Feed open to all, distance slider, like counts only for author | `get_feed` |
 | 3+ reporters → auto-suspend; underage/threats prioritized; device bans | `report_user`, `ban_user`, `register_device` |
+| Ideas: routed to people whose ideas/interests are close (plus a few new ones from your city), never broadcast; no public counts | `get_ideas` |
+| "Same idea" nudges (2+ shared words, 40%+ of the shorter idea); up to 3 people told on a new idea | `get_same_ideas`, `tg_idea_after` |
+| I'm in / Let's talk open a private chat; contact details blocked in ideas and idea chats | `respond_to_idea`, `tg_idea_message_before` |
+| An idea becomes a Herd; everyone who said "I'm in" gets an invite | `idea_to_group`, `invite_to_idea_group` |
 
 ## Setup
 
