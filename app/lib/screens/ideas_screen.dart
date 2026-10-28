@@ -126,7 +126,7 @@ class _IdeasScreenState extends State<IdeasScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
           child: Text('Don\'t just have an idea, build it. Yours goes to the people it fits, not to everyone.',
-              style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
+              style: TextStyle(color: B.ink2, fontSize: 13.5, height: 1.4, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 12),
         Padding(
@@ -171,7 +171,7 @@ class _IdeasScreenState extends State<IdeasScreen> {
               Icon(Icons.lightbulb_outline, size: 40, color: B.muted),
               const SizedBox(height: 10),
               Text('No ideas here yet. Share what you\'re thinking about building, doing or starting.',
-                  textAlign: TextAlign.center, style: TextStyle(color: B.muted)),
+                  textAlign: TextAlign.center, style: TextStyle(color: B.ink2, fontWeight: FontWeight.w600)),
             ]),
           ),
         for (final i in _ideas) ...[

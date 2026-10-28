@@ -54,9 +54,10 @@ class Castle {
 
 /// A spot in the castle: which room's photo, where the camera looks (fractions of the photo) and how close.
 class _View {
-  const _View(this.room, this.x, this.y, this.zoom);
+  const _View(this.room, this.x, this.y, this.zoom, {this.dim = 0});
   final String room;
   final double x, y, zoom;
+  final double dim; // extra shadow for busy photos, so text on top stays readable
 }
 
 const _views = <int, _View>{
@@ -66,15 +67,16 @@ const _views = <int, _View>{
   3: _View('study', 0.50, 0.42, 1.15), // You: the study, by the bookcase
   4: _View('dining', 0.42, 0.55, 1.00), // Friends: the dining room
   5: _View('gate', 0.62, 0.50, 1.00), // Spots: the courtyard gate at night
-  6: _View('armory', 0.45, 0.55, 1.00), // Herd: the armory
-  7: _View('library', 0.50, 0.50, 1.00), // Search: the long library
-  8: _View('dungeon', 0.50, 0.55, 1.00), // Events: the dungeon
-  9: _View('forge', 0.55, 0.55, 1.00), // Market: the blacksmith's forge
+  6: _View('library', 0.30, 0.45, 1.30, dim: 0.14), // Ideas: a quiet corner of the library
+  7: _View('armory', 0.45, 0.55, 1.00), // Herd: the armory
+  8: _View('library', 0.50, 0.50, 1.00), // Search: the long library
+  9: _View('dungeon', 0.50, 0.55, 1.00), // Events: the dungeon
+  10: _View('forge', 0.55, 0.55, 1.00), // Market: the blacksmith's forge
   Castle.landing: _View('vaults', 0.50, 0.82, 1.65), // a landing on the stairs down to the vaults
 };
 const _corridor = _View('vaults', 0.54, 0.58, 1.10); // the brick corridor you walk through between rooms
 
-_View _v(int i) => _views[i] ?? _views[i % 10] ?? _views[0]!;
+_View _v(int i) => _views[i] ?? _views[i % 11] ?? _views[0]!;
 
 /// The walls around whatever's on screen. Follows [Castle.view] unless [fixed] is given.
 class CastleBackdrop extends StatefulWidget {
@@ -184,7 +186,9 @@ class _WallsPainter extends CustomPainter {
       _room(canvas, size, to, 1 + 0.18 * (1 - q), bob);
       dip = 0.55 * (1 - q);
     }
-    final shade = dark ? (0.52 + dip * 0.45) : (0.80 + dip * 0.18);
+    // the room you're in (or arriving at) can ask for a little extra shadow
+    final extra = p >= 0.65 || identical(from, to) ? to.dim : (p < 0.35 ? from.dim : 0.0);
+    final shade = dark ? (0.52 + extra + dip * 0.45) : (0.80 + extra * 0.6 + dip * 0.18);
     canvas.drawRect(Offset.zero & size, Paint()..color = (dark ? Colors.black : B.bg).withOpacity(shade.clamp(0.0, 1.0).toDouble()));
     // lamplight from above
     final lamp = Offset(w * 0.55, -h * 0.08);
