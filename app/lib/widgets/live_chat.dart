@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../services/api.dart';
 import '../theme.dart';
@@ -31,7 +32,9 @@ class _LiveChatState extends State<LiveChat> {
       _text.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Message not sent. Try again.')));
+        // Show the server's reason when it refuses (e.g. contact details), otherwise a plain retry.
+        final why = e is PostgrestException && e.code == 'P0001' ? e.message : 'Message not sent. Try again.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(why)));
       }
     } finally {
       if (mounted) setState(() => _sending = false);

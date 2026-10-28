@@ -224,7 +224,7 @@ class _SearchScreenState extends State<SearchScreen> {
             if (e['place'] != null) e['place'] as String,
             if (e['host'] != null) 'with ${e['host']}',
           ].join(' · ')),
-          onTap: () => widget.openModule(3),
+          onTap: () => widget.openModule(4) /* Events: Ideas, Herd, Search, Events */,
         ),
       );
 }
