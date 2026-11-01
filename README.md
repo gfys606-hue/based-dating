@@ -42,6 +42,7 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 | An idea becomes a Herd; everyone who said "I'm in" gets an invite | `idea_to_group`, `invite_to_idea_group` |
 | Idea cards: up to 3 a day picked by interests + what you post and save; summaries in our own words, credited, labeled AI | `get_idea_cards`, `card_score`, `put_idea_cards` |
 | Saving the same cards surfaces people under "Thinking alike"; nudge at most every 3 days | `get_card_kindred`, `nudge_idea_cards` (cron) |
+| What I'm up for: Looking for (2 weeks, renewable), Available for, I can / I need; matches in your city with the reason; nudge the best 3 when you add something (each person at most every 3 days) | `set_my_intents`, `intent_pairs`, `intent_fits`, `get_intent_matches`, `nudge_intent_matches` |
 | Back it / Push back on ideas and cards: one tap, optional reasons and notes, 5 backs a day, no counts; author sees who and why plus a private temperature | `react_to_idea`, `get_idea_reactions`, `idea_heat` |
 | Open conversation under every idea and card: anyone can read, join to comment; can become a group | `get_idea_convo`, `join_idea_convo`, `post_idea_convo`, `idea_to_group` |
 
