@@ -40,6 +40,8 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 | "Same idea" nudges (2+ shared words, 40%+ of the shorter idea); up to 3 people told on a new idea | `get_same_ideas`, `tg_idea_after` |
 | I'm in / Let's talk open a private chat; contact details blocked in ideas and idea chats | `respond_to_idea`, `tg_idea_message_before` |
 | An idea becomes a Herd; everyone who said "I'm in" gets an invite | `idea_to_group`, `invite_to_idea_group` |
+| Idea cards: up to 3 a day picked by interests + what you post and save; summaries in our own words, credited, labeled AI | `get_idea_cards`, `card_score`, `put_idea_cards` |
+| Saving the same cards surfaces people under "Thinking alike"; nudge at most every 3 days | `get_card_kindred`, `nudge_idea_cards` (cron) |
 
 ## Setup
 

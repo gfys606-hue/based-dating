@@ -18,11 +18,14 @@ class IdeasScreen extends StatefulWidget {
 }
 
 class _IdeasScreenState extends State<IdeasScreen> {
-  int _view = 0; // 0 feed, 1 chats
+  int _view = 0; // 0 feed, 1 saved cards, 2 chats
   bool _loading = true;
   List<Map<String, dynamic>> _ideas = [];
   List<Map<String, dynamic>> _same = [];
   List<Map<String, dynamic>> _threads = [];
+  List<Map<String, dynamic>> _cards = []; // today's picks
+  List<Map<String, dynamic>> _kindred = []; // people who saved the same cards
+  List<Map<String, dynamic>> _saved = [];
 
   @override
   void initState() {
@@ -30,19 +33,56 @@ class _IdeasScreenState extends State<IdeasScreen> {
     _load();
   }
 
+  // Cards are extras: if they fail to load, the rest of the screen still works.
+  static Future<List<Map<String, dynamic>>> _soft(Future<List<Map<String, dynamic>>> f) =>
+      f.catchError((_) => <Map<String, dynamic>>[]);
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      if (_view == 1) {
+      if (_view == 2) {
         _threads = await IdeasApi.threads();
+      } else if (_view == 1) {
+        _saved = await IdeasApi.savedCards();
       } else {
-        final r = await Future.wait([IdeasApi.feed(), IdeasApi.sameIdeas()]);
+        final r = await Future.wait([
+          IdeasApi.feed(),
+          IdeasApi.sameIdeas(),
+          _soft(IdeasApi.cards()),
+          _soft(IdeasApi.cardKindred()),
+        ]);
         _ideas = r[0];
         _same = r[1];
+        _cards = r[2];
+        _kindred = r[3];
       }
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
+
+  Future<void> _toggleSave(Map<String, dynamic> card) async {
+    final save = card['saved'] != true;
+    try {
+      await IdeasApi.saveCard(card['card_id'] as String, save);
+      setState(() => card['saved'] = save);
+      if (save) _toast('Saved. People who save the same ideas will show up under Thinking alike.');
+      if (!save && _view == 1) _load();
+    } catch (e) {
+      _toast(IdeasApi.errorText(e));
+    }
+  }
+
+  Future<void> _hideCard(Map<String, dynamic> card) async {
+    try {
+      await IdeasApi.hideCard(card['card_id'] as String);
+      setState(() => _cards.remove(card));
+    } catch (e) {
+      _toast(IdeasApi.errorText(e));
+    }
+  }
+
+  void _openProfile(String userId) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: userId)));
 
   void _toast(String m) {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
@@ -53,13 +93,13 @@ class _IdeasScreenState extends State<IdeasScreen> {
     _load();
   }
 
-  Future<void> _compose() async {
+  Future<void> _compose({String initial = ''}) async {
     final posted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: B.card,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
-      builder: (_) => const _ComposeSheet(),
+      builder: (_) => _ComposeSheet(initial: initial),
     );
     if (posted == true) {
       _toast('Posted. It goes to the people it fits.');
@@ -134,7 +174,7 @@ class _IdeasScreenState extends State<IdeasScreen> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: Segmented(
-              options: const ['Ideas', 'Chats'],
+              options: const ['Ideas', 'Saved', 'Chats'],
               index: _view,
               onChanged: (i) {
                 setState(() => _view = i);
@@ -147,9 +187,39 @@ class _IdeasScreenState extends State<IdeasScreen> {
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(onRefresh: _load, child: _view == 1 ? _chats() : _feed()),
+              : RefreshIndicator(
+                  onRefresh: _load,
+                  child: switch (_view) { 2 => _chats(), 1 => _savedList(), _ => _feed() },
+                ),
         ),
       ]),
+    );
+  }
+
+  Widget _pick(Map<String, dynamic> c, {bool inSaved = false}) => _PickCard(
+        card: c,
+        onSave: () => _toggleSave(c),
+        onTake: () => _compose(initial: 'On "${c['title']}": '),
+        onHide: inSaved ? null : () => _hideCard(c),
+      );
+
+  // ---------- saved cards ----------
+  Widget _savedList() {
+    if (_saved.isEmpty) {
+      return ListView(children: [
+        const SizedBox(height: 120),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text('Ideas you save land here. Saving one also helps you find people who think the same way.',
+              textAlign: TextAlign.center, style: TextStyle(color: B.muted)),
+        ),
+      ]);
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, B.navClearance),
+      children: [
+        for (final c in _saved) ...[_pick({...c, 'saved': true}, inSaved: true), const SizedBox(height: 10)],
+      ],
     );
   }
 
@@ -158,11 +228,19 @@ class _IdeasScreenState extends State<IdeasScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, B.navClearance),
       children: [
-        if (_same.isNotEmpty) ...[
+        if (_same.isNotEmpty || _kindred.isNotEmpty) ...[
           const SectionLabel('Thinking alike'),
           const SizedBox(height: 8),
           for (final s in _same) ...[_sameCard(s), const SizedBox(height: 10)],
+          for (final k in _kindred) ...[_kindredCard(k), const SizedBox(height: 10)],
           const SizedBox(height: 6),
+        ],
+        if (_cards.isNotEmpty) ...[
+          const SectionLabel('Picked for you today'),
+          const SizedBox(height: 8),
+          for (final c in _cards) ...[_pick(c), const SizedBox(height: 10)],
+          const SizedBox(height: 6),
+          if (_ideas.isNotEmpty) ...[const SectionLabel('From people'), const SizedBox(height: 8)],
         ],
         if (_ideas.isEmpty)
           Padding(
@@ -223,6 +301,40 @@ class _IdeasScreenState extends State<IdeasScreen> {
           ]),
         ]),
       );
+
+  Widget _kindredCard(Map<String, dynamic> k) {
+    final shared = (k['shared'] as num?)?.toInt() ?? 1;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: B.cardBox(border: B.gold),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Avatar(path: k['photo'] as String?, size: 34),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              shared > 1 ? '${k['name']} saved $shared of the same ideas you did' : '${k['name']} saved the same idea you did',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 6),
+        Text('"${k['card_title']}"', style: TextStyle(fontSize: 13.5, color: B.ink2, fontStyle: FontStyle.italic)),
+        const SizedBox(height: 10),
+        Row(children: [
+          FilledButton(onPressed: () => _openProfile(k['user_id'] as String), child: const Text('See profile')),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () async {
+              await IdeasApi.dismissCardKindred(k['user_id'] as String).catchError((_) {});
+              setState(() => _kindred.remove(k));
+            },
+            child: const Text('Not now'),
+          ),
+        ]),
+      ]),
+    );
+  }
 
   // ---------- chats ----------
   Widget _chats() {
@@ -465,14 +577,77 @@ class _IdeaCard extends StatelessWidget {
   }
 }
 
+/// An idea card: a short idea from a book or thinker, summarized in our own words and credited.
+/// Clearly labeled as a Based pick with an AI-written summary, so it never passes for a person's post.
+class _PickCard extends StatelessWidget {
+  const _PickCard({required this.card, required this.onSave, required this.onTake, this.onHide});
+  final Map<String, dynamic> card;
+  final VoidCallback onSave;
+  final VoidCallback onTake;
+  final VoidCallback? onHide; // null in the Saved list
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = card['saved'] == true;
+    final quote = card['quote'] as String?;
+    final author = card['source_author'] as String?;
+    final why = card['why'] as String?;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: B.cardBox(),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.auto_stories_outlined, size: 18, color: B.goldInk),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(why == null ? 'Based pick' : 'Based pick · $why',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: B.goldInk, fontWeight: FontWeight.w700)),
+          ),
+          if (onHide != null)
+            PopupMenuButton<String>(
+              tooltip: 'More',
+              icon: Icon(Icons.more_horiz, color: B.muted),
+              onSelected: (_) => onHide!(),
+              itemBuilder: (_) => const [PopupMenuItem(value: 'hide', child: Text('Not for me'))],
+            ),
+        ]),
+        const SizedBox(height: 6),
+        Text(card['title'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, height: 1.3)),
+        const SizedBox(height: 6),
+        if (quote != null) ...[
+          Text('"$quote"', style: TextStyle(fontSize: 14.5, fontStyle: FontStyle.italic, color: B.ink2, height: 1.4)),
+          const SizedBox(height: 6),
+        ],
+        Text(card['body'] as String, style: const TextStyle(fontSize: 15, height: 1.45)),
+        const SizedBox(height: 8),
+        Text('From ${card['source_title']}${author == null ? '' : ' by $author'}',
+            style: TextStyle(fontSize: 12.5, color: B.ink2, fontWeight: FontWeight.w600)),
+        Text(card['made_by'] == 'team' ? 'Summary written by the Based team' : 'Summary written by AI',
+            style: TextStyle(fontSize: 11.5, color: B.muted)),
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          PillChip(label: saved ? 'Saved' : 'Save', selected: saved, onTap: onSave),
+          TextButton.icon(
+            onPressed: onTake,
+            icon: const Icon(Icons.edit_outlined, size: 16),
+            label: const Text('Post your take'),
+          ),
+        ]),
+      ]),
+    );
+  }
+}
+
 class _ComposeSheet extends StatefulWidget {
-  const _ComposeSheet();
+  const _ComposeSheet({this.initial = ''});
+  final String initial;
   @override
   State<_ComposeSheet> createState() => _ComposeSheetState();
 }
 
 class _ComposeSheetState extends State<_ComposeSheet> {
-  final _body = TextEditingController();
+  late final _body = TextEditingController(text: widget.initial);
   bool _busy = false;
   String? _error;
 

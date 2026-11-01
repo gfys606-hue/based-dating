@@ -54,4 +54,25 @@ class IdeasApi {
 
   static Future<void> send(String threadId, String body) =>
       _db.from('idea_messages').insert({'thread_id': threadId, 'sender_id': Api.me, 'body': body});
+
+  // ---------- Idea cards (supabase/migrations/20261101000050_idea_cards.sql) ----------
+  // Short ideas from books and thinkers, summarized in our own words and credited, picked for you
+  // (up to 3 a day). Saving one is how you find people who think alike.
+
+  /// Today's picks for you.
+  static Future<List<Map<String, dynamic>>> cards() async => _rows(await _db.rpc('get_idea_cards'));
+
+  static Future<List<Map<String, dynamic>>> savedCards() async => _rows(await _db.rpc('get_saved_cards'));
+
+  static Future<void> saveCard(String cardId, bool save) =>
+      _db.rpc('save_idea_card', params: {'p_card': cardId, 'p_save': save});
+
+  /// "Not for me": drops it from today's picks and it won't come back.
+  static Future<void> hideCard(String cardId) => _db.rpc('hide_idea_card', params: {'p_card': cardId});
+
+  /// People who saved the same cards you did.
+  static Future<List<Map<String, dynamic>>> cardKindred() async => _rows(await _db.rpc('get_card_kindred'));
+
+  static Future<void> dismissCardKindred(String userId) =>
+      _db.rpc('dismiss_card_kindred', params: {'p_user': userId});
 }
