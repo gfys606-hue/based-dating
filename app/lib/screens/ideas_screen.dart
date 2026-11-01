@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../services/ideas_api.dart';
 import '../theme.dart';
+import '../widgets/idea_reactions.dart';
 import '../widgets/live_chat.dart';
 import '../widgets/report_sheet.dart';
 import '../widgets/ui.dart';
@@ -26,6 +27,9 @@ class _IdeasScreenState extends State<IdeasScreen> {
   List<Map<String, dynamic>> _cards = []; // today's picks
   List<Map<String, dynamic>> _kindred = []; // people who saved the same cards
   List<Map<String, dynamic>> _saved = [];
+  // Back it / Push back / conversation state, keyed by idea id and card id
+  Map<String, Map<String, dynamic>> _rxIdeas = {};
+  Map<String, Map<String, dynamic>> _rxCards = {};
 
   @override
   void initState() {
@@ -37,6 +41,11 @@ class _IdeasScreenState extends State<IdeasScreen> {
   static Future<List<Map<String, dynamic>>> _soft(Future<List<Map<String, dynamic>>> f) =>
       f.catchError((_) => <Map<String, dynamic>>[]);
 
+  // Reactions are extras too: if they fail, cards still show (with empty reaction state).
+  static Future<Map<String, Map<String, dynamic>>> _rx(String kind, List<Map<String, dynamic>> rows, String key) =>
+      IdeasApi.reactions(kind, [for (final r in rows) r[key] as String])
+          .catchError((_) => <String, Map<String, dynamic>>{});
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
@@ -44,6 +53,7 @@ class _IdeasScreenState extends State<IdeasScreen> {
         _threads = await IdeasApi.threads();
       } else if (_view == 1) {
         _saved = await IdeasApi.savedCards();
+        _rxCards = await _rx('card', _saved, 'card_id');
       } else {
         final r = await Future.wait([
           IdeasApi.feed(),
@@ -55,6 +65,9 @@ class _IdeasScreenState extends State<IdeasScreen> {
         _same = r[1];
         _cards = r[2];
         _kindred = r[3];
+        final rx = await Future.wait([_rx('idea', _ideas, 'idea_id'), _rx('card', _cards, 'card_id')]);
+        _rxIdeas = rx[0];
+        _rxCards = rx[1];
       }
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
@@ -198,6 +211,8 @@ class _IdeasScreenState extends State<IdeasScreen> {
 
   Widget _pick(Map<String, dynamic> c, {bool inSaved = false}) => _PickCard(
         card: c,
+        rx: _rxCards.putIfAbsent(c['card_id'] as String, () => <String, dynamic>{}),
+        toast: _toast,
         onSave: () => _toggleSave(c),
         onTake: () => _compose(initial: 'On "${c['title']}": '),
         onHide: inSaved ? null : () => _hideCard(c),
@@ -255,6 +270,7 @@ class _IdeasScreenState extends State<IdeasScreen> {
         for (final i in _ideas) ...[
           _IdeaCard(
             idea: i,
+            rx: _rxIdeas.putIfAbsent(i['idea_id'] as String, () => <String, dynamic>{}),
             onRespond: (kind) => _respond(i, kind),
             onOpenChat: (thread, title) => _openChat(thread, title),
             onStartGroup: () => _startGroup(i),
@@ -374,6 +390,7 @@ class _IdeasScreenState extends State<IdeasScreen> {
 class _IdeaCard extends StatelessWidget {
   const _IdeaCard({
     required this.idea,
+    required this.rx,
     required this.onRespond,
     required this.onOpenChat,
     required this.onStartGroup,
@@ -381,6 +398,7 @@ class _IdeaCard extends StatelessWidget {
     required this.toast,
   });
   final Map<String, dynamic> idea;
+  final Map<String, dynamic> rx;
   final void Function(String kind) onRespond;
   final void Function(String threadId, String title) onOpenChat;
   final VoidCallback onStartGroup;
@@ -426,6 +444,18 @@ class _IdeaCard extends StatelessWidget {
         Text(idea['body'] as String, style: const TextStyle(fontSize: 16, height: 1.45)),
         const SizedBox(height: 10),
         if (_mine) _mineActions(context) else _theirActions(closed),
+        if (!_mine) ...[
+          const SizedBox(height: 10),
+          ReactBar(
+            kind: 'idea',
+            id: idea['idea_id'] as String,
+            title: idea['body'] as String,
+            state: rx,
+            toast: toast,
+            onChat: (t) => onOpenChat(t, idea['author_name'] as String),
+            onConvoClosed: onChanged,
+          ),
+        ],
       ]),
     );
   }
@@ -455,7 +485,16 @@ class _IdeaCard extends StatelessWidget {
         ((idea['responders'] as List?) ?? const []).map((e) => Map<String, dynamic>.from(e as Map)));
     final group = idea['group_name'] as String?;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (people.isEmpty)
+      OwnIdeaReactions(
+        ideaId: idea['idea_id'] as String,
+        title: idea['body'] as String,
+        state: rx,
+        onChat: onOpenChat,
+        toast: toast,
+        onConvoClosed: onChanged,
+      ),
+      const SizedBox(height: 6),
+      if (people.isEmpty && ((rx['reactors'] as List?)?.isEmpty ?? true))
         Text('No one yet. It\'s going to people it fits; only you will see who replies.',
             style: TextStyle(fontSize: 12.5, color: B.muted))
       else ...[
@@ -580,8 +619,17 @@ class _IdeaCard extends StatelessWidget {
 /// An idea card: a short idea from a book or thinker, summarized in our own words and credited.
 /// Clearly labeled as a Based pick with an AI-written summary, so it never passes for a person's post.
 class _PickCard extends StatelessWidget {
-  const _PickCard({required this.card, required this.onSave, required this.onTake, this.onHide});
+  const _PickCard({
+    required this.card,
+    required this.rx,
+    required this.toast,
+    required this.onSave,
+    required this.onTake,
+    this.onHide,
+  });
   final Map<String, dynamic> card;
+  final Map<String, dynamic> rx;
+  final void Function(String) toast;
   final VoidCallback onSave;
   final VoidCallback onTake;
   final VoidCallback? onHide; // null in the Saved list
@@ -634,6 +682,8 @@ class _PickCard extends StatelessWidget {
             label: const Text('Post your take'),
           ),
         ]),
+        const SizedBox(height: 8),
+        ReactBar(kind: 'card', id: card['card_id'] as String, title: card['title'] as String, state: rx, toast: toast),
       ]),
     );
   }

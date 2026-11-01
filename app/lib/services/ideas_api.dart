@@ -75,4 +75,51 @@ class IdeasApi {
 
   static Future<void> dismissCardKindred(String userId) =>
       _db.rpc('dismiss_card_kindred', params: {'p_user': userId});
+
+  // ---------- Reactions + conversations (supabase/migrations/20261101000052_idea_reactions.sql) ----------
+  // kind is 'idea' (a person's idea) or 'card' (a Based pick).
+
+  /// reaction: 'back' | 'push' | null (take it back). Reason, note and tag are optional.
+  /// Returns {thread_id, backs_left}; thread_id is set when "I'd join" opened a chat with the author.
+  static Future<Map<String, dynamic>> react(String kind, String id, String? reaction,
+      {String? reason, String? note, String? tag}) async {
+    final res = await _db.rpc('react_to_idea', params: {
+      'p_kind': kind,
+      'p_id': id,
+      'p_reaction': reaction,
+      'p_reason': reason,
+      'p_note': note,
+      'p_tag': tag,
+    });
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  static Future<int> backsLeft() async => (await _db.rpc('my_backs_left') as num).toInt();
+
+  /// My reaction on each, whether I'm in its conversation, and (on my own ideas) the private
+  /// temperature and who reacted and why.
+  static Future<Map<String, Map<String, dynamic>>> reactions(String kind, List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final rows = _rows(await _db.rpc('get_idea_reactions', params: {'p_kind': kind, 'p_ids': ids}));
+    return {for (final r in rows) r['target_id'] as String: r};
+  }
+
+  /// {joined, is_author, posts: [...], members: [...] (only when joined)}
+  static Future<Map<String, dynamic>> convo(String kind, String id) async =>
+      Map<String, dynamic>.from(await _db.rpc('get_idea_convo', params: {'p_kind': kind, 'p_id': id}) as Map);
+
+  static Future<void> joinConvo(String kind, String id) =>
+      _db.rpc('join_idea_convo', params: {'p_kind': kind, 'p_id': id});
+
+  static Future<void> leaveConvo(String kind, String id) =>
+      _db.rpc('leave_idea_convo', params: {'p_kind': kind, 'p_id': id});
+
+  static Future<void> comment(String kind, String id, String body) =>
+      _db.rpc('post_idea_convo', params: {'p_kind': kind, 'p_id': id, 'p_body': body});
+
+  static Future<void> removeComment(String postId) => _db.rpc('remove_idea_convo_post', params: {'p_post': postId});
+
+  /// On your own idea: open a private chat with someone who reacted or commented.
+  static Future<String> authorTalk(String ideaId, String userId) async =>
+      await _db.rpc('idea_author_talk', params: {'p_idea': ideaId, 'p_user': userId}) as String;
 }
