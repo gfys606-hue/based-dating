@@ -8,6 +8,8 @@ import 'activity_screen.dart';
 import '../widgets/feedback_sheet.dart';
 import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
+import 'goals_screen.dart';
+import 'intents_screen.dart';
 import 'invite_screens.dart';
 import 'membership_screen.dart';
 import 'venue_screens.dart';
@@ -101,7 +103,11 @@ class YouScreen extends StatelessWidget {
             child: Column(children: [
               row(Icons.edit_outlined, 'Edit profile', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()))),
               Divider(height: 1, color: B.fill),
+              row(Icons.travel_explore_outlined, 'What I\'m up for', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const IntentsScreen()))),
+              Divider(height: 1, color: B.fill),
               row(Icons.vpn_key_outlined, 'Invite friends', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyInvitesScreen()))),
+              Divider(height: 1, color: B.fill),
+              row(Icons.flag_outlined, 'Goals & challenges', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GoalsScreen()))),
               Divider(height: 1, color: B.fill),
               row(Icons.bug_report_outlined, 'Report a problem', () => showFeedbackSheet(context)),
               Divider(height: 1, color: B.fill),

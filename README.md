@@ -43,6 +43,8 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 | Idea cards: up to 3 a day picked by interests + what you post and save; summaries in our own words, credited, labeled AI | `get_idea_cards`, `card_score`, `put_idea_cards` |
 | Saving the same cards surfaces people under "Thinking alike"; nudge at most every 3 days | `get_card_kindred`, `nudge_idea_cards` (cron) |
 | Who's In: every plan gets a plan page: what we need + who's bringing it, a chat for people who are in, a reminder 2-3 h before, "did it happen?" after (2 confirmations = happened) | `get_plan`, `claim_plan_need`, `confirm_plan_happened`, `ping_plans` (cron) |
+| Goals: herd or personal, a habit (N a week) or milestones; challenges; members see each other's progress; cheers when you hit your week or a milestone; Saturday group nudge if nobody has checked in, never naming anyone | `create_goal`, `start_challenge`, `goal_check_in`, `set_goal_milestone`, `saturday_goal_nudge` (cron) |
+| What I'm up for: Looking for (2 weeks, renewable), Available for, I can / I need; matches in your city with the reason; nudge the best 3 when you add something (each person at most every 3 days) | `set_my_intents`, `intent_pairs`, `intent_fits`, `get_intent_matches`, `nudge_intent_matches` |
 | Back it / Push back on ideas and cards: one tap, optional reasons and notes, 5 backs a day, no counts; author sees who and why plus a private temperature | `react_to_idea`, `get_idea_reactions`, `idea_heat` |
 | Open conversation under every idea and card: anyone can read, join to comment; can become a group | `get_idea_convo`, `join_idea_convo`, `post_idea_convo`, `idea_to_group` |
 
