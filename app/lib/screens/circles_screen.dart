@@ -8,6 +8,7 @@ import '../widgets/live_chat.dart';
 import '../widgets/ui.dart';
 import 'events_screen.dart';
 import 'profile_view_screen.dart';
+import 'goals_screen.dart';
 
 /// Circles: groups of up to 30 that run themselves. Anyone can start one; members bring people in
 /// by nominating them, and an invite goes out once enough members say yes.
@@ -253,7 +254,7 @@ class _CircleScreenState extends State<CircleScreen> {
   Widget build(BuildContext context) {
     final names = {for (final m in _members) m['user_id'] as String: m['name'] as String};
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.circle['name'] as String? ?? 'Herd'),
@@ -265,7 +266,7 @@ class _CircleScreenState extends State<CircleScreen> {
               itemBuilder: (_) => const [PopupMenuItem(value: 'leave', child: Text('Leave herd'))],
             ),
           ],
-          bottom: const TabBar(tabs: [Tab(text: 'Chat'), Tab(text: 'Plans'), Tab(text: 'Grow')]),
+          bottom: const TabBar(tabs: [Tab(text: 'Chat'), Tab(text: 'Plans'), Tab(text: 'Goals'), Tab(text: 'Grow')]),
         ),
         body: Column(children: [
           SizedBox(
@@ -301,6 +302,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 hint: 'Message the herd',
               ),
               EventsList(circleId: _id),
+              GoalsList(circleId: _id),
               _GrowTab(circleId: _id, memberIds: _members.map((m) => m['user_id'] as String).toSet()),
             ]),
           ),
