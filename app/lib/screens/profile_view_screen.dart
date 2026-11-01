@@ -8,6 +8,7 @@ import '../widgets/report_sheet.dart';
 import '../widgets/self_expression.dart';
 import '../widgets/signed_photo.dart';
 import '../brand.dart';
+import 'intents_screen.dart';
 
 /// A profile = photos + interests (shared ones highlighted) + recent activity. No bio.
 class ProfileViewScreen extends StatelessWidget {
@@ -157,6 +158,7 @@ class ProfileBody extends StatelessWidget {
               avatar: i['shared'] == true ? const Icon(Icons.check, size: 16) : null,
             ),
         ]),
+        ProfileIntents(userId: profile['id'] as String),
         const SizedBox(height: 20),
         Text('Recent activity', style: Theme.of(context).textTheme.titleMedium),
         if (activity.isEmpty) const Padding(padding: EdgeInsets.only(top: 8), child: Text('Nothing posted yet.')),
