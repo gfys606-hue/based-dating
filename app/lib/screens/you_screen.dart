@@ -16,6 +16,7 @@ import '../services/invites_api.dart';
 import '../services/membership_api.dart';
 import 'profile_view_screen.dart';
 import 'tester_invites_screen.dart';
+import 'tally_screen.dart';
 
 /// Green / yellow / red: how visible your activity is keeping you, with one tip.
 /// Hidden unless Based switches it on in The door.
@@ -106,6 +107,8 @@ class YouScreen extends StatelessWidget {
               row(Icons.bug_report_outlined, 'Report a problem', () => showFeedbackSheet(context)),
               Divider(height: 1, color: B.fill),
               row(Icons.workspace_premium_outlined, 'Membership', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()))),
+              Divider(height: 1, color: B.fill),
+              row(Icons.public_outlined, 'Real-world tally', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TallyScreen()))),
               FutureBuilder(
                 future: Future.wait([
                   VenueApi.myVenues().catchError((_) => <Map<String, dynamic>>[]),

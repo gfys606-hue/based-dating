@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import 'tally_screen.dart';
 import '../services/membership_api.dart';
 import '../theme.dart';
 import '../widgets/friend_button.dart';
@@ -167,6 +168,7 @@ class ProfileBody extends StatelessWidget {
               subtitle: Text(a['topic'] as String),
             ),
           ),
+        ProfileTally(userId: profile['id'] as String),
       ],
     );
   }
