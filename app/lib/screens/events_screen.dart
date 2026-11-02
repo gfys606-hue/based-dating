@@ -10,6 +10,7 @@ import '../widgets/place_widgets.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
 import 'venue_screens.dart';
+import 'plan_screen.dart';
 
 /// Events: your free time (used to match you with people and circles) and plans near you.
 class EventsScreen extends StatefulWidget {
@@ -305,9 +306,23 @@ class EventsListState extends State<EventsList> {
                     else ...[
                       _rsvpButton(e, 'maybe', 'Maybe'),
                       const SizedBox(width: 6),
-                      _rsvpButton(e, 'going', 'Going'),
+                      _rsvpButton(e, 'going', 'I\'m in'),
                     ],
                   ]),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                      onPressed: () async {
+                        await Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => PlanScreen(eventId: e['event_id'] as String, title: e['title'] as String),
+                        ));
+                        load();
+                      },
+                      icon: const Icon(Icons.checklist, size: 18),
+                      label: Text(my != null || e['mine'] == true ? 'Plan page: who\'s bringing what, chat' : 'Plan page'),
+                    ),
+                  ),
                 ]),
               ),
             ),
