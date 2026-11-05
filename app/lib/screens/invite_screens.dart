@@ -296,12 +296,14 @@ class _MyInvitesScreenState extends State<MyInvitesScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('$left', style: B.display(48).copyWith(color: B.gold)),
-                  Text(left == 1 ? 'invite left this $period' : 'invites left this $period',
+                  Text(d['unlimited'] == true ? '∞' : '$left', style: B.display(48).copyWith(color: B.gold)),
+                  Text(d['unlimited'] == true ? 'unlimited invites (owner)' : left == 1 ? 'invite left this $period' : 'invites left this $period',
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   Text(
-                    d['frozen'] == true
+                    d['unlimited'] == true
+                        ? 'Make as many as you need. Each code lets one person in and lasts 30 days. For testers, use Invite testers (admin): those codes also turn on tester access.'
+                        : d['frozen'] == true
                         ? 'Your invites are paused for now.'
                         : next == null
                             ? (d['phase'] == 'done' ? 'You\'ve had your six months of invites.' : 'That\'s your last batch of invites.')
