@@ -265,10 +265,11 @@ footer a{color:var(--muted);margin-right:16px}
     .then(function (r) { return r.ok ? r.json() : []; })
     .then(function (rows) {
       rows.forEach(function (c) {
-        var o = document.createElement('option'); o.value = c.slug; o.textContent = c.name + (c.region ? ', ' + c.region : '');
+        var o = document.createElement('option'); o.value = c.slug; o.textContent = c.name + (c.region ? ', ' + c.region : '') + (c.open === false ? ' (coming soon)' : '');
         sel.appendChild(o);
       });
-      if (rows.length === 1) sel.value = rows[0].slug;
+      var open = rows.filter(function (c) { return c.open !== false; });
+      if (open.length === 1) sel.value = open[0].slug;
     })
     .catch(function () {})
     .then(function () {

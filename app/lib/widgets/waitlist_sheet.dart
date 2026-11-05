@@ -113,7 +113,7 @@ class _WaitlistSheetState extends State<_WaitlistSheet> {
                   decoration: const InputDecoration(hintText: 'Your city'),
                   items: [
                     for (final c in _cities)
-                      DropdownMenuItem(value: c['slug'] as String, child: Text([c['name'], c['region']].whereType<String>().join(', '))),
+                      DropdownMenuItem(value: c['slug'] as String, child: Text([c['name'], c['region']].whereType<String>().join(', ') + (c['open'] == false ? ' (coming soon)' : ''))),
                     const DropdownMenuItem(value: _elsewhere, child: Text('Somewhere else')),
                   ],
                   onChanged: (v) => setState(() => _city = v),
