@@ -175,6 +175,8 @@ footer a{color:var(--muted);margin-right:16px}
         <label class="f" for="city">City</label>
         <select id="city" required><option value="">Choose your city</option></select>
         <input id="cityOther" class="hidden" type="text" autocomplete="address-level2" placeholder="Your city" style="margin-top:8px">
+        <label class="f" for="gender">Gender</label>
+        <select id="gender" required><option value="">Choose one</option><option value="man">Man</option><option value="woman">Woman</option></select>
         <label class="f" for="ref">Invite or reference code <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
         <input id="ref" type="text" autocomplete="off" placeholder="ABCD-1234" style="text-transform:uppercase">
         <label class="check"><input type="checkbox" id="adult"> I'm 18 or older.</label>
@@ -284,11 +286,12 @@ footer a{color:var(--muted);margin-right:16px}
     var city = sel.value === '__other' ? $('cityOther').value.trim() : sel.value;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.className = 'msg err'; msg.textContent = 'Enter a real email.'; return; }
     if (!city) { msg.className = 'msg err'; msg.textContent = 'Which city are you in?'; return; }
+    if (!$('gender').value) { msg.className = 'msg err'; msg.textContent = 'Choose your gender.'; return; }
     if (!$('adult').checked) { msg.className = 'msg err'; msg.textContent = 'Based is 18+ only.'; return; }
     var btn = $('submit'); btn.disabled = true; btn.textContent = 'Saving…';
     fetch(URL + 'join_waitlist_site', {
       method: 'POST', headers: H,
-      body: JSON.stringify({ p_email: email, p_city: city, p_ref: $('ref').value.trim() || null, p_adult: true })
+      body: JSON.stringify({ p_email: email, p_city: city, p_ref: $('ref').value.trim() || null, p_adult: true, p_gender: $('gender').value })
     }).then(function (r) {
       return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong. Try again.'); return j; });
     }).then(function (j) {
