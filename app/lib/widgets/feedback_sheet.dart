@@ -5,26 +5,28 @@ import '../theme.dart';
 import 'ui.dart';
 
 /// "Report a problem": a bug, something confusing, or an idea. Goes to the admin Activity screen
-/// with the screen it came from and the build number attached.
-Future<void> showFeedbackSheet(BuildContext context) {
+/// (and the analytics page on the website) with the screen it came from and the build number attached.
+/// [suggestion] opens it as "Make a suggestion" instead (its own button next to "Report a problem").
+Future<void> showFeedbackSheet(BuildContext context, {bool suggestion = false}) {
   final where = Diagnostics.screen; // capture before the sheet itself opens
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _FeedbackSheet(screen: where),
+    builder: (_) => _FeedbackSheet(screen: where, suggestion: suggestion),
   );
 }
 
 class _FeedbackSheet extends StatefulWidget {
-  const _FeedbackSheet({required this.screen});
+  const _FeedbackSheet({required this.screen, this.suggestion = false});
   final String screen;
+  final bool suggestion;
   @override
   State<_FeedbackSheet> createState() => _FeedbackSheetState();
 }
 
 class _FeedbackSheetState extends State<_FeedbackSheet> {
   final _body = TextEditingController();
-  String _kind = 'bug';
+  late String _kind = widget.suggestion ? 'suggestion' : 'bug';
   bool _busy = false;
   String? _error;
 
@@ -61,15 +63,17 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Report a problem', style: B.heading(24)),
+          Text(widget.suggestion ? 'Make a suggestion' : 'Report a problem', style: B.heading(24)),
           const SizedBox(height: 4),
-          Text('From: ${widget.screen}', style: TextStyle(color: B.muted, fontSize: 12.5)),
+          Text(widget.suggestion ? 'Something you\'d add, change or take away. It goes straight to the owner.' : 'From: ${widget.screen}',
+              style: TextStyle(color: B.muted, fontSize: 12.5)),
           const SizedBox(height: 12),
-          Wrap(spacing: 6, children: [
-            PillChip(label: 'Something broke', selected: _kind == 'bug', onTap: () => setState(() => _kind = 'bug')),
-            PillChip(label: 'This is confusing', selected: _kind == 'confusing', onTap: () => setState(() => _kind = 'confusing')),
-            PillChip(label: 'Idea', selected: _kind == 'idea', onTap: () => setState(() => _kind = 'idea')),
-          ]),
+          if (!widget.suggestion)
+            Wrap(spacing: 6, children: [
+              PillChip(label: 'Something broke', selected: _kind == 'bug', onTap: () => setState(() => _kind = 'bug')),
+              PillChip(label: 'This is confusing', selected: _kind == 'confusing', onTap: () => setState(() => _kind = 'confusing')),
+              PillChip(label: 'Idea', selected: _kind == 'idea', onTap: () => setState(() => _kind = 'idea')),
+            ]),
           const SizedBox(height: 12),
           TextField(
             controller: _body,
@@ -81,6 +85,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               hintText: switch (_kind) {
                 'bug' => 'What happened, and what did you expect?',
                 'confusing' => 'What were you trying to do?',
+                'suggestion' => 'What would you add or change?',
                 _ => 'What would make it better?',
               },
             ),

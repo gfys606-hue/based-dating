@@ -48,6 +48,14 @@ waitlist/index.html         pre-launch waitlist site (sign-ups go into the `wait
 | What I'm up for: Looking for (2 weeks, renewable), Available for, I can / I need; matches in your city with the reason; nudge the best 3 when you add something (each person at most every 3 days) | `set_my_intents`, `intent_pairs`, `intent_fits`, `get_intent_matches`, `nudge_intent_matches` |
 | Back it / Push back on ideas and cards: one tap, optional reasons and notes, 5 backs a day, no counts; author sees who and why plus a private temperature | `react_to_idea`, `get_idea_reactions`, `idea_heat` |
 | Open conversation under every idea and card: anyone can read, join to comment; can become a group | `get_idea_convo`, `join_idea_convo`, `post_idea_convo`, `idea_to_group` |
+| Pitch cards: idea, stage, the ask, who you are; routed to members whose "What I'm up for" fits the ask (up to 5 told), browsable by ask; Let's talk opens a private chat; only the author sees who reached out | `post_pitch`, `get_pitches`, `nudge_pitch`, `talk_about_pitch` |
+| Invites: 5 a week for the first month, then 3 a month until 6 months; unused don't carry over; owner can open extra invites to a full city's members | `grant_invites`, `refill_invites` (hourly), `admin_city_invites` |
+| Morning recap after a check-in (no list of people); night ratings in two tracks (Met new people / Night with my people); venues that rate well rise in suggestions | `send_night_recaps` (cron), `rate_night`, `venue_night_score`, `get_partner_venues` |
+| Venue plans: members going to each place tonight and the next 2 nights; friends named, everyone else a number; quiet mode and plans aimed past you count but aren't named | `get_venue_plans` |
+| Slow-night perks: staff post a members-only perk; everyone nearby of drinking age told, max one perk push a day; then a tag on the venue | `post_venue_perk` |
+| Friend nudges: after 28 days away, active friends get "X is on, you're both into Y" (never says they've been away); once a week per friend; opt-out | `send_friend_nudges` (cron) |
+| House rules accepted once; warnings then strikes (violence = straight to a strike); "Conduct strike" mark for 12 months, appealable; 3 strikes = suspended for review | `accept_house_rules`, `admin_conduct`, `appeal_strike`, `admin_decide_strike` |
+| Owner alerts: a ping per waitlist signup until 10 in a day, then one nightly summary; analytics page at based-social.com/admin (owner only); suggestions next to bug reports | `tg_waitlist_alert`, `send_waitlist_summary` (cron), `admin_waitlist_overview` |
 
 ## Setup
 

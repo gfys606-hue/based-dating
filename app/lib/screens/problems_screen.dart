@@ -235,6 +235,7 @@ class _KindChip extends StatelessWidget {
     final (label, color) = switch (kind) {
       'bug' => ('Something broke', B.bad),
       'confusing' => ('Confusing', B.caution),
+      'suggestion' => ('Suggestion', B.good),
       _ => ('Idea', B.good),
     };
     return Container(

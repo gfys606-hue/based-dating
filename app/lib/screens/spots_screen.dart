@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../services/nights_api.dart';
 import '../services/places_api.dart';
 import '../services/social_api.dart';
 import '../services/venue_api.dart';
@@ -26,6 +27,9 @@ class _SpotsScreenState extends State<SpotsScreen> {
   List<Map<String, dynamic>> _spots = [];
   List<Map<String, dynamic>> _partners = [];
   List<Map<String, dynamic>> _rooms = [];
+  List<Map<String, dynamic>> _plans = []; // where members plan to go, tonight and the next two nights
+  int _planNight = 0; // 0 tonight, 1 tomorrow, 2 the night after
+  Map<String, dynamic>? _recap; // last night, to look back on
   bool _loading = true;
 
   @override
@@ -59,6 +63,15 @@ class _SpotsScreenState extends State<SpotsScreen> {
     try {
       final r = await RoomsApi.mine();
       if (mounted) setState(() => _rooms = r);
+    } catch (_) {}
+    try {
+      final r = await Future.wait([NightsApi.plans(days: 3), NightsApi.recap().then((v) => v == null ? <Map<String, dynamic>>[] : [v])]);
+      if (mounted) {
+        setState(() {
+          _plans = r[0];
+          _recap = r[1].isEmpty ? null : r[1].first;
+        });
+      }
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
@@ -115,6 +128,18 @@ class _SpotsScreenState extends State<SpotsScreen> {
           const SizedBox(height: 16),
           if (_loading) const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
 
+          // ---- The morning after: how was it? ----
+          if (_recap != null) ...[
+            _NightRecapCard(
+              recap: _recap!,
+              onDone: (msg) {
+                setState(() => _recap = null);
+                if (msg != null) _toast(msg);
+              },
+            ),
+            const SizedBox(height: 18),
+          ],
+
           // ---- Here now ----
           SectionLabel('Here now', color: B.accentStrong),
           const SizedBox(height: 10),
@@ -138,6 +163,10 @@ class _SpotsScreenState extends State<SpotsScreen> {
             for (final f in friends) _friendHere(f),
           ] else if (!_loading)
             Text('None of your friends are checked in right now.', style: TextStyle(color: B.muted, fontSize: 13)),
+          const SizedBox(height: 24),
+
+          // ---- Plans around town ----
+          _plansSection(),
           const SizedBox(height: 24),
 
           // ---- Watering holes ----
@@ -173,7 +202,9 @@ class _SpotsScreenState extends State<SpotsScreen> {
                 title: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text([
                   if (p['featured'] == true) 'Featured',
-                  '${(p['distance_km'] as num).toStringAsFixed(1)} km',
+                  if (p['perk'] != null) 'Tonight: ${p['perk']}',
+                  if (p['nights'] != null) p['nights'] as String,
+                  '${(p['distance_km'] as num? ?? 0).toStringAsFixed(1)} km',
                   if ((p['friends_here'] as num? ?? 0) > 0) '${p['friends_here']} friends here now',
                   if (p['address'] != null) p['address'] as String,
                 ].join(' · ')),
@@ -182,6 +213,111 @@ class _SpotsScreenState extends State<SpotsScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  // Where members plan to go. Friends going are named; everyone else is just part of the number.
+  Widget _plansSection() {
+    final today = DateTime.now().subtract(const Duration(hours: 6)); // a night runs until 6 am
+    final nights = [for (var i = 0; i < 3; i++) DateFormat('yyyy-MM-dd').format(today.add(Duration(days: i)))];
+    final rows = _plans.where((p) => p['night'] == nights[_planNight]).toList();
+    final pins = [
+      for (final p in rows)
+        if (p['lat'] != null && ((p['going'] as num? ?? 0) > 0 || p['perk'] != null))
+          {
+            'lat': p['lat'],
+            'lng': p['lng'],
+            'label': (p['going'] as num? ?? 0) > 0 ? '${p['going']} going' : 'Perk',
+          },
+    ];
+    String dayLabel(int i) => switch (i) {
+          0 => 'Tonight',
+          1 => 'Tomorrow',
+          _ => DateFormat('EEEE').format(today.add(Duration(days: i))),
+        };
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      SectionLabel('Plans around town', color: B.accentStrong),
+      const SizedBox(height: 4),
+      Text('How many members plan to be where. Your friends are named; everyone else is just a number.',
+          style: TextStyle(color: B.muted, fontSize: 12.5)),
+      const SizedBox(height: 10),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Segmented(
+          options: [for (var i = 0; i < 3; i++) dayLabel(i)],
+          index: _planNight,
+          onChanged: (i) => setState(() => _planNight = i),
+        ),
+      ),
+      const SizedBox(height: 10),
+      if (pins.isNotEmpty) ...[
+        PlaceMap(height: 210, zoom: 13, pins: pins),
+        const SizedBox(height: 8),
+      ],
+      if (rows.isEmpty && !_loading)
+        Text('No plans posted for ${dayLabel(_planNight).toLowerCase()} yet. Post one from your spots below.',
+            style: TextStyle(color: B.muted, fontSize: 13)),
+      for (final p in rows) _planTile(p),
+    ]);
+  }
+
+  Widget _planTile(Map<String, dynamic> p) {
+    final going = (p['going'] as num? ?? 0).toInt();
+    final friends = List<Map<String, dynamic>>.from(
+        (p['friends'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)));
+    final names = friends.map((f) => f['name'] as String).toList();
+    final others = going - names.length - (p['me_going'] == true ? 1 : 0);
+    final who = [
+      if (p['me_going'] == true) 'You',
+      ...names.take(3),
+      if (names.length > 3) '${names.length - 3} more friends',
+      if (others > 0) '$others ${others == 1 ? 'other member' : 'other members'}',
+    ];
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: B.cardBox(border: p['perk'] != null ? B.gold : null),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          width: 48,
+          child: Column(children: [
+            Text('$going', style: B.display(26).copyWith(color: going > 0 ? B.goldInk : B.muted)),
+            Text('GOING', style: B.label.copyWith(fontSize: 8.5)),
+          ]),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Flexible(child: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+              if (p['partner'] == true) ...[
+                const SizedBox(width: 6),
+                Icon(Icons.verified_outlined, size: 15, color: B.goldInk),
+              ],
+            ]),
+            if (who.isNotEmpty)
+              Text(who.join(', '), style: TextStyle(color: B.ink2, fontSize: 13)),
+            if (p['nights'] != null)
+              Text(p['nights'] as String, style: TextStyle(color: B.muted, fontSize: 12)),
+            if (p['perk'] != null) ...[
+              const SizedBox(height: 6),
+              Wrap(children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: B.gold, borderRadius: BorderRadius.circular(2)),
+                  child: Text('MEMBERS: ${(p['perk'] as String).toUpperCase()}',
+                      style: B.label.copyWith(color: B.onGold, fontSize: 9.5)),
+                ),
+              ]),
+              if (p['perk_details'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(p['perk_details'] as String, style: TextStyle(color: B.muted, fontSize: 12.5)),
+                ),
+            ],
+          ]),
+        ),
+      ]),
     );
   }
 
@@ -585,6 +721,97 @@ class _QuickPlanSheetState extends State<_QuickPlanSheet> {
           ),
         ]),
       ),
+    );
+  }
+}
+
+
+/// The morning after: "You were at X last night. How was it? Did you meet anybody? Any pictures?"
+/// No list of people. The answer becomes a rating for the night (two kinds of night, three answers each).
+class _NightRecapCard extends StatefulWidget {
+  const _NightRecapCard({required this.recap, required this.onDone});
+  final Map<String, dynamic> recap;
+  final void Function(String? message) onDone;
+  @override
+  State<_NightRecapCard> createState() => _NightRecapCardState();
+}
+
+class _NightRecapCardState extends State<_NightRecapCard> {
+  String? _track;
+  String? _rating;
+  bool? _met;
+  bool _busy = false;
+
+  String get _place => widget.recap['place_name'] as String;
+  String get _when => widget.recap['last_night'] == true ? 'last night' : 'the other night';
+
+  Future<void> _save() async {
+    if (_track == null || _rating == null) return;
+    setState(() => _busy = true);
+    try {
+      await NightsApi.rate(widget.recap['place_id'] as String, widget.recap['night'] as String, _track!, _rating!, met: _met);
+      widget.onDone(_met == true
+          ? 'Thanks. If you met someone, find them in Friends and add them.'
+          : 'Thanks. That helps other members find good nights.');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(NightsApi.errorText(e))));
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _skip() async {
+    await NightsApi.skip(widget.recap['place_id'] as String, widget.recap['night'] as String).catchError((_) {});
+    widget.onDone(null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: B.cardBox(border: B.gold),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text('You were at $_place $_when.', style: B.heading(19))),
+          IconButton(tooltip: 'Not now', onPressed: _busy ? null : _skip, icon: Icon(Icons.close, color: B.muted, size: 20)),
+        ]),
+        Text('How was it?', style: TextStyle(color: B.ink2, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 10),
+        Wrap(spacing: 6, runSpacing: 6, children: [
+          for (final t in nightTracks.entries)
+            PillChip(
+              label: t.value.$1,
+              selected: _track == t.key,
+              onTap: () => setState(() {
+                _track = t.key;
+                _rating = null;
+              }),
+            ),
+        ]),
+        if (_track != null) ...[
+          const SizedBox(height: 10),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for (final r in nightTracks[_track]!.$2)
+              PillChip(label: r.$2, selected: _rating == r.$1, onTap: () => setState(() => _rating = r.$1)),
+          ]),
+        ],
+        const SizedBox(height: 12),
+        Text('Did you meet anybody?', style: TextStyle(color: B.ink2, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Wrap(spacing: 6, children: [
+          PillChip(label: 'Yes', selected: _met == true, onTap: () => setState(() => _met = true)),
+          PillChip(label: 'Not this time', selected: _met == false, onTap: () => setState(() => _met = false)),
+        ]),
+        const SizedBox(height: 10),
+        Text('Any pictures you want to post? Share them from Discover → Posts. Ask before you post anyone else.',
+            style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
+        const SizedBox(height: 12),
+        FilledButton(
+          onPressed: _busy || _rating == null ? null : _save,
+          child: Text(_busy ? 'Saving…' : 'DONE'),
+        ),
+      ]),
     );
   }
 }

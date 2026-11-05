@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/api.dart';
 import '../services/push.dart';
@@ -9,6 +10,7 @@ import '../widgets/feedback_sheet.dart';
 import 'admin_review_screen.dart';
 import 'edit_profile_screen.dart';
 import 'goals_screen.dart';
+import 'house_rules_screen.dart';
 import 'intents_screen.dart';
 import 'invite_screens.dart';
 import 'membership_screen.dart';
@@ -73,7 +75,21 @@ class YouScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, B.navClearance),
       children: [
-        Text('You', style: B.display(32)),
+        Row(children: [
+          Expanded(child: Text('You', style: B.display(32))),
+          // Owner only, for testing: the analytics page on the website. (Temporary; the page will
+          // get its own separate entrance later.)
+          FutureBuilder(
+            future: Api.myProfile(),
+            builder: (context, snap) => snap.data?['is_admin'] == true
+                ? IconButton(
+                    tooltip: 'Analytics (website)',
+                    icon: Icon(Icons.query_stats, color: B.goldInk),
+                    onPressed: () => launchUrl(Uri.parse('https://based-social.com/admin/'), mode: LaunchMode.externalApplication),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ]),
         const SizedBox(height: 16),
         InkWell(
           borderRadius: BorderRadius.circular(4),
@@ -115,6 +131,9 @@ class YouScreen extends StatelessWidget {
               row(Icons.workspace_premium_outlined, 'Membership', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()))),
               Divider(height: 1, color: B.fill),
               row(Icons.public_outlined, 'Real-world tally', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TallyScreen()))),
+              Divider(height: 1, color: B.fill),
+              row(Icons.gavel_outlined, 'House rules & your standing',
+                  () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StandingScreen()))),
               FutureBuilder(
                 future: Future.wait([
                   VenueApi.myVenues().catchError((_) => <Map<String, dynamic>>[]),
@@ -196,6 +215,21 @@ class YouScreen extends StatelessWidget {
               title: 'Same-room heads-ups',
               on: 'When another member checks in where you are, you both get a heads-up (age and interests only).',
               off: 'Off: no heads-ups, and nobody gets one about you.',
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: B.cardBox(),
+          child: FutureBuilder(
+            future: Api.myProfile(),
+            builder: (context, snap) => _ProfileSwitch(
+              key: ValueKey('fn${snap.data?['friend_nudges']}'),
+              field: 'friend_nudges',
+              initial: snap.data?['friend_nudges'] != false,
+              title: 'Friend nudges',
+              on: 'Now and then, a heads-up when there\'s something on that you and a friend would both be into.',
+              off: 'Off: no friend nudges for you, and none to your friends about you.',
             ),
           ),
         ),

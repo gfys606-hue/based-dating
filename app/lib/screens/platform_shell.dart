@@ -6,9 +6,10 @@ import 'events_screen.dart';
 import 'home_shell.dart';
 import 'ideas_screen.dart';
 import 'market_screen.dart';
+import 'pitches_screen.dart';
 import 'search_screen.dart';
 
-/// The whole app, for every member: the dating tabs plus Ideas, Herd, Search, Events and Market on one left rail.
+/// The whole app, for every member: the dating tabs plus Ideas, Pitches, Herd, Search, Events and Market on one left rail.
 class PlatformShell extends StatelessWidget {
   const PlatformShell({super.key, required this.onStatusChanged});
   final VoidCallback onStatusChanged;
@@ -19,6 +20,7 @@ class PlatformShell extends StatelessWidget {
       onStatusChanged: onStatusChanged,
       extras: [
         ShellPage(const RailItem('Ideas', Icons.lightbulb_outline, Icons.lightbulb), (_) => const IdeasScreen()),
+        ShellPage(const RailItem('Pitches', Icons.rocket_launch_outlined, Icons.rocket_launch), (_) => const PitchesScreen()),
         ShellPage(const RailItem('Herd', Icons.groups_outlined, Icons.groups), (_) => const CirclesScreen()),
         ShellPage(const RailItem('Search', Icons.search, Icons.search), (open) => SearchScreen(openModule: open)),
         ShellPage(const RailItem('Events', Icons.event_outlined, Icons.event), (_) => const EventsScreen()),

@@ -284,6 +284,9 @@ class _MyInvitesScreenState extends State<MyInvitesScreen> {
     final left = d?['left'] as int? ?? 0;
     final next = d?['next_refill'] == null ? null : DateTime.parse(d!['next_refill'] as String).toLocal();
     final monthsLeft = d?['months_left'] as int? ?? 0;
+    final weekly = d?['phase'] == 'weekly';
+    final period = d?['period'] as String? ?? 'month';
+    final nextAmount = d?['next_amount'] as int? ?? 3;
     return Scaffold(
       appBar: AppBar(title: Text('Invite friends', style: B.heading(22))),
       body: d == null
@@ -294,15 +297,18 @@ class _MyInvitesScreenState extends State<MyInvitesScreen> {
                 decoration: BoxDecoration(color: B.panel, borderRadius: BorderRadius.circular(B.radius)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('$left', style: B.display(48).copyWith(color: B.gold)),
-                  Text(left == 1 ? 'invite left this month' : 'invites left this month',
+                  Text(left == 1 ? 'invite left this $period' : 'invites left this $period',
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   Text(
                     d['frozen'] == true
                         ? 'Your invites are paused for now.'
-                        : monthsLeft > 0 && next != null
-                            ? 'Back to 3 on ${DateFormat('MMM d').format(next)} · $monthsLeft more ${monthsLeft == 1 ? 'month' : 'months'} of invites. Unused ones don\'t carry over.'
-                            : 'That\'s your last month of invites.',
+                        : next == null
+                            ? (d['phase'] == 'done' ? 'You\'ve had your six months of invites.' : 'That\'s your last batch of invites.')
+                            : weekly
+                                ? 'Your first month: 5 invites a week. Back to $nextAmount on ${DateFormat('MMM d').format(next)}. '
+                                    'After that, 3 a month until you\'ve been in 6 months. Unused ones don\'t carry over.'
+                                : 'Back to 3 on ${DateFormat('MMM d').format(next)} · about $monthsLeft more ${monthsLeft == 1 ? 'month' : 'months'} of invites. Unused ones don\'t carry over.',
                     style: TextStyle(color: B.onPanelMuted, fontSize: 13, height: 1.4),
                   ),
                   const SizedBox(height: 14),
@@ -583,6 +589,20 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                 },
                 child: const Text('SCHEDULE DROP'),
               ),
+              const SizedBox(height: 22),
+              const SectionLabel('Extra invites for members'),
+              const SizedBox(height: 4),
+              Text('City full and the waitlist growing? Members get first say on who comes in: give everyone here a few more invites, even past their six months.',
+                  style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, children: [
+                for (final n in const [1, 2, 3])
+                  OutlinedButton(
+                    onPressed: () => run(ctx, () => CityApi.extraInvites(slug, n),
+                        '${c['name']} members got $n more ${n == 1 ? 'invite' : 'invites'}'),
+                    child: Text('+$n EACH'),
+                  ),
+              ]),
             ]),
           ),
         ),

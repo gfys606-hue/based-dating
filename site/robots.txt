@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /test/based-test.apk
 Disallow: /test/based-test-older-phones.apk
+Disallow: /admin/
 
 Sitemap: https://based-social.com/sitemap.xml

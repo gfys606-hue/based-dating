@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api.dart';
+import '../services/conduct_api.dart';
 import 'tally_screen.dart';
 import '../services/membership_api.dart';
 import '../theme.dart';
@@ -125,6 +126,19 @@ class ProfileBody extends StatelessWidget {
               Text('BARRED BY 3 VENUES THIS YEAR', style: B.label.copyWith(color: B.urgent)),
             ]),
           ),
+        FutureBuilder(
+          future: ConductApi.mark(profile['id'] as String).catchError((_) => false),
+          builder: (context, snap) => snap.data == true
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(children: [
+                    Icon(Icons.gavel_outlined, size: 14, color: B.urgent),
+                    const SizedBox(width: 6),
+                    Text('CONDUCT STRIKE', style: B.label.copyWith(color: B.urgent)),
+                  ]),
+                )
+              : const SizedBox.shrink(),
+        ),
         if (profile['joined_via'] != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),

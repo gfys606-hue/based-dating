@@ -42,4 +42,8 @@ class CityApi {
   static Future<void> scheduleDrop(String slug, int spots, DateTime at) => _db.rpc('admin_schedule_drop',
       params: {'p_city': slug, 'p_spots': spots, 'p_at': at.toUtc().toIso8601String()});
   static Future<void> cancelDrop(int id) => _db.rpc('admin_cancel_drop', params: {'p_id': id});
+
+  /// Admin: give every member in a city [count] more invites (members first, then the waitlist).
+  static Future<void> extraInvites(String slug, int count) =>
+      _db.rpc('admin_city_invites', params: {'p_city': slug, 'p_count': count});
 }

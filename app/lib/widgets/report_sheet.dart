@@ -13,6 +13,7 @@ Future<bool> showReportSheet(BuildContext context, {required String userId, requ
     'scam': 'Scam or asking for money',
     'explicit': 'Explicit content',
     'underage': 'May be under 18',
+    'house_rules': 'Broke a house rule (photos, sharing, venues)',
     'spam': 'Spam or selling',
     'other': 'Something else',
   };

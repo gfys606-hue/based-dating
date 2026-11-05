@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../services/membership_api.dart';
+import '../services/nights_api.dart';
 import '../services/venue_api.dart';
 import '../theme.dart';
 import '../widgets/place_widgets.dart';
@@ -87,7 +88,7 @@ class MyVenueScreen extends StatelessWidget {
   final Map<String, dynamic> venue;
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 4,
+        length: 5,
         child: Scaffold(
           appBar: AppBar(
             title: Text(venue['name'] as String, style: B.heading(22)),
@@ -100,16 +101,150 @@ class MyVenueScreen extends StatelessWidget {
                 )),
               ),
             ],
-            bottom: const TabBar(tabs: [Tab(text: 'Tables'), Tab(text: 'Passes'), Tab(text: 'People'), Tab(text: 'Bars')]),
+            bottom: const TabBar(
+              isScrollable: true,
+              tabs: [Tab(text: 'Tables'), Tab(text: 'Perks'), Tab(text: 'Passes'), Tab(text: 'People'), Tab(text: 'Bars')],
+            ),
           ),
           body: TabBarView(children: [
             _TablesTab(venue: venue),
+            _PerksTab(venueId: venue['venue_id'] as String),
             _PassesTab(venueId: venue['venue_id'] as String, name: venue['name'] as String),
             _PeopleTab(venueId: venue['venue_id'] as String),
             _BarsTab(venueId: venue['venue_id'] as String),
           ]),
         ),
       );
+}
+
+/// Slow-night perks: a members-only perk for a quiet night. Every member nearby hears about it
+/// (at most one perk notification a day each); after that it shows as a tag on your venue.
+class _PerksTab extends StatefulWidget {
+  const _PerksTab({required this.venueId});
+  final String venueId;
+  @override
+  State<_PerksTab> createState() => _PerksTabState();
+}
+
+class _PerksTabState extends State<_PerksTab> {
+  final _title = TextEditingController();
+  final _details = TextEditingController();
+  int _night = 0; // nights from tonight
+  bool _busy = false;
+  List<Map<String, dynamic>>? _perks;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _details.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final r = await NightsApi.venuePerks(widget.venueId);
+      if (mounted) setState(() => _perks = r);
+    } catch (_) {
+      if (mounted) setState(() => _perks = []);
+    }
+  }
+
+  DateTime get _tonight => DateTime.now().subtract(const Duration(hours: 6));
+
+  Future<void> _post() async {
+    if (_title.text.trim().length < 3) return;
+    setState(() => _busy = true);
+    try {
+      final n = await NightsApi.postPerk(
+        widget.venueId,
+        _title.text.trim(),
+        details: _details.text.trim().isEmpty ? null : _details.text.trim(),
+        night: DateFormat('yyyy-MM-dd').format(_tonight.add(Duration(days: _night))),
+      );
+      _title.clear();
+      _details.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(n > 0
+                ? 'Posted. $n ${n == 1 ? 'member' : 'members'} nearby got a heads-up; everyone else sees it on your venue.'
+                : 'Posted. It shows as a tag on your venue (members nearby already had a perk today).')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_err(e))));
+    }
+    if (mounted) setState(() => _busy = false);
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final perks = _perks;
+    return ListView(padding: const EdgeInsets.all(18), children: [
+      Text('Quiet night? Fill the seats.', style: B.heading(20)),
+      const SizedBox(height: 4),
+      Text('Post a members-only perk. Members nearby (of drinking age) get one heads-up, '
+          'and it shows as a tag on your venue in Spots.',
+          style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
+      const SizedBox(height: 14),
+      Wrap(spacing: 6, runSpacing: 6, children: [
+        for (var i = 0; i < 4; i++)
+          PillChip(
+            label: i == 0 ? 'Tonight' : i == 1 ? 'Tomorrow' : DateFormat('EEEE').format(_tonight.add(Duration(days: i))),
+            selected: _night == i,
+            onTap: () => setState(() => _night = i),
+          ),
+      ]),
+      const SizedBox(height: 10),
+      TextField(
+        controller: _title,
+        maxLength: 80,
+        textCapitalization: TextCapitalization.sentences,
+        onChanged: (_) => setState(() {}),
+        decoration: const InputDecoration(labelText: 'The perk', hintText: 'e.g. Half-price old fashioneds before 9'),
+      ),
+      TextField(
+        controller: _details,
+        maxLength: 300,
+        maxLines: 3,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(labelText: 'Details (optional)', hintText: 'e.g. Show the app at the bar'),
+      ),
+      FilledButton(
+        onPressed: _busy || _title.text.trim().length < 3 ? null : _post,
+        child: Text(_busy ? 'Posting…' : 'POST PERK'),
+      ),
+      const SizedBox(height: 22),
+      const SectionLabel('Recent perks'),
+      if (perks == null) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
+      if (perks != null && perks.isEmpty)
+        Padding(padding: const EdgeInsets.only(top: 8), child: Text('None yet.', style: TextStyle(color: B.muted))),
+      for (final p in perks ?? const <Map<String, dynamic>>[])
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(p['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text([
+            DateFormat('EEE MMM d').format(DateTime.parse(p['night'] as String)),
+            '${p['reached']} told',
+            if (p['active'] != true) 'ended',
+          ].join(' · ')),
+          trailing: p['active'] == true
+              ? TextButton(
+                  onPressed: () async {
+                    await NightsApi.endPerk(p['perk_id'] as String).catchError((_) {});
+                    _load();
+                  },
+                  child: const Text('END'),
+                )
+              : null,
+        ),
+    ]);
+  }
 }
 
 class _TablesTab extends StatefulWidget {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/api.dart';
+import '../services/conduct_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'profile_view_screen.dart';
@@ -19,6 +20,7 @@ const _catNames = {
   'scam': 'Scam',
   'explicit': 'Explicit',
   'underage': 'Under 18?',
+  'house_rules': 'House rule',
   'spam': 'Spam',
   'other': 'Other',
 };
@@ -28,13 +30,13 @@ class AdminReviewScreen extends StatelessWidget {
   const AdminReviewScreen({super.key});
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 3,
+        length: 4,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Safety review', style: B.heading(22)),
-            bottom: const TabBar(tabs: [Tab(text: 'Reports'), Tab(text: 'Photos'), Tab(text: 'Venues')]),
+            bottom: const TabBar(tabs: [Tab(text: 'Reports'), Tab(text: 'Appeals'), Tab(text: 'Photos'), Tab(text: 'Venues')]),
           ),
-          body: const TabBarView(children: [_ReportsTab(), _PhotosTab(), AdminVenuesTab()]),
+          body: const TabBarView(children: [_ReportsTab(), _AppealsTab(), _PhotosTab(), AdminVenuesTab()]),
         ),
       );
 }
@@ -166,6 +168,65 @@ class _ReportDetailState extends State<_ReportDetail> {
     if (mounted) setState(() => _busy = false);
   }
 
+  // A house-rule break: minor ones start as a warning (the same rule again within a year is a strike);
+  // serious ones (violence) go straight to a strike.
+  Future<void> _conduct() async {
+    String rule = 'photos';
+    bool serious = false;
+    final note = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => AlertDialog(
+          title: const Text('House rule'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              for (final e in conductRules.entries)
+                RadioListTile<String>(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  value: e.key,
+                  groupValue: rule,
+                  title: Text(e.value),
+                  onChanged: (v) => set(() {
+                    rule = v!;
+                    if (rule == 'violence') serious = true;
+                  }),
+                ),
+              CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: serious,
+                title: const Text('Serious: straight to a strike'),
+                subtitle: const Text('Otherwise a first slip is a warning'),
+                onChanged: (v) => set(() => serious = v ?? false),
+              ),
+              TextField(controller: note, maxLines: 3, decoration: const InputDecoration(hintText: 'What they\'re told (optional)')),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('RECORD')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _busy = true);
+    try {
+      final level = await ConductApi.record(widget.userId, rule,
+          note: note.text.trim().isEmpty ? null : note.text.trim(), serious: serious);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(level == 'strike' ? 'Conduct strike added. It shows on their profile.' : 'Warning sent.')));
+      }
+      await _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ConductApi.errorText(e))));
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final d = _d;
@@ -197,6 +258,7 @@ class _ReportDetailState extends State<_ReportDetail> {
         Wrap(spacing: 8, runSpacing: 8, children: [
           OutlinedButton(onPressed: _busy ? null : () => _act('dismiss', 'Dismiss', 'Why it\'s fine (only you see this)'), child: const Text('DISMISS')),
           OutlinedButton(onPressed: _busy ? null : () => _act('warn', 'Warn', 'Message they\'ll get (optional)'), child: const Text('WARN')),
+          OutlinedButton(onPressed: _busy ? null : _conduct, child: const Text('HOUSE RULE')),
           FilledButton(onPressed: _busy ? null : () => _act('suspend', 'Suspend', 'Reason they\'ll see'), child: const Text('SUSPEND')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: B.urgent),
@@ -242,6 +304,88 @@ class _ReportDetailState extends State<_ReportDetail> {
               subtitle: Text('${_when(a['at'] as String)} · ${a['by'] ?? ''}'),
             ),
         ],
+      ]),
+    );
+  }
+}
+
+/// Conduct-strike appeals waiting on a decision.
+class _AppealsTab extends StatefulWidget {
+  const _AppealsTab();
+  @override
+  State<_AppealsTab> createState() => _AppealsTabState();
+}
+
+class _AppealsTabState extends State<_AppealsTab> {
+  List<Map<String, dynamic>>? _rowsData;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final r = await ConductApi.appeals();
+      if (mounted) setState(() => _rowsData = r);
+    } catch (_) {
+      if (mounted) setState(() => _rowsData = []);
+    }
+  }
+
+  Future<void> _decide(Map<String, dynamic> a, bool lift) async {
+    final note = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(lift ? 'Lift the strike' : 'Keep the strike'),
+        content: TextField(controller: note, maxLines: 3, decoration: const InputDecoration(hintText: 'What they\'re told (optional)')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(lift ? 'LIFT' : 'UPHOLD')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ConductApi.decide(a['strike_id'] as String, lift, note: note.text.trim().isEmpty ? null : note.text.trim());
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ConductApi.errorText(e))));
+    }
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = _rowsData;
+    if (rows == null) return const Center(child: CircularProgressIndicator());
+    if (rows.isEmpty) return Center(child: Text('No appeals waiting.', style: TextStyle(color: B.muted)));
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(padding: const EdgeInsets.all(16), children: [
+        for (final a in rows)
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: B.cardBox(),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              InkWell(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: a['user_id'] as String))),
+                child: Text('${a['name']} · ${a['rule_title']}', style: const TextStyle(fontWeight: FontWeight.w700)),
+              ),
+              Text('Strike ${_when(a['created_at'] as String)} · appealed ${_when(a['appealed_at'] as String)}',
+                  style: TextStyle(color: B.muted, fontSize: 12.5)),
+              if (a['note'] != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Why: ${a['note']}')),
+              Padding(padding: const EdgeInsets.only(top: 6), child: Text('Their side: ${a['appeal']}', style: TextStyle(color: B.ink2))),
+              const SizedBox(height: 8),
+              Row(children: [
+                OutlinedButton(onPressed: () => _decide(a, false), child: const Text('UPHOLD')),
+                const SizedBox(width: 8),
+                FilledButton(onPressed: () => _decide(a, true), child: const Text('LIFT')),
+              ]),
+            ]),
+          ),
       ]),
     );
   }

@@ -4,6 +4,7 @@ import '../services/diagnostics.dart';
 import '../widgets/feedback_sheet.dart';
 
 import '../services/api.dart';
+import '../services/conduct_api.dart';
 import '../services/friends_api.dart';
 import '../services/places_api.dart';
 import '../theme.dart';
@@ -12,12 +13,13 @@ import '../widgets/module_rail.dart';
 import 'discover_screen.dart';
 import 'friends_screen.dart';
 import 'home_screen.dart';
+import 'house_rules_screen.dart';
 import 'spots_screen.dart';
 import 'talk_screen.dart';
 import 'you_screen.dart';
 
 /// An extra module page on the rail (Circles, Search, Events, Market).
-/// [build] gets `open(module)` so a page can jump to another module (1 Circles, 2 Search, 3 Events, 4 Market).
+/// [build] gets `open(module)` so a page can jump to another module (1 Ideas, 2 Pitches, 3 Herd, 4 Search, 5 Events, 6 Market).
 class ShellPage {
   const ShellPage(this.item, this.build);
   final RailItem item;
@@ -61,6 +63,20 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
     Castle.view.value = 0;
     _checkBadge();
     PlacesApi.refreshMyLocation(); // distances use where you are now, not where you signed up
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkHouseRules());
+  }
+
+  /// Every member accepts the house rules once ("I'm in") before using the app.
+  Future<void> _checkHouseRules() async {
+    try {
+      final r = await ConductApi.houseRules();
+      if (r['accepted'] == true || !mounted) return;
+      await Navigator.of(context).push(MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => HouseRulesScreen(rules: List<Map<String, dynamic>>.from(
+            (r['rules'] as List).map((e) => Map<String, dynamic>.from(e as Map)))),
+      ));
+    } catch (_) {}
   }
 
   Future<void> _checkBadge() async {
@@ -107,17 +123,28 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
     ];
     Diagnostics.tab = items[_tab.clamp(0, items.length - 1)].label;
     return Scaffold(
-      // testers get a "Report a problem" button everywhere
+      // testers get "Make a suggestion" and "Report a problem" buttons everywhere
       floatingActionButton: widget.extras.isEmpty
           ? null
-          : FloatingActionButton.small(
-              heroTag: 'feedback',
-              tooltip: 'Report a problem',
-              backgroundColor: B.panel,
-              foregroundColor: B.gold,
-              onPressed: () => showFeedbackSheet(context),
-              child: const Icon(Icons.bug_report_outlined, size: 20),
-            ),
+          : Column(mainAxisSize: MainAxisSize.min, children: [
+              FloatingActionButton.small(
+                heroTag: 'suggest',
+                tooltip: 'Make a suggestion',
+                backgroundColor: B.panel,
+                foregroundColor: B.gold,
+                onPressed: () => showFeedbackSheet(context, suggestion: true),
+                child: const Icon(Icons.lightbulb_outline, size: 20),
+              ),
+              const SizedBox(height: 8),
+              FloatingActionButton.small(
+                heroTag: 'feedback',
+                tooltip: 'Report a problem',
+                backgroundColor: B.panel,
+                foregroundColor: B.gold,
+                onPressed: () => showFeedbackSheet(context),
+                child: const Icon(Icons.bug_report_outlined, size: 20),
+              ),
+            ]),
       body: Row(children: [
         ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 5),
         Expanded(
