@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _datingOn = false;
   Map<String, dynamic>? _post;
   List<Map<String, dynamic>> _notices = [];
+  String? _myPhoto;
   bool _loading = true;
 
   @override
@@ -50,15 +51,20 @@ class _HomeScreenState extends State<HomeScreen> {
         Api.feed(range: 'region'),
         Api.unreadNotices().catchError((_) => <Map<String, dynamic>>[]),
         Api.myProfile().then((p) => p == null ? <Map<String, dynamic>>[] : [p]).catchError((_) => <Map<String, dynamic>>[]),
+        Api.myPhotos().catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       final posts = results[2].where((p) => p['author_id'] != Api.me).toList();
+      final myPhotos = results[5]..sort((a, b) => (a['position'] as int).compareTo(b['position'] as int));
       setState(() {
         _matches = results[0];
         _people = results[1].take(3).toList();
         _post = posts.isEmpty ? null : posts.first;
         _notices = results[3];
         _datingOn = results[4].isNotEmpty && results[4].first['dating_on'] == true;
+        _myPhoto = myPhotos
+            .cast<Map<String, dynamic>?>()
+            .firstWhere((p) => p?['review_status'] == 'approved', orElse: () => null)?['storage_path'] as String?;
         _loading = false;
       });
     } catch (e) {
@@ -131,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               tooltip: 'You',
               onPressed: () => widget.goTab(3),
-              icon: CircleAvatar(radius: 22, backgroundColor: B.avatarFill, child: Icon(Icons.person, color: B.ink2)),
+              icon: Avatar(path: _myPhoto, size: 44),
             ),
           ]),
           const SizedBox(height: 16),

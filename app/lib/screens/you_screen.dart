@@ -98,7 +98,16 @@ class YouScreen extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: B.cardBox(),
             child: Row(children: [
-              CircleAvatar(radius: 30, backgroundColor: B.avatarFill, child: Icon(Icons.person, color: B.ink2, size: 30)),
+              FutureBuilder(
+                future: Api.myPhotos(),
+                builder: (context, snap) {
+                  final approved = (snap.data ?? const <Map<String, dynamic>>[])
+                      .where((p) => p['review_status'] == 'approved')
+                      .toList()
+                    ..sort((a, b) => (a['position'] as int).compareTo(b['position'] as int));
+                  return Avatar(path: approved.isEmpty ? null : approved.first['storage_path'] as String?, size: 60);
+                },
+              ),
               SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
