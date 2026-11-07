@@ -146,6 +146,9 @@
             <div><input type="radio" id="g-woman" name="gender" value="woman"><label for="g-woman">Woman</label></div>
           </div>
 
+          <label class="field" for="ref">Invite or reference code <span style="font-weight:400;color:var(--ink-2)">(optional)</span></label>
+          <input id="ref" name="ref" type="text" autocomplete="off" placeholder="From a member or a venue">
+
           <label class="check"><input type="checkbox" id="adult" required> I'm 18 or older.</label>
 
           <button type="submit" id="submit">Save my spot</button>
@@ -220,6 +223,7 @@
     const email = form.email.value.trim();
     const city = form.city.value.trim();
     const gender = (form.querySelector('input[name=gender]:checked') || {}).value;
+    const ref = form.ref.value.trim();
     const adult = document.getElementById('adult').checked;
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say('Enter a valid email.', 'err');
@@ -229,14 +233,16 @@
 
     btn.disabled = true; say('Saving…');
     try {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+      // Goes through the validated join_waitlist_site function (checks the email, the 18+ flag,
+      // and any reference code against real invite codes) instead of writing to the table directly.
+      const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/join_waitlist_site', {
         method: 'POST',
-        headers: { ...headers, Prefer: 'return=minimal' },
-        body: JSON.stringify({ email, city, gender, is_adult: true, source })
+        headers,
+        body: JSON.stringify({ p_email: email, p_city: city, p_ref: ref || null, p_adult: adult })
       });
-      if (r.status === 201 || r.status === 409) {
+      if (r.ok) {
         document.getElementById('formWrap').innerHTML =
-          '<div class="done"><div class="big">' + (r.status === 409 ? "You're already on the list." : "You're on the list.") + '</div>' +
+          '<div class="done"><div class="big">You\'re on the list.</div>' +
           '<p>We\'ll email you the moment Based opens in ' + city.replace(/[<>&"]/g, '') + '.</p>' +
           '<p class="fine">Want it to open sooner? Send this page to friends in your city. The more people who sign up, the faster it opens there.</p></div>';
         return;
