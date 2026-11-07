@@ -146,8 +146,8 @@
             <div><input type="radio" id="g-woman" name="gender" value="woman"><label for="g-woman">Woman</label></div>
           </div>
 
-          <label class="field" for="ref">Invite or reference code <span style="font-weight:400;color:var(--ink-2)">(optional)</span></label>
-          <input id="ref" name="ref" type="text" autocomplete="off" placeholder="From a member or a venue">
+          <label class="field" for="ref">Invite or reference code</label>
+          <input id="ref" name="ref" type="text" autocomplete="off" required placeholder="From a member or a venue">
 
           <label class="check"><input type="checkbox" id="adult" required> I'm 18 or older.</label>
 
@@ -229,6 +229,7 @@
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say('Enter a valid email.', 'err');
     if (city.length < 2) return say('Which city are you in?', 'err');
     if (!gender) return say('Pick man or woman.', 'err');
+    if (!ref) return say('Based is invite-only right now — enter your invite or reference code.', 'err');
     if (!adult) return say('Based is 18+ only.', 'err');
 
     btn.disabled = true; say('Saving…');
