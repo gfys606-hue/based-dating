@@ -175,6 +175,7 @@ footer a{color:var(--muted);margin-right:16px}
         <label class="f" for="city">City</label>
         <select id="city" required><option value="">Choose your city</option></select>
         <input id="cityOther" class="hidden" type="text" autocomplete="address-level2" placeholder="Your city" style="margin-top:8px">
+        <p class="fine" id="cityCounts" style="margin:8px 0 0"></p>
         <label class="f" for="gender">Gender</label>
         <select id="gender" required><option value="">Choose one</option><option value="man">Man</option><option value="woman">Woman</option></select>
         <label class="f" for="ref">Invite or reference code <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
@@ -272,6 +273,13 @@ footer a{color:var(--muted);margin-right:16px}
       });
       var open = rows.filter(function (c) { return c.open !== false; });
       if (open.length === 1) sel.value = open[0].slug;
+      var counts = $('cityCounts');
+      if (counts && rows.length) {
+        counts.textContent = rows.map(function (c) {
+          var n = c.waiting || 0;
+          return c.name + ': ' + n.toLocaleString() + (n === 1 ? ' person waiting' : ' people waiting');
+        }).join(' · ');
+      }
     })
     .catch(function () {})
     .then(function () {
