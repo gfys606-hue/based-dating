@@ -10,6 +10,7 @@ import '../services/places_api.dart';
 import '../theme.dart';
 import '../widgets/castle.dart';
 import '../widgets/module_rail.dart';
+import '../widgets/update_banner.dart';
 import 'discover_screen.dart';
 import 'friends_screen.dart';
 import 'home_screen.dart';
@@ -145,32 +146,37 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
                 child: const Icon(Icons.bug_report_outlined, size: 20),
               ),
             ]),
-      body: Row(children: [
-        ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 5),
+      body: Column(children: [
+        const UpdateBanner(),
         Expanded(
-          child: SafeArea(
-            left: false,
-            child: AnimatedBuilder(
-              animation: _enter,
-              builder: (context, stack) {
-                final e = Curves.easeOutCubic.transform(((_enter.value - 0.62) / 0.38).clamp(0.0, 1.0).toDouble());
-                return Opacity(
-                  opacity: e,
-                  child: Transform.scale(scale: 0.96 + 0.04 * e, child: stack),
-                );
-              },
-              child: IndexedStack(index: _tab, children: [
-              HomeScreen(refresh: _refresh[0], goTab: goTab),
-              DiscoverScreen(refresh: _refresh[1], mode: discoverMode),
-              TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
-              YouScreen(onStatusChanged: widget.onStatusChanged),
-              FriendsScreen(refresh: _refresh[4], onChanged: _checkBadge),
-              SpotsScreen(refresh: _refresh[5]),
-              for (var i = 0; i < widget.extras.length; i++)
-                _opened.contains(6 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
-            ]),
+          child: Row(children: [
+            ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 5),
+            Expanded(
+              child: SafeArea(
+                left: false,
+                child: AnimatedBuilder(
+                  animation: _enter,
+                  builder: (context, stack) {
+                    final e = Curves.easeOutCubic.transform(((_enter.value - 0.62) / 0.38).clamp(0.0, 1.0).toDouble());
+                    return Opacity(
+                      opacity: e,
+                      child: Transform.scale(scale: 0.96 + 0.04 * e, child: stack),
+                    );
+                  },
+                  child: IndexedStack(index: _tab, children: [
+                  HomeScreen(refresh: _refresh[0], goTab: goTab),
+                  DiscoverScreen(refresh: _refresh[1], mode: discoverMode),
+                  TalkScreen(refresh: _refresh[2], onChanged: _checkBadge),
+                  YouScreen(onStatusChanged: widget.onStatusChanged),
+                  FriendsScreen(refresh: _refresh[4], onChanged: _checkBadge),
+                  SpotsScreen(refresh: _refresh[5]),
+                  for (var i = 0; i < widget.extras.length; i++)
+                    _opened.contains(6 + i) ? widget.extras[i].build(_openModule) : const SizedBox.shrink(),
+                ]),
+                ),
+              ),
             ),
-          ),
+          ]),
         ),
       ]),
     );
