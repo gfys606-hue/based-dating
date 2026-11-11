@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
@@ -349,8 +350,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             final was = _city;
                             setState(() => _city = v);
                             _run(() async {
+                              // Confirm you're actually near this city: a fresh GPS fix, checked
+                              // server-side (within 200 km). Declining still lets the server fall
+                              // back to your last known location, if it has one.
+                              double? lat, lng;
                               try {
-                                await CityApi.set(v);
+                                var perm = await Geolocator.checkPermission();
+                                if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
+                                if (perm != LocationPermission.denied && perm != LocationPermission.deniedForever) {
+                                  final pos = await Geolocator.getCurrentPosition(
+                                    locationSettings:
+                                        const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 12)),
+                                  );
+                                  lat = pos.latitude;
+                                  lng = pos.longitude;
+                                }
+                              } catch (_) {}
+                              try {
+                                await CityApi.set(v, lat: lat, lng: lng);
                               } catch (e) {
                                 if (mounted) setState(() => _city = was);
                                 rethrow;

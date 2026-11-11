@@ -24,8 +24,14 @@ class CityApi {
   /// Cities you can pick right now
   static Future<List<Map<String, dynamic>>> open() async => _rows(await _db.rpc('get_cities'));
 
-  static Future<void> set(String slug) async {
-    final r = await _db.rpc('set_city', params: {'p_city': slug});
+  /// [lat]/[lng]: a fresh GPS fix, checked server-side against the city's coordinates
+  /// (must be within 200 km) so people can't just claim a city they're not in.
+  static Future<void> set(String slug, {double? lat, double? lng}) async {
+    final r = await _db.rpc('set_city', params: {
+      'p_city': slug,
+      if (lat != null) 'p_lat': lat,
+      if (lng != null) 'p_lng': lng,
+    });
     current.value = r == null ? null : Map<String, dynamic>.from(r as Map);
   }
 
