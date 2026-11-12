@@ -198,7 +198,7 @@ footer a{color:var(--muted);margin-right:16px}
 <section id="inside">
   <div class="wrap">
     <h2>What's inside</h2>
-    <p class="intro">Most social media keeps you scrolling. Based is built to get you into the same room as people worth knowing, with everything you need for that in one place.</p>
+    <p class="intro">Most social media keeps you scrolling. Based is built to get you into the same room as people worth knowing.</p>
     <div class="grid">
       <div class="item"><div class="k">Feed</div><h3>Posts worth reading</h3><p>Topics from startups to Stoicism, or start your own. Useful posts reach more people; noise and rage-bait don't.</p></div>
       <div class="item"><div class="k">Herd</div><h3>Groups and circles</h3><p>Join or start circles around what you're into: run clubs, founders, book clubs, hockey. Make plans with people who are in.</p></div>
@@ -274,11 +274,17 @@ footer a{color:var(--muted);margin-right:16px}
       var open = rows.filter(function (c) { return c.open !== false; });
       if (open.length === 1) sel.value = open[0].slug;
       var counts = $('cityCounts');
-      if (counts && rows.length) {
-        counts.textContent = rows.map(function (c) {
-          var n = c.waiting || 0;
-          return c.name + ': ' + n.toLocaleString() + (n === 1 ? ' person waiting' : ' people waiting');
-        }).join(' · ');
+      if (counts) {
+        var waiting = rows.filter(function (c) { return (c.waiting || 0) > 0; });
+        if (waiting.length) {
+          counts.style.display = '';
+          counts.textContent = waiting.map(function (c) {
+            var n = c.waiting;
+            return c.name + ': ' + n.toLocaleString() + (n === 1 ? ' person waiting' : ' people waiting');
+          }).join(' · ');
+        } else {
+          counts.style.display = 'none';
+        }
       }
     })
     .catch(function () {})
