@@ -96,7 +96,7 @@ footer a{color:var(--muted);margin-right:16px}
     <p class="slogan">Calgary · Alberta</p>
     <h1>Based is opening in Calgary.</h1>
     <p class="lede" style="max-width:52ch">A members-only social network for YYC: what Calgarians are talking about, groups for what you're into, events this week, and the bars and spots worth going to.</p>
-    <p class="lede" style="max-width:52ch" id="seats">Calgary has a set number of member spots. New spots open in timed drops, and the front of the line gets in first.</p>
+    <p class="lede" style="max-width:52ch" id="seats">Calgary has a set number of member spots. Spots open as current members invite people in, and the front of the line gets in first.</p>
     <div class="btns"><a class="btn" href="/#join">Join the Calgary waitlist</a><a class="btn2" href="/test/">Get the Android app</a></div>
   </div>
 </div>
@@ -120,7 +120,7 @@ footer a{color:var(--muted);margin-right:16px}
 fetch('https://dzfnetcoyxjyjtmorfgk.supabase.co/rest/v1/rpc/waitlist_cities',{method:'POST',headers:{apikey:'sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ','Content-Type':'application/json'},body:'{}'})
  .then(function(r){return r.json()}).then(function(rows){
    var c=(rows||[]).find(function(x){return x.slug==='calgary'});
-   if(c&&c.cap){document.getElementById('seats').textContent='Calgary is capped at '+c.cap.toLocaleString()+' members. New spots open in timed drops, and the front of the line gets in first.';}
+   if(c&&c.cap){document.getElementById('seats').textContent='Calgary is capped at '+c.cap.toLocaleString()+' members. Spots open as current members invite people in, and the front of the line gets in first.';}
  }).catch(function(){});
 </script>
 </body>
