@@ -81,16 +81,18 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
   }
 
   Future<void> _checkBadge() async {
+    // Talk is the one inbox: dating matches and friends both.
     try {
       final ms = await Api.myMatches();
-      final waiting = ms.any((m) => m['last_message'] != null && m['last_from_me'] == false);
+      final fr = await FriendsApi.friends();
+      final waiting = ms.any((m) => m['last_message'] != null && m['last_from_me'] == false) ||
+          fr.any((f) => f['last_message'] != null && f['last_from_me'] == false);
       if (mounted) setState(() => _talkBadge = waiting);
     } catch (_) {}
+    // Friends is just your list, so its badge is only pending friend requests.
     try {
       final req = await FriendsApi.requests();
-      final fr = await FriendsApi.friends();
-      final unread = fr.any((f) => f['last_message'] != null && f['last_from_me'] == false);
-      if (mounted) setState(() => _friendsBadge = req.isNotEmpty || unread);
+      if (mounted) setState(() => _friendsBadge = req.isNotEmpty);
     } catch (_) {}
   }
 

@@ -109,11 +109,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
-  Future<void> _open(Map<String, dynamic> f) async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => FriendChatScreen(friend: f)));
-    _load();
-  }
-
   @override
   Widget build(BuildContext context) {
     final q = _query.trim().toLowerCase();
@@ -135,7 +130,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ),
           ]),
           const SizedBox(height: 4),
-          Text('People you\'ve met. Add someone from their profile.', style: TextStyle(color: B.muted, fontSize: 13)),
+          Text('People you\'ve met and added. Message them from Talk.', style: TextStyle(color: B.muted, fontSize: 13)),
           const SizedBox(height: 12),
           QuietModeBar(until: _quiet, onChanged: _load),
           const SizedBox(height: 14),
@@ -223,12 +218,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
         'Going to ${plans.first['title']} · ${DateFormat('EEE h:mm a').format(DateTime.parse(plans.first['starts_at'] as String).toLocal())}',
       if (circles != null && circles.isNotEmpty) 'In ${circles.join(', ')}',
     ];
-    final last = f['last_message'] as String?;
-    final unread = last != null && f['last_from_me'] == false;
+    final since = f['since'] as String?;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: InkWell(
-        onTap: () => _open(f),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileViewScreen(userId: f['user_id'] as String))),
         borderRadius: BorderRadius.circular(B.radius),
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -247,15 +241,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 ]),
                 for (final l in lines)
                   Text(l, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: B.accentStrong, fontSize: 12.5, fontWeight: FontWeight.w600)),
-                Text(
-                  last ?? 'Say hi',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: unread ? B.ink : B.muted, fontSize: 13, fontWeight: unread ? FontWeight.w700 : FontWeight.w400),
-                ),
+                if (lines.isEmpty && since != null)
+                  Text('Friends since ${DateFormat('MMM d').format(DateTime.parse(since).toLocal())}',
+                      style: TextStyle(color: B.muted, fontSize: 12.5)),
               ]),
             ),
-            if (unread) Container(width: 9, height: 9, decoration: const BoxDecoration(color: B.gold, shape: BoxShape.circle)),
+            Icon(Icons.chevron_right, color: B.muted, size: 20),
           ]),
         ),
       ),
