@@ -33,7 +33,7 @@ class InvitesApi {
   static Future<List<Map<String, dynamic>>> cityDemand() async => _rows(await _db.rpc('admin_city_demand'));
 
   /// The city's door (supabase/migrations/20261019000034_city_caps.sql). Works before signing in.
-  /// {slug, name, cap, members, spots_left, waiting, next_drop: {spots, at}, my_status, my_position, my_vouched}
+  /// {slug, name, cap, members, spots_left, waiting, my_status, my_position, my_vouched}
   static Future<Map<String, dynamic>?> cityDoor([String? city]) async {
     final r = await _db.rpc('city_door', params: {'p_city': city});
     return r == null ? null : Map<String, dynamic>.from(r as Map);

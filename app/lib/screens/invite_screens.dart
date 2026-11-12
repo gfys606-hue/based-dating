@@ -107,7 +107,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('Join the waitlist', style: B.heading(24)),
           const SizedBox(height: 4),
-          Text('New spots open in timed drops. If a member gives you their code, you move to the front of the line.',
+          Text('Spots open as current members invite people in. If a member gives you their code, you move to the front of the line.',
               style: TextStyle(color: B.muted, fontSize: 13, height: 1.4)),
           const SizedBox(height: 12),
           TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Email')),
@@ -364,6 +364,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   List<Map<String, dynamic>> _communities = [];
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _demand = [];
+  List<Map<String, dynamic>> _openings = [];
 
   @override
   void initState() {
@@ -374,6 +375,9 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
   Future<void> _load() async {
     CityApi.all().then((c) {
       if (mounted) setState(() => _cities = c);
+    }).catchError((_) {});
+    CityApi.pendingOpenings().then((o) {
+      if (mounted) setState(() => _openings = o);
     }).catchError((_) {});
     InvitesApi.cityDemand().then((d) {
       if (mounted) setState(() => _demand = d);
@@ -464,6 +468,44 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
     _load();
   }
 
+  /// A full city asked for the go-ahead to let some waiting people in. Only this (an explicit
+  /// owner approval) ever admits anyone without an invite code.
+  Future<void> _approveOpening(Map<String, dynamic> o) async {
+    final n = TextEditingController(text: '${o['suggested_n']}');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Open spots in ${o['name']}?'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('${o['waiting_n']} waiting. Vouched people get in first, then by when they joined.'),
+          const SizedBox(height: 12),
+          TextField(controller: n, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'How many spots')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Not yet')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('APPROVE')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      final admitted = await CityApi.approveOpening(o['id'] as int, n: int.tryParse(n.text.trim()));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$admitted let in')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
+    _load();
+  }
+
+  Future<void> _declineOpening(Map<String, dynamic> o) async {
+    try {
+      await CityApi.declineOpening(o['id'] as int);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_clean(e))));
+    }
+    _load();
+  }
+
   Future<void> _addCity() async {
     final name = TextEditingController();
     final region = TextEditingController();
@@ -492,15 +534,11 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
     _load();
   }
 
-  /// A city's cap, drinking age, and spot drops.
+  /// A city's cap and drinking age.
   Future<void> _citySheet(Map<String, dynamic> c) async {
     final slug = c['slug'] as String;
     final cap = TextEditingController(text: c['cap']?.toString() ?? '');
     final age = TextEditingController(text: '${c['drinking_age'] ?? 18}');
-    final spots = TextEditingController(text: '500');
-    final drop = c['next_drop'] as Map?;
-    var at = DateTime.now().add(const Duration(days: 3));
-    at = DateTime(at.year, at.month, at.day, 20); // 8 PM
     Future<void> run(BuildContext ctx, Future<void> Function() f, String done) async {
       try {
         await f();
@@ -515,7 +553,7 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => Padding(
+        builder: (ctx, _) => Padding(
           padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
           child: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -548,48 +586,6 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                     () => CityApi.setRules(slug, int.tryParse(cap.text.trim()), int.tryParse(age.text.trim()) ?? 18),
                     'Saved'),
                 child: const Text('SAVE CAP AND AGE'),
-              ),
-              const SizedBox(height: 22),
-              const SectionLabel('Spot drop'),
-              const SizedBox(height: 4),
-              Text('At drop time the cap goes up and the front of the line gets in: vouched people first, then by when they joined.',
-                  style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
-              if (drop != null) ...[
-                const SizedBox(height: 10),
-                Row(children: [
-                  Expanded(
-                    child: Text('Next: ${drop['spots']} spots ${dropWhen(drop['at'] as String)}',
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                  TextButton(
-                    onPressed: () => run(ctx, () => CityApi.cancelDrop(drop['id'] as int), 'Drop cancelled'),
-                    child: const Text('CANCEL IT'),
-                  ),
-                ]),
-              ],
-              const SizedBox(height: 10),
-              TextField(controller: spots, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'New spots')),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.schedule, size: 18),
-                label: Text(DateFormat('EEE MMM d, h:mm a').format(at)),
-                onPressed: () async {
-                  final d = await showDatePicker(
-                      context: ctx, initialDate: at, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
-                  if (d == null || !ctx.mounted) return;
-                  final t = await showTimePicker(context: ctx, initialTime: TimeOfDay.fromDateTime(at));
-                  if (t == null) return;
-                  set(() => at = DateTime(d.year, d.month, d.day, t.hour, t.minute));
-                },
-              ),
-              const SizedBox(height: 10),
-              FilledButton(
-                onPressed: () {
-                  final n = int.tryParse(spots.text.trim());
-                  if (n == null || n <= 0) return;
-                  run(ctx, () => CityApi.scheduleDrop(slug, n, at), '$n spots drop ${dropWhen(at.toUtc().toIso8601String())}');
-                },
-                child: const Text('SCHEDULE DROP'),
               ),
               const SizedBox(height: 22),
               const SectionLabel('Extra invites for members'),
@@ -749,13 +745,43 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
                 _load();
               },
             ),
+          if (_openings.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            const SectionLabel('Waiting on you'),
+            const SizedBox(height: 4),
+            Text('A city is full and people are waiting. Nobody gets in without a code until you say so.',
+                style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4)),
+            for (final o in _openings)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(border: Border.all(color: B.line), borderRadius: BorderRadius.circular(4)),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(o['name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    const SizedBox(height: 2),
+                    Text('${o['waiting_n']} waiting · suggested ${o['suggested_n']}', style: TextStyle(color: B.muted, fontSize: 13)),
+                    const SizedBox(height: 10),
+                    Row(children: [
+                      Expanded(
+                        child: OutlinedButton(onPressed: () => _declineOpening(o), child: const Text('NOT YET')),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton(onPressed: () => _approveOpening(o), child: const Text('APPROVE')),
+                      ),
+                    ]),
+                  ]),
+                ),
+              ),
+          ],
           const SizedBox(height: 22),
           Row(children: [
             const Expanded(child: SectionLabel('Cities')),
             TextButton.icon(onPressed: _addCity, icon: const Icon(Icons.add, size: 18), label: const Text('ADD')),
           ]),
           Text('Open cities show in everyone\'s city pull-down. Ouch only matches people in the same city. '
-              'Tap a city to set its member cap and schedule spot drops.',
+              'Tap a city to set its member cap.',
               style: TextStyle(color: B.muted, fontSize: 12.5)),
           for (final c in _cities)
             ListTile(
@@ -765,7 +791,6 @@ class _AdminDoorScreenState extends State<AdminDoorScreen> {
               subtitle: Text([
                 c['cap'] == null ? '${c['members']} members · no cap' : '${c['members']} of ${c['cap']} members',
                 if ((c['waiting'] as int? ?? 0) > 0) '${c['waiting']} waiting',
-                if (c['next_drop'] != null) '${(c['next_drop'] as Map)['spots']} spots drop ${dropWhen((c['next_drop'] as Map)['at'] as String)}',
                 c['active'] == true ? 'open' : 'not open yet',
               ].join(' · ')),
               trailing: Switch(

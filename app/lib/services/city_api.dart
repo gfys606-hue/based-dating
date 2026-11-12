@@ -45,9 +45,13 @@ class CityApi {
   /// Member cap (null = no cap) and the local drinking age for bars and venue promos.
   static Future<void> setRules(String slug, int? cap, int drinkingAge) =>
       _db.rpc('admin_set_city_rules', params: {'p_city': slug, 'p_cap': cap, 'p_drinking_age': drinkingAge});
-  static Future<void> scheduleDrop(String slug, int spots, DateTime at) => _db.rpc('admin_schedule_drop',
-      params: {'p_city': slug, 'p_spots': spots, 'p_at': at.toUtc().toIso8601String()});
-  static Future<void> cancelDrop(int id) => _db.rpc('admin_cancel_drop', params: {'p_id': id});
+  /// Full cities with people waiting that are asking for your go-ahead to open some spots.
+  static Future<List<Map<String, dynamic>>> pendingOpenings() async => _rows(await _db.rpc('admin_pending_openings'));
+
+  /// Approve one: [n] spots open and the front of the line gets in (null = the suggested amount).
+  static Future<int> approveOpening(int id, {int? n}) async =>
+      (await _db.rpc('admin_approve_opening', params: {'p_id': id, if (n != null) 'p_n': n})) as int;
+  static Future<void> declineOpening(int id) => _db.rpc('admin_decline_opening', params: {'p_id': id});
 
   /// Admin: give every member in a city [count] more invites (members first, then the waitlist).
   static Future<void> extraInvites(String slug, int count) =>
