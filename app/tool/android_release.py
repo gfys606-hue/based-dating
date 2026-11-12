@@ -33,6 +33,15 @@ if 'create("release")' not in s:
         }
     }
 
+    // CI's Android Lint has started crashing internally (a lint tooling bug unrelated to our
+    // code: see JavaDocParser/LintDriver in the stack trace) and lintVitalRelease would otherwise
+    // fail the whole release build - and with it, the website deploy that rides along in the
+    // same CI job. Skip it; `flutter analyze` above already lints the Dart side.
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     buildTypes {'''
     s, n = re.subn(r"    buildTypes \{", signing, s, count=1)
     if n != 1:
