@@ -36,10 +36,10 @@ jobs:
         if: env.SUPABASE_ACCESS_TOKEN != ''
         working-directory: .
         run: |
-          supabase functions deploy photo-check     --project-ref "$PROJECT_REF" --use-api
-          supabase functions deploy call-token      --project-ref "$PROJECT_REF" --use-api
-          supabase functions deploy livekit-webhook --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
-          supabase functions deploy push            --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
-          supabase functions deploy billing         --project-ref "$PROJECT_REF" --use-api
-          supabase functions deploy stripe-webhook  --project-ref "$PROJECT_REF" --use-api --no-verify-jwt
-          supabase functions deploy music-search    --project-ref "$PROJECT_REF" --use-api
+          supabase functions deploy photo-check     --project-ref "$PROJECT_REF" --use-api --yes
+          supabase functions deploy call-token      --project-ref "$PROJECT_REF" --use-api --yes
+          supabase functions deploy livekit-webhook --project-ref "$PROJECT_REF" --use-api --no-verify-jwt --yes
+          supabase functions deploy push            --project-ref "$PROJECT_REF" --use-api --no-verify-jwt --yes
+          supabase functions deploy billing         --project-ref "$PROJECT_REF" --use-api --yes
+          supabase functions deploy stripe-webhook  --project-ref "$PROJECT_REF" --use-api --no-verify-jwt --yes
+          supabase functions deploy music-search    --project-ref "$PROJECT_REF" --use-api --yes
