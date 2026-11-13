@@ -88,7 +88,11 @@ Deno.serve(async (req) => {
           data: stringData,
           android: {
             priority: "HIGH",
-            notification: { channel_id: "based", color: "#4169E1", tag: stringData.match_id ?? stringData.kind },
+            // No channel_id here on purpose: the app never creates an Android notification channel
+            // named "based", and Android silently drops a notification aimed at a channel that
+            // doesn't exist on the device (FCM still reports success). Omitting it lets Android use
+            // its own always-present default channel instead, so the notification actually shows.
+            notification: { color: "#4169E1", tag: stringData.match_id ?? stringData.kind },
           },
         },
       }),
