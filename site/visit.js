@@ -9,10 +9,10 @@
     } catch (e) {
       id = String(Date.now()) + Math.random(); // localStorage blocked: still report this one visit
     }
-    fetch('https://dzfnetcoyxjyjtmorfgk.supabase.co/rest/v1/rpc/track_site_visit', {
+    fetch('https://dzfnetcoyxjyjtmorfgk.supabase.co/functions/v1/track-visit', {
       method: 'POST',
       headers: { apikey: 'sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_page: location.pathname, p_visitor: id, p_referrer: document.referrer || null }),
+      body: JSON.stringify({ page: location.pathname, visitor: id, referrer: document.referrer || null }),
       keepalive: true,
     }).catch(function () {});
   } catch (e) {}

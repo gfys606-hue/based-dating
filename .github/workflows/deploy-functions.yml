@@ -43,3 +43,4 @@ jobs:
           supabase functions deploy billing         --project-ref "$PROJECT_REF" --use-api --yes
           supabase functions deploy stripe-webhook  --project-ref "$PROJECT_REF" --use-api --no-verify-jwt --yes
           supabase functions deploy music-search    --project-ref "$PROJECT_REF" --use-api --yes
+          supabase functions deploy track-visit     --project-ref "$PROJECT_REF" --use-api --no-verify-jwt --yes
