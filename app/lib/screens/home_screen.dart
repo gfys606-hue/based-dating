@@ -235,6 +235,16 @@ class _NoticesCard extends StatelessWidget {
         _ => Icons.notifications_none,
       };
 
+  static String _ago(String iso) {
+    final t = DateTime.parse(iso).toLocal();
+    final d = DateTime.now().difference(t);
+    if (d.inMinutes < 1) return 'just now';
+    if (d.inHours < 1) return '${d.inMinutes}m ago';
+    if (d.inDays < 1) return '${d.inHours}h ago';
+    if (d.inDays < 7) return '${d.inDays}d ago';
+    return DateFormat('MMM d').format(t);
+  }
+
   @override
   Widget build(BuildContext context) {
     final shown = notices.take(4).toList();
@@ -250,7 +260,16 @@ class _NoticesCard extends StatelessWidget {
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Icon(_icon(n['kind'] as String? ?? ''), size: 18, color: B.accent),
               const SizedBox(width: 10),
-              Expanded(child: Text(n['body'] as String? ?? '', style: TextStyle(fontSize: 14, height: 1.35, color: B.ink))),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(n['body'] as String? ?? '', style: TextStyle(fontSize: 14, height: 1.35, color: B.ink)),
+                  if (n['created_at'] != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(_ago(n['created_at'] as String), style: TextStyle(fontSize: 11, color: B.muted)),
+                    ),
+                ]),
+              ),
             ]),
           ),
         Row(children: [
