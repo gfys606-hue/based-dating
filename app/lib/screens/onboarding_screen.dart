@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api.dart';
+import '../services/city_api.dart';
 import '../theme.dart';
 import '../brand.dart';
 
@@ -48,6 +49,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   static const _slots = ['morning', 'afternoon', 'evening'];
   final Map<String, Set<String>> _avail = {};
+
+  // location
+  // True once "Share location" has failed (denied, deniedForever, or no prompt shown at all --
+  // common in a mobile browser that already remembers an earlier denial). Reveals a fallback
+  // so people aren't stuck on this step with no way to continue.
+  bool _locBlocked = false;
 
   @override
   void initState() {
@@ -266,13 +273,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             var perm = await Geolocator.checkPermission();
             if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
             if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
-              throw Exception('Location is required to find people near you.');
+              // The browser/OS won't ask again from here (often because it was denied once
+              // already) -- don't dead-end the step, offer the city-level fallback below.
+              setState(() => _locBlocked = true);
+              throw Exception(
+                  'Location is blocked. You can turn it on in your browser/phone settings, or continue below.');
             }
             final pos = await Geolocator.getCurrentPosition();
             await Api.updateProfile({'lat': pos.latitude, 'lng': pos.longitude});
             _next();
           }),
         ),
+        if (_locBlocked) ...[
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: () => _run(() async {
+              final mine = await CityApi.mine();
+              final slug = mine?['slug'] as String?;
+              final cities = await CityApi.open();
+              final city = cities.firstWhere((c) => c['slug'] == slug, orElse: () => const {});
+              final lat = city['lat'] as num?;
+              final lng = city['lng'] as num?;
+              if (lat == null || lng == null) {
+                throw Exception("Couldn't find your city's location. Try sharing location instead.");
+              }
+              await Api.updateProfile({'lat': lat.toDouble(), 'lng': lng.toDouble()});
+              _next();
+            }),
+            child: Text("Use ${CityApi.current.value?['name'] ?? 'my city'}'s general area instead"),
+          ),
+        ],
       ]);
 
   Widget _rules() => ListView(children: [
