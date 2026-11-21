@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,14 +7,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/api.dart';
 import '../theme.dart';
 import '../widgets/city_door.dart';
-import '../widgets/waitlist_sheet.dart';
 import '../brand.dart';
 
-/// Email sign-in (free, built into Supabase).
-/// Supabase's default email contains a sign-in LINK. Once a custom email sender
-/// (e.g. Resend) is connected, the template can also show a 6-digit code,
-/// which the optional code box below accepts.
-/// Phone sign-in (one account per number) can replace this later via Twilio.
+/// One step to get in: type your email, then the 6-digit code we email you.
+/// New and returning people use the same flow -- a new email creates the account,
+/// a known email logs in. No passwords, no separate sign-up form.
+/// (A password login stays tucked away for accounts that have one, e.g. the Google Play review account.)
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
   @override
@@ -26,9 +26,28 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _usePassword = false; // only for accounts that have a password (e.g. the Google Play review account)
   bool _sent = false;
   bool _busy = false;
-  bool _showCode = true;
-  bool _logIn = false; // false = create account, true = existing account
   String? _error;
+  int _resendIn = 0;
+  Timer? _resendTimer;
+
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    _email.dispose();
+    _code.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+    setState(() => _resendIn = 60);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return t.cancel();
+      setState(() => _resendIn--);
+      if (_resendIn <= 0) t.cancel();
+    });
+  }
 
   Future<void> _sendLink() async {
     final email = _email.text.trim();
@@ -40,18 +59,16 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await Api.db.auth.signInWithOtp(
         email: email,
-        // Log in never creates a new account; Sign up does.
-        shouldCreateUser: !_logIn,
-        // On the website, send people back to this exact page after they tap the link.
+        // Same flow for everyone: a new email creates the account, a known one logs in.
+        shouldCreateUser: true,
+        // On the website, send people back to this exact page if they tap a link instead.
         emailRedirectTo: kIsWeb ? '${Uri.base.origin}${Uri.base.path}' : null,
       );
-      setState(() => _sent = true);
+      setState(() { _sent = true; _code.clear(); });
+      _startResendTimer();
     } on AuthException catch (e) {
-      final noAccount = _logIn &&
-          (e.code == 'otp_disabled' || e.message.toLowerCase().contains('signups not allowed'));
-      setState(() => _error = noAccount
-          ? 'No account with that email yet. Tap "Sign up" to create one.'
-          : e.message);
+      final wait = e.statusCode == '429' || e.message.toLowerCase().contains('rate limit');
+      setState(() => _error = wait ? 'Too many codes sent. Wait a minute and try again.' : e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -68,36 +85,15 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _setMode(bool logIn) {
-    if (_busy) return;
-    setState(() { _logIn = logIn; _usePassword = false; _error = null; });
-  }
-
-  Widget _modeTab(String label, bool logIn) {
-    final on = _logIn == logIn;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _setMode(logIn),
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: on ? B.accent : B.line, width: on ? 2.5 : 1)),
-          ),
-          child: Text(label,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, fontWeight: on ? FontWeight.w700 : FontWeight.w500, color: on ? B.ink : B.muted)),
-        ),
-      ),
-    );
-  }
-
   Future<void> _verifyCode() async {
+    final code = _code.text.trim();
+    if (code.length != 6 || _busy) return;
     setState(() { _busy = true; _error = null; });
     try {
-      await Api.db.auth.verifyOTP(email: _email.text.trim(), token: _code.text.trim(), type: OtpType.email);
+      await Api.db.auth.verifyOTP(email: _email.text.trim(), token: code, type: OtpType.email);
     } on AuthException catch (e) {
-      setState(() => _error = e.message);
+      final expired = e.message.toLowerCase().contains('expired') || e.message.toLowerCase().contains('invalid');
+      setState(() => _error = expired ? 'That code didn\'t work. Check it, or send a new one.' : e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -128,19 +124,22 @@ class _AuthScreenState extends State<AuthScreen> {
                   decoration: B.cardBox(),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     if (!_sent) ...[
-                      Row(children: [_modeTab('Sign up', false), _modeTab('Log in', true)]),
-                      const SizedBox(height: 16),
-                      const Text('Email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 8),
+                      Text('Get in', style: B.heading(22)),
+                      const SizedBox(height: 4),
+                      Text('New or returning, just enter your email. We\'ll send you a 6-digit code.',
+                          style: TextStyle(color: B.muted, fontSize: 13.5, height: 1.4)),
+                      const SizedBox(height: 14),
                       TextField(
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
+                        autocorrect: false,
+                        textInputAction: TextInputAction.go,
                         decoration: const InputDecoration(hintText: 'you@example.com'),
-                        onSubmitted: (_) => _sendLink(),
+                        onSubmitted: (_) => _usePassword ? _passwordLogIn() : _sendLink(),
                       ),
                       const SizedBox(height: 14),
-                      if (_logIn && _usePassword) ...[
+                      if (_usePassword) ...[
                         TextField(
                           controller: _password,
                           obscureText: true,
@@ -151,44 +150,57 @@ class _AuthScreenState extends State<AuthScreen> {
                         const SizedBox(height: 14),
                         FilledButton(onPressed: _busy ? null : _passwordLogIn, child: const Text('Log in')),
                       ] else
-                        FilledButton(onPressed: _busy ? null : _sendLink, child: Text(_logIn ? 'Email me a login code' : 'Create account')),
-                      if (_logIn)
-                        TextButton(
-                          onPressed: _busy ? null : () => setState(() { _usePassword = !_usePassword; _error = null; }),
-                          child: Text(_usePassword ? 'Use an email code instead' : 'Log in with a password',
-                              style: TextStyle(color: B.muted, fontSize: 13)),
-                        ),
+                        FilledButton(onPressed: _busy ? null : _sendLink, child: Text(_busy ? 'Sending…' : 'Continue')),
+                      TextButton(
+                        onPressed: _busy ? null : () => setState(() { _usePassword = !_usePassword; _error = null; }),
+                        child: Text(_usePassword ? 'Use an email code instead' : 'I have a password',
+                            style: TextStyle(color: B.muted, fontSize: 12.5)),
+                      ),
                     ] else ...[
-                      Text('Check your email', style: B.heading(22)),
+                      Text('Enter your code', style: B.heading(22)),
                       const SizedBox(height: 6),
                       Text.rich(TextSpan(children: [
                         const TextSpan(text: 'We sent a 6-digit code to '),
                         TextSpan(text: _email.text.trim(), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        const TextSpan(text: '. Enter it below, or tap the link in the email.'),
+                        const TextSpan(text: '.'),
                       ]), style: TextStyle(color: B.ink2, height: 1.45)),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text('Not there? Check spam. It can take a minute.', style: TextStyle(color: B.muted, fontSize: 13)),
                       const SizedBox(height: 14),
-                      if (_showCode) ...[
-                        TextField(
-                          controller: _code,
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          autofocus: true,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 8),
-                          decoration: const InputDecoration(hintText: '······', counterText: ''),
-                          onChanged: (v) { if (v.trim().length == 6) _verifyCode(); },
-                        ),
-                        const SizedBox(height: 10),
-                        FilledButton(onPressed: _busy ? null : _verifyCode, child: const Text('Sign in')),
-                      ] else
-                        OutlinedButton(onPressed: () => setState(() => _showCode = true), child: const Text('My email has a code instead')),
-                      const SizedBox(height: 6),
-                      TextButton(
-                        onPressed: _busy ? null : () => setState(() { _sent = false; _code.clear(); }),
-                        child: const Text('Use a different email or send again'),
+                      TextField(
+                        controller: _code,
+                        keyboardType: TextInputType.number,
+                        autofillHints: const [AutofillHints.oneTimeCode],
+                        maxLength: 6,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 8),
+                        decoration: const InputDecoration(hintText: '······', counterText: ''),
+                        onChanged: (v) {
+                          // Accept a pasted code with spaces or dashes, then sign in as soon as there are 6 digits.
+                          final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
+                          if (digits != v) {
+                            _code.value = TextEditingValue(
+                              text: digits.length > 6 ? digits.substring(0, 6) : digits,
+                              selection: TextSelection.collapsed(offset: digits.length > 6 ? 6 : digits.length),
+                            );
+                          }
+                          if (_code.text.length == 6) _verifyCode();
+                        },
                       ),
+                      const SizedBox(height: 10),
+                      FilledButton(onPressed: _busy ? null : _verifyCode, child: Text(_busy ? 'Checking…' : 'Continue')),
+                      const SizedBox(height: 4),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        TextButton(
+                          onPressed: _busy ? null : () => setState(() { _sent = false; _code.clear(); _error = null; }),
+                          child: const Text('Change email'),
+                        ),
+                        TextButton(
+                          onPressed: (_busy || _resendIn > 0) ? null : _sendLink,
+                          child: Text(_resendIn > 0 ? 'Resend in ${_resendIn}s' : 'Resend code'),
+                        ),
+                      ]),
                     ],
                     if (_error != null) Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -196,12 +208,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ]),
                 ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => showWaitlistSheet(context),
-                  child: Text('No invite? Join the waitlist', style: TextStyle(color: B.goldInk, fontWeight: FontWeight.w700)),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 18),
               ]),
             ),
           ),

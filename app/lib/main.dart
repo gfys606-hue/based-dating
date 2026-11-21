@@ -228,7 +228,7 @@ class _StatusRouterState extends State<_StatusRouter> {
           case 'banned':
             return PausedScreen(status: status, reason: p?['pause_reason'] as String?, onFixed: _refresh);
           default:
-            if (p == null) return _DoorCheck(onDone: _refresh); // brand-new account: needs an invite code first
+            if (p == null) return _DoorCheck(onDone: _refresh); // brand-new account: invite code only if invite-only is switched back on
             return OnboardingScreen(existing: p, onDone: _refresh);
         }
       },
@@ -256,7 +256,7 @@ class _DoorCheckState extends State<_DoorCheck> {
         if (snap.connectionState != ConnectionState.done) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        final a = snap.data ?? const {'invite_only': true, 'redeemed': false};
+        final a = snap.data ?? const {'invite_only': false, 'redeemed': false}; // the server still enforces the door
         if (a['invite_only'] == true && a['redeemed'] != true) {
           return InviteGateScreen(onDone: () => setState(() => _access = InvitesApi.access()));
         }
