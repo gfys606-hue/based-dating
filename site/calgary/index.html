@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Based in Calgary · The members-only social network for YYC</title>
-<meta name="description" content="Based is opening in Calgary: a members-only social network for YYC with local posts, groups, events and the best bars and spots. Real, verified people. Limited spots, 18+. Join the Calgary waitlist.">
+<meta name="description" content="Based is opening in Calgary: a members-only social network for YYC with local posts, groups, events and the best bars and spots. Real, verified people. Limited spots, 18+. Sign up today.">
 <link rel="canonical" href="https://based-social.com/calgary/">
 <meta name="theme-color" content="#110B07">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://based-social.com/calgary/">
 <meta property="og:title" content="Based in Calgary">
-<meta property="og:description" content="The members-only social network for YYC: posts, groups, events and the best spots. Join the Calgary waitlist.">
+<meta property="og:description" content="The members-only social network for YYC: posts, groups, events and the best spots. Sign up today.">
 <meta property="og:image" content="https://based-social.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
@@ -96,8 +96,8 @@ footer a{color:var(--muted);margin-right:16px}
     <p class="slogan">Calgary · Alberta</p>
     <h1>Based is opening in Calgary.</h1>
     <p class="lede" style="max-width:52ch">A members-only social network for YYC: what Calgarians are talking about, groups for what you're into, events this week, and the bars and spots worth going to.</p>
-    <p class="lede" style="max-width:52ch" id="seats">Calgary has a set number of member spots. Spots open as current members invite people in, and the front of the line gets in first.</p>
-    <div class="btns"><a class="btn" href="/#join">Join the Calgary waitlist</a><a class="btn2" href="/test/">Get the Android app</a></div>
+    <p class="lede" style="max-width:52ch" id="seats">Calgary has a set number of member spots. Sign up with your email right in the app &mdash; no waitlist, no invite code needed.</p>
+    <div class="btns"><a class="btn" href="/app/">Sign up</a><a class="btn2" href="/test/">Get the Android app</a></div>
   </div>
 </div>
 <section>
@@ -120,7 +120,7 @@ footer a{color:var(--muted);margin-right:16px}
 fetch('https://dzfnetcoyxjyjtmorfgk.supabase.co/rest/v1/rpc/waitlist_cities',{method:'POST',headers:{apikey:'sb_publishable_6LwInbn32Vkcz5LbX5O6Bg_-id7TuFQ','Content-Type':'application/json'},body:'{}'})
  .then(function(r){return r.json()}).then(function(rows){
    var c=(rows||[]).find(function(x){return x.slug==='calgary'});
-   if(c&&c.cap){document.getElementById('seats').textContent='Calgary is capped at '+c.cap.toLocaleString()+' members. Spots open as current members invite people in, and the front of the line gets in first.';}
+   if(c&&c.cap){document.getElementById('seats').textContent='Calgary is capped at '+c.cap.toLocaleString()+' members. Sign up with your email right in the app — no waitlist, no invite code needed.';}
  }).catch(function(){});
 </script>
 </body>
