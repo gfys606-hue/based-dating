@@ -122,6 +122,12 @@ button:disabled{opacity:.5;cursor:default}
         <table><thead><tr><th>When</th><th>Alert</th></tr></thead><tbody id="tAlerts"></tbody></table>
       </div>
     </div>
+
+    <div class="card scroll" style="margin-top:12px">
+      <h2>Left Based</h2>
+      <table><thead><tr><th>Left</th><th>Name</th><th>City</th><th>Email</th><th>Joined</th></tr></thead><tbody id="tLeft"></tbody></table>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Accounts deleted before Nov 26 come from the sign-in log: no name or city, and "Left" is their last login.</p>
+    </div>
   </div>
 </div>
 
@@ -151,7 +157,7 @@ button:disabled{opacity:.5;cursor:default}
   }
 
   async function load() {
-    var r = await Promise.all([sb.rpc('admin_waitlist_overview'), sb.rpc('admin_health'), sb.rpc('admin_feedback', { p_include_done: false })]);
+    var r = await Promise.all([sb.rpc('admin_waitlist_overview'), sb.rpc('admin_health'), sb.rpc('admin_feedback', { p_include_done: false }), sb.rpc('admin_departures')]);
     if (r[0].error) { alert(r[0].error.message); return; }
     var w = r[0].data, h = r[1].data || {}, fb = r[2].data || [];
 
@@ -198,6 +204,15 @@ button:disabled{opacity:.5;cursor:default}
         : 'Daily summary: ' + p.total + ' signups (' + p.with_code + ' with code) ' + esc(p.top || '');
       return '<tr><td>' + when(a.at) + '</td><td>' + text + '</td></tr>';
     }).join('') || '<tr><td colspan="2" class="muted">None yet.</td></tr>';
+
+    var dep = r[3].data || {}, left = (dep.logged || []).concat(dep.older || []);
+    $('tLeft').innerHTML = r[3].error
+      ? '<tr><td colspan="5" class="muted">Not set up yet: run the latest SQL in Supabase.</td></tr>'
+      : left.map(function (x) {
+          return '<tr><td>' + when(x.at) + (x.source === 'sign-in log' ? ' <span class="muted">(last login)</span>' : '') + '</td>' +
+            '<td>' + esc(x.name || '') + '</td><td>' + esc(x.city || '') + '</td><td>' + esc(x.email || '') + '</td>' +
+            '<td>' + (x.joined ? when(x.joined) : '') + '</td></tr>';
+        }).join('') || '<tr><td colspan="5" class="muted">Nobody has left.</td></tr>';
   }
 
   document.addEventListener('click', async function (e) {
