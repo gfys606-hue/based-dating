@@ -14,10 +14,15 @@ class RailItem {
 /// The navigation rail down the left side: every destination in one place.
 /// Dating tabs first, then (for testers) a thin divider and the other Based Social modules.
 class ModuleRail extends StatelessWidget {
-  const ModuleRail({super.key, required this.items, required this.index, required this.onTap, this.dividerAfter});
+  const ModuleRail(
+      {super.key, required this.items, required this.index, required this.onTap, this.dividerAfter, this.footer = const []});
   final List<RailItem> items;
   final int index;
   final ValueChanged<int> onTap;
+
+  /// Small buttons pinned to the bottom of the rail (e.g. testers' suggestion / report buttons),
+  /// kept here so nothing floats over the page and hides its last line or button.
+  final List<Widget> footer;
 
   /// Draw a divider after this item index (separates dating from the other modules).
   final int? dividerAfter;
@@ -60,6 +65,13 @@ class ModuleRail extends StatelessWidget {
               ]),
             ),
           ),
+          if (footer.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(height: 1, color: B.onPanelMuted.withOpacity(.35)),
+            ),
+            Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Column(children: footer)),
+          ],
         ]),
       ),
     );
