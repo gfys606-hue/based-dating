@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/api.dart';
@@ -151,6 +153,30 @@ class _AuthScreenState extends State<AuthScreen> {
                         FilledButton(onPressed: _busy ? null : _passwordLogIn, child: const Text('Log in')),
                       ] else
                         FilledButton(onPressed: _busy ? null : _sendLink, child: Text(_busy ? 'Sending…' : 'Continue')),
+                      const SizedBox(height: 8),
+                      Text.rich(
+                        TextSpan(children: [
+                          const TextSpan(text: 'By continuing, you agree to our '),
+                          TextSpan(
+                            text: 'Terms of Use',
+                            style: const TextStyle(decoration: TextDecoration.underline),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => launchUrl(Uri.parse('https://based-social.com/terms.html'),
+                                  mode: LaunchMode.externalApplication),
+                          ),
+                          const TextSpan(text: ' and '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: const TextStyle(decoration: TextDecoration.underline),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => launchUrl(Uri.parse('https://based-social.com/privacy.html'),
+                                  mode: LaunchMode.externalApplication),
+                          ),
+                          const TextSpan(text: '.'),
+                        ]),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: B.muted, fontSize: 12.5, height: 1.4),
+                      ),
                       TextButton(
                         onPressed: _busy ? null : () => setState(() { _usePassword = !_usePassword; _error = null; }),
                         child: Text(_usePassword ? 'Use an email code instead' : 'I have a password',
