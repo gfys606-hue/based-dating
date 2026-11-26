@@ -46,6 +46,11 @@ head = f"""
   <meta property="og:title" content="{NAME} · {SLOGAN}">
   <meta property="og:description" content="The members-only social network for real people.">
   <meta property="og:image" content="https://based-social.com/og.png">
+  <style>
+    /* Size the app to the part of the screen you can actually see. On phones the browser's own
+       toolbars otherwise sit over the bottom of the app, hiding the last button or line. */
+    html, body {{ height: 100%; height: 100dvh; margin: 0; overflow: hidden; }}
+  </style>
 """
 html = html.replace("</head>", head + "</head>", 1)
 open(INDEX, "w").write(html)
