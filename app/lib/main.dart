@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -173,8 +174,13 @@ class _BasedAppState extends State<BasedApp> with WidgetsBindingObserver {
       scaffoldMessengerKey: Push.messenger,
       navigatorObservers: [Diagnostics.observer],
       theme: B.theme(),
-      // every screen sits inside the castle: its walls are painted once, behind the whole app
-      builder: (context, child) => Stack(fit: StackFit.expand, children: [const CastleBackdrop(), if (child != null) child]),
+      // every screen sits inside the castle: its walls are painted once, behind the whole app.
+      // In the phone app, every page also stops above Android's navigation/gesture bar (newer Android draws
+      // apps underneath it), so the last button or line on a page is never hidden behind it.
+      builder: (context, child) => Stack(fit: StackFit.expand, children: [
+        const CastleBackdrop(),
+        if (child != null) kIsWeb ? child : SafeArea(top: false, left: false, right: false, child: child),
+      ]),
       home: const DoorIntro(child: AuthGate()),
     );
   }
