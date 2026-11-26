@@ -126,33 +126,33 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
     ];
     Diagnostics.tab = items[_tab.clamp(0, items.length - 1)].label;
     return Scaffold(
-      // testers get "Make a suggestion" and "Report a problem" buttons everywhere
-      floatingActionButton: widget.extras.isEmpty
-          ? null
-          : Column(mainAxisSize: MainAxisSize.min, children: [
-              FloatingActionButton.small(
-                heroTag: 'suggest',
-                tooltip: 'Make a suggestion',
-                backgroundColor: B.panel,
-                foregroundColor: B.gold,
-                onPressed: () => showFeedbackSheet(context, suggestion: true),
-                child: const Icon(Icons.lightbulb_outline, size: 20),
-              ),
-              const SizedBox(height: 8),
-              FloatingActionButton.small(
-                heroTag: 'feedback',
-                tooltip: 'Report a problem',
-                backgroundColor: B.panel,
-                foregroundColor: B.gold,
-                onPressed: () => showFeedbackSheet(context),
-                child: const Icon(Icons.bug_report_outlined, size: 20),
-              ),
-            ]),
       body: Column(children: [
         const UpdateBanner(),
         Expanded(
           child: Row(children: [
-            ModuleRail(items: items, index: _tab, onTap: (i) => goTab(i), dividerAfter: widget.extras.isEmpty ? null : 5),
+            ModuleRail(
+              items: items,
+              index: _tab,
+              onTap: (i) => goTab(i),
+              dividerAfter: widget.extras.isEmpty ? null : 5,
+              // testers get "Make a suggestion" and "Report a problem" buttons at the bottom of the rail
+              footer: widget.extras.isEmpty
+                  ? const []
+                  : [
+                      IconButton(
+                        tooltip: 'Make a suggestion',
+                        color: B.gold,
+                        onPressed: () => showFeedbackSheet(context, suggestion: true),
+                        icon: const Icon(Icons.lightbulb_outline, size: 22),
+                      ),
+                      IconButton(
+                        tooltip: 'Report a problem',
+                        color: B.gold,
+                        onPressed: () => showFeedbackSheet(context),
+                        icon: const Icon(Icons.bug_report_outlined, size: 22),
+                      ),
+                    ],
+            ),
             Expanded(
               child: SafeArea(
                 left: false,
