@@ -1,12 +1,15 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../brand.dart';
 import '../services/conduct_api.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 
-/// The house rules, accepted once ("I'm in") before using the app.
+/// The house rules plus the Terms of Use and Privacy Policy, accepted ("I'm in") before using the app.
+/// Shown again when the terms change significantly.
 class HouseRulesScreen extends StatefulWidget {
   const HouseRulesScreen({super.key, required this.rules});
   final List<Map<String, dynamic>> rules;
@@ -16,6 +19,10 @@ class HouseRulesScreen extends StatefulWidget {
 
 class _HouseRulesScreenState extends State<HouseRulesScreen> {
   bool _busy = false;
+  bool _agreed = false;
+
+  static void _open(String path) =>
+      launchUrl(Uri.parse('https://based-social.com/$path'), mode: LaunchMode.externalApplication);
 
   Future<void> _accept() async {
     setState(() => _busy = true);
@@ -68,9 +75,39 @@ class _HouseRulesScreenState extends State<HouseRulesScreen> {
                   style: TextStyle(color: B.ink2, fontSize: 13, height: 1.45),
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 18),
+              InkWell(
+                onTap: () => setState(() => _agreed = !_agreed),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Checkbox(value: _agreed, onChanged: (v) => setState(() => _agreed = v ?? false)),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text.rich(
+                        TextSpan(children: [
+                          const TextSpan(text: 'I\'m 18 or older and I agree to the house rules, the '),
+                          TextSpan(
+                            text: 'Terms of Use',
+                            style: TextStyle(color: B.goldInk, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                            recognizer: TapGestureRecognizer()..onTap = () => _open('terms.html'),
+                          ),
+                          const TextSpan(text: ' and the '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: TextStyle(color: B.goldInk, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
+                            recognizer: TapGestureRecognizer()..onTap = () => _open('privacy.html'),
+                          ),
+                          const TextSpan(text: '.'),
+                        ]),
+                        style: TextStyle(color: B.ink2, fontSize: 13.5, height: 1.45),
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 14),
               FilledButton(
-                onPressed: _busy ? null : _accept,
+                onPressed: (_busy || !_agreed) ? null : _accept,
                 child: Text(_busy ? 'One moment…' : 'I\'M IN'),
               ),
             ]),
