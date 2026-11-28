@@ -42,7 +42,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/intro/
-    - assets/rooms/
     - assets/icon/mark.png
   shaders:
     - shaders/parallax.frag
