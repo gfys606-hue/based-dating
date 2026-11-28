@@ -116,7 +116,7 @@ class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final items = [
-      const RailItem('Home', Icons.home_outlined, Icons.home_rounded),
+      const RailItem('Home', Icons.home_outlined, Icons.home_rounded, brandMark: true),
       const RailItem('Discover', Icons.radar_outlined, Icons.radar),
       RailItem('Talk', Icons.chat_bubble_outline, Icons.chat_bubble, badge: _talkBadge),
       const RailItem('You', Icons.person_outline, Icons.person),

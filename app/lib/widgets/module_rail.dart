@@ -4,11 +4,15 @@ import '../theme.dart';
 
 /// One tab on the left rail.
 class RailItem {
-  const RailItem(this.label, this.icon, this.activeIcon, {this.badge = false});
+  const RailItem(this.label, this.icon, this.activeIcon, {this.badge = false, this.brandMark = false});
   final String label;
   final IconData icon;
   final IconData activeIcon;
   final bool badge; // small blue dot (e.g. a reply is waiting)
+
+  /// Home: show the "B" mark instead of an icon + label. It doubles as the rail's
+  /// brand stamp, so the rail no longer needs a separate non-interactive header above it.
+  final bool brandMark;
 }
 
 /// The navigation rail down the left side: every destination in one place.
@@ -43,13 +47,7 @@ class ModuleRail extends StatelessWidget {
           boxShadow: B.shadow,
         ),
         child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 14, bottom: 10),
-            child: Text.rich(TextSpan(children: [
-              TextSpan(text: 'B', style: B.display(26).copyWith(color: Colors.white)),
-              TextSpan(text: '.', style: B.display(26).copyWith(color: B.gold)),
-            ])),
-          ),
+          const SizedBox(height: 10),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 8),
@@ -93,16 +91,21 @@ class ModuleRail extends StatelessWidget {
             height: 58,
             decoration: on ? BoxDecoration(color: B.panelRaised, borderRadius: BorderRadius.circular(4)) : null,
             child: Stack(alignment: Alignment.center, children: [
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(on ? m.activeIcon : m.icon, size: 22, color: on ? Colors.white : B.onPanelMuted),
-                const SizedBox(height: 4),
-                Text(m.label.toUpperCase(),
-                    style: TextStyle(
-                        fontSize: 9.5,
-                        letterSpacing: 1.0,
-                        fontWeight: on ? FontWeight.w700 : FontWeight.w600,
-                        color: on ? Colors.white : B.onPanelMuted)),
-              ]),
+              if (m.brandMark)
+                // The logo itself, in its true metal color — it's the brand, not a status icon,
+                // so it doesn't get tinted or greyed out when the tab isn't the active one.
+                Image.asset('assets/icon/mark.png', width: 30, height: 30)
+              else
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(on ? m.activeIcon : m.icon, size: 22, color: on ? Colors.white : B.onPanelMuted),
+                  const SizedBox(height: 4),
+                  Text(m.label.toUpperCase(),
+                      style: TextStyle(
+                          fontSize: 9.5,
+                          letterSpacing: 1.0,
+                          fontWeight: on ? FontWeight.w700 : FontWeight.w600,
+                          color: on ? Colors.white : B.onPanelMuted)),
+                ]),
               if (m.badge && !on)
                 Positioned(top: 9, right: 14, child: CircleAvatar(radius: 4, backgroundColor: B.gold)),
               if (on)
