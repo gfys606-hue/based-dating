@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../brand.dart';
 import '../services/api.dart';
 import '../services/push.dart';
 import '../theme.dart';
@@ -191,16 +192,18 @@ class YouScreen extends StatelessWidget {
             ]),
           ),
         ),
-        const SizedBox(height: 20),
-        const SectionLabel('Ouch'),
-        const SizedBox(height: 10),
-        Container(
-          decoration: B.cardBox(),
-          child: FutureBuilder(
-            future: Api.myProfile(),
-            builder: (context, snap) => _DatingSwitch(initial: snap.data?['dating_on'] == true, key: ValueKey(snap.data?['dating_on'])),
+        if (kDatingEnabled) ...[
+          const SizedBox(height: 20),
+          const SectionLabel('Ouch'),
+          const SizedBox(height: 10),
+          Container(
+            decoration: B.cardBox(),
+            child: FutureBuilder(
+              future: Api.myProfile(),
+              builder: (context, snap) => _DatingSwitch(initial: snap.data?['dating_on'] == true, key: ValueKey(snap.data?['dating_on'])),
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 10),
         Container(
           decoration: B.cardBox(),

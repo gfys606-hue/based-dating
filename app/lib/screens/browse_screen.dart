@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../brand.dart';
 import '../services/api.dart';
 import '../services/rooms_api.dart';
 import '../theme.dart';
@@ -103,11 +104,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   onChanged: _setOn,
                 ),
                 if (on) ...[
-                  Row(children: [
-                    PillChip(label: 'Everyone', selected: !_dating, onTap: () { setState(() => _dating = false); _load(); }),
-                    const SizedBox(width: 6),
-                    PillChip(label: 'Ouch', selected: _dating, onTap: () { setState(() => _dating = true); _load(); }),
-                  ]),
+                  if (kDatingEnabled)
+                    Row(children: [
+                      PillChip(label: 'Everyone', selected: !_dating, onTap: () { setState(() => _dating = false); _load(); }),
+                      const SizedBox(width: 6),
+                      PillChip(label: 'Ouch', selected: _dating, onTap: () { setState(() => _dating = true); _load(); }),
+                    ]),
                   const SizedBox(height: 12),
                   if (_loading) const Padding(padding: EdgeInsets.all(30), child: Center(child: CircularProgressIndicator())),
                   if (_error != null) Text(_error!, style: TextStyle(color: B.urgent)),

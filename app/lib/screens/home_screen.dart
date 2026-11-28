@@ -169,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 18),
           ],
 
-          if (_datingOn) ...[
+          if (kDatingEnabled && _datingOn) ...[
           Row(children: [
             Expanded(child: Text('New near you', style: B.heading(18))),
             TextButton(onPressed: () => widget.goTab(1, discover: 0), child: const Text('See all')),

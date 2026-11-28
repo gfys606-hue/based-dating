@@ -131,7 +131,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final posts = widget.mode.value == 1;
+    final posts = kDatingEnabled ? widget.mode.value == 1 : true;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
@@ -145,14 +145,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ),
           ]),
           const SizedBox(height: 12),
-          Row(children: [
-            PillChip(label: 'Ouch', selected: !posts, onTap: () => widget.mode.value = 0),
-            const SizedBox(width: 6),
-            PillChip(label: 'Posts', selected: posts, onTap: () => widget.mode.value = 1),
-            const Spacer(),
-            if (!posts && _datingOn == true)
-              Segmented(options: const ['Cards', 'Radar'], index: _view, onChanged: (i) => setState(() => _view = i)),
-          ]),
+          if (kDatingEnabled)
+            Row(children: [
+              PillChip(label: 'Ouch', selected: !posts, onTap: () => widget.mode.value = 0),
+              const SizedBox(width: 6),
+              PillChip(label: 'Posts', selected: posts, onTap: () => widget.mode.value = 1),
+              const Spacer(),
+              if (!posts && _datingOn == true)
+                Segmented(options: const ['Cards', 'Radar'], index: _view, onChanged: (i) => setState(() => _view = i)),
+            ]),
         ]),
       ),
       Expanded(
